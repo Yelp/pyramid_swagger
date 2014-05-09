@@ -1,0 +1,6 @@
+*pyc
+dist/
+.coverage
+.tox
+pyramid_swagger.egg-info
+tests/__pycache__
