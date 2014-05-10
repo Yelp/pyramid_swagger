@@ -34,7 +34,7 @@ def validation_tween_factory(handler, registry):
     delegating to the relevant matching view.
     """
     # Pre-load the schema outside our tween
-    schema_resolver = load_schema(registry.settings['schema_path'])
+    schema_resolver = load_schema(registry.settings.get('schema_path', 'swagger.json'))
 
     def validator_tween(request):
         schema_data = extract_relevant_schema(request, schema_resolver)
@@ -139,8 +139,7 @@ def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
 
 
 def includeme(config):
-    if 'swagger_validation' in config.registry.settings:
-        config.add_tween(
-            "pyramid_swagger.tweens.validation_tween_factory",
-            under=pyramid.tweens.EXCVIEW
-        )
+    config.add_tween(
+        "pyramid_swagger.tweens.validation_tween_factory",
+        under=pyramid.tweens.EXCVIEW
+    )

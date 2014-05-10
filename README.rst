@@ -11,3 +11,19 @@ In particular, in currently offers two main features:
 
 Each assumes your swagger spec is available at "swagger.json" in the project's
 root, although you are free to configure this location via Pyramid's registry.
+
+To include the tween in your pyramid app, insert this into your PasteDeploy
+.ini file:
+
+```
+[app:main]
+pyramid.includes = pyramid_swagger.tweens
+```
+
+or, equivalently, add this to your webapp:
+
+```
+config = Configurator(settings=settings)
+# ...
+config.include('pyramid_swagger.tweens')
+```
