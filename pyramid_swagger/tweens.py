@@ -71,6 +71,11 @@ def validate_incoming_request(request, schema_map, resolver):
     # Static URLs are skipped
     if not skip_validation_re.match(request.path):
         if schema_map.request_query_schema:
+            # You'll notice we use Draft3 some places and Draft4 in others.
+            # Unfortunately this is just Swagger's inconsistency showing. It
+            # may be nice in the future to do the necessary munging to make
+            # everything Draft4 compatible, although the Swagger UI will
+            # probably never truly support Draft4.
             Draft3Validator(
                 schema_map.request_query_schema,
                 resolver=resolver,
@@ -96,8 +101,8 @@ def validate_outgoing_response(request, response, schema_map, resolver):
     :param schema_map: our mapping from request data to schemas (see
         load_schema)
     :type schema_map: dict
-    :param resolver: the request object to validate
-    :type resolver: Pyramid request object passed into a view
+    :param resolver: a resolver for validation, if any
+    :type resolver: a jsonschema resolver or None
     :returns: None
     """
     if not skip_validation_re.match(request.path):

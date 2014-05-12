@@ -11,7 +11,29 @@ from jsonschema import RefResolver
 
 def extract_query_param_schema(schema):
     """Turn a swagger endpoint schema into an equivalent one to validate our
-    request."""
+    request.
+
+    As an example, this would take this swagger schema:
+        {
+            "paramType": "query",
+            "name": "query",
+            "description": "Location to query",
+            "type": "string",
+            "required": true
+        }
+    To this jsonschema:
+        {
+            "type": "object",
+            "additionalProperties": "False",
+            "properties:": {
+                "description": "Location to query",
+                "type": "string",
+                "required": true
+            }
+        }
+    Which we can then validate against a JSON object we construct from the
+    pyramid request.
+    """
     properties = dict(
         (s['name'], strip_swagger_markup(s))
         for s in schema['parameters']
@@ -31,7 +53,29 @@ def extract_query_param_schema(schema):
 
 def extract_body_schema(schema):
     """Turn a swagger endpoint schema into an equivalent one to validate our
-    request."""
+    request.
+
+    As an example, this would take this swagger schema:
+        {
+            "paramType": "body",
+            "name": "body",
+            "description": "json list: [ll1,ll2]",
+            "type": "array",
+            "items": {
+                "$ref": "GeoPoint"
+            },
+            "required": true
+        }
+    To this jsonschema:
+        {
+            "type": "array",
+            "items": {
+                "$ref": "GeoPoint"
+            },
+        }
+    Which we can then validate against a JSON object we construct from the
+    pyramid request.
+    """
     matching_body_schemas = [
         s
         for s in schema['parameters']
@@ -81,6 +125,12 @@ class SchemaMap(namedtuple(
             'request_body_schema',
             'response_body_schema'
         ])):
+    """
+    A SchemaMap contains a mapping from incoming paths to schemas for request
+    queries, request bodies, and responses. This requires some precomputation
+    but means we can do fast query-time validation without having to walk over
+    the schema.
+    """
     __slots__ = ()
 
 
