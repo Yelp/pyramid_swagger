@@ -25,5 +25,5 @@ or, equivalently, add this to your webapp:
 ```
 config = Configurator(settings=settings)
 # ...
-config.include('pyramid_swagger.tweens')
+config.include('pyramid_swagger')
 ```

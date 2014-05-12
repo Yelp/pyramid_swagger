@@ -1,4 +1,5 @@
 *pyc
+docs/build
 dist/
 .coverage
 .tox
