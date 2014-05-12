@@ -2,7 +2,6 @@
 import re
 
 import jsonschema.exceptions
-import pyramid
 import simplejson
 from jsonschema.validators import Draft3Validator
 from jsonschema.validators import Draft4Validator
@@ -34,7 +33,10 @@ def validation_tween_factory(handler, registry):
     delegating to the relevant matching view.
     """
     # Pre-load the schema outside our tween
-    schema_resolver = load_schema(registry.settings.get('schema_path', 'swagger.json'))
+    schema_resolver = load_schema(registry.settings.get(
+        'pyramid_swagger.schema_path',
+        'swagger.json'
+    ))
 
     def validator_tween(request):
         schema_data = extract_relevant_schema(request, schema_resolver)
@@ -136,10 +138,3 @@ def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
         if not partial_path == splitted_p2[pos]:
             return False
     return True
-
-
-def includeme(config):
-    config.add_tween(
-        "pyramid_swagger.tweens.validation_tween_factory",
-        under=pyramid.tweens.EXCVIEW
-    )

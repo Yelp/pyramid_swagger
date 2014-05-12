@@ -63,7 +63,9 @@ def get_registry(settings=None):
 def _validate_request_against_tween(request):
     def handler(request):
         return Response()
-    settings = {'schema_path': 'tests/sample_swagger_spec.json'}
+    settings = {
+        'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json'
+    }
     registry = get_registry(settings=settings)
     validation_tween_factory(handler, registry)(request)
 
