@@ -17,7 +17,7 @@ To include the tween in your pyramid app, insert this into your PasteDeploy
 
 ```
 [app:main]
-pyramid.includes = pyramid_swagger.tweens
+pyramid.includes = pyramid_swagger
 ```
 
 or, equivalently, add this to your webapp:
