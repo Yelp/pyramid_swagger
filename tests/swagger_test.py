@@ -121,6 +121,13 @@ def test_validation_skips_path_properly():
     )
 
 
+def test_nonexistant_path_returns_4xx_error():
+    request.method = 'GET'
+    request.path = '/madeuppath'
+    with pytest.raises(HTTPClientError):
+        _validate_request_against_tween(request)
+
+
 def test_partial_path_match():
     assert partial_path_match(
         '/v1/bing/forward_unstructured',
