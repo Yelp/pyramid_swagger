@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/striglia/pyramid_swagger.png)](https://travis-ci.org/striglia/pyramid_swagger)
+
+
 pyramid_swagger
 =======================
 
