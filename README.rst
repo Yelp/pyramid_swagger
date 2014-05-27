@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/striglia/pyramid_swagger.png)](https://travis-ci.org/striglia/pyramid_swagger)
+.. image:: https://travis-ci.org/striglia/pyramid_swagger.png
+  :target: https://travis-ci.org/striglia/pyramid_swagger
 
 
 pyramid_swagger
