@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/striglia/pyramid_swagger.png)](https://travis-ci.org/striglia/pyramid_swagger)
+
+
 pyramid_swagger
 =======================
 
@@ -27,3 +30,5 @@ config = Configurator(settings=settings)
 # ...
 config.include('pyramid_swagger')
 ```
+
+Full documentation is available at https://readthedocs.org/projects/pyramid-swagger/
