@@ -93,11 +93,12 @@ def validate_incoming_request(request, schema_map, resolver):
 
         # Body validation
         if schema_map.request_body_schema:
+            body = getattr(request, 'json_body', None)
             Draft3Validator(
                 schema_map.request_body_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
-            ).validate(request.json_body)
+            ).validate(body)
 
 
 def validate_outgoing_response(request, response, schema_map, resolver):

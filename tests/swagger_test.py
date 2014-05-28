@@ -70,8 +70,17 @@ def _validate_request_against_tween(request):
     validation_tween_factory(handler, registry)(request)
 
 
-def test_validation_fails_for_missing_arg(request):
+def test_validation_fails_for_missing_query_arg(request):
     request.params = {'query': 'SF'}  # No locale
+    with pytest.raises(HTTPClientError):
+        _validate_request_against_tween(request)
+
+
+def test_validation_fails_for_missing_body():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/required_body',
+    )
     with pytest.raises(HTTPClientError):
         _validate_request_against_tween(request)
 
