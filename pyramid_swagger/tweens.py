@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 
 import jsonschema.exceptions
@@ -17,11 +18,11 @@ EXTENDED_TYPES = {
 
 
 # We don't always care about validating every endpoint (e.g. static resources)
-skip_validation_re = re.compile(ur'/(static)\b')
+skip_validation_re = re.compile(r'/(static)\b')
 
 
 def extract_relevant_schema(request, schema_resolver):
-    for (s_path, s_method), value in schema_resolver.schema_map.iteritems():
+    for (s_path, s_method), value in schema_resolver.schema_map.items():
         if partial_path_match(request.path, s_path):
             return value
 

@@ -98,7 +98,7 @@ def strip_swagger_markup(schema):
     )
     return dict(
         (k, v)
-        for k, v in schema.iteritems()
+        for k, v in schema.items()
         if k not in swagger_specific_keys
     )
 
@@ -114,7 +114,7 @@ def get_model_resolver(schema):
     """
     models = dict(
         (k, strip_swagger_markup(v))
-        for k, v in schema['models'].iteritems()
+        for k, v in schema['models'].items()
     )
     return RefResolver('', '', models)
 
