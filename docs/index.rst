@@ -9,29 +9,33 @@ Welcome to pyramid_swagger's documentation!
 This project offers convenient tools for using Swagger to define and validate
 your interfaces in a Pyramid webapp.
 
-In particular, in currently offers two main features:
+In particular, in currently offers two main features via a pyramid tween:
 
-* Request validation (and automatic 4xx errors) via a pyramid tween
-* A method for pyramid response validation
+* Request validation (and automatic 4xx errors).
+* Response validation (and automatic 5xx errors). Disabled by default, enabled
+  via a registry setting.
 
 Each assumes your swagger spec is available at "swagger.json" in the project's
 root, although you are free to configure this location via Pyramid's registry.
 
-To include the tween in your pyramid app, insert this into your PasteDeploy
-.ini file:::
+A few relevant settings for your PasteDeploy .ini file:::
 
         [app:main]
+        # Add the pyramid_swagger request validation tween to your app
         pyramid.includes = pyramid_swagger
+        # Enable response validation (off by default)
+        pyramid_swagger.enable_response_validation = true
+        # Point pyramid_swagger at your swagger spec (defaults to swagger.json)
+        pyramid_swagger.schema_path = "swagger.json"
 
-or, equivalently, add this to your webapp:::
+note that, equivalently, you can add these from your webapp:::
 
-        config = Configurator(settings=settings)
-        # ...
-        config.include('pyramid_swagger')
-
-
-For response validation, see the validate_outgoing_response method in the
-pyramid_swagger.tweens module.
+        def main(global_config, **settings):
+            # ...
+            settings['pyramid_swagger.enable_response_validation'] = True
+            settings['pyramid_swagger.enable_response_validation'] = True
+            config = Configurator(settings=settings)
+            config.include('pyramid_swagger')
 
 Indices and tables
 ==================
