@@ -33,7 +33,6 @@ note that, equivalently, you can add these from your webapp:::
         def main(global_config, **settings):
             # ...
             settings['pyramid_swagger.enable_response_validation'] = True
-            settings['pyramid_swagger.enable_response_validation'] = True
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')
 
