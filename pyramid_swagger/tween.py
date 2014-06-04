@@ -8,6 +8,7 @@ import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
+from .swagger_spec import validate_swagger_spec
 from .load_schema import load_schema
 
 
@@ -34,15 +35,25 @@ def validation_tween_factory(handler, registry):
     delegating to the relevant matching view.
     """
     # Pre-load the schema outside our tween
-    schema_resolver = load_schema(registry.settings.get(
+    schema_path = registry.settings.get(
         'pyramid_swagger.schema_path',
         'swagger.json'
-    ))
+    )
+
+    enable_swagger_spec_validation = registry.settings.get(
+        'pyramid_swagger.enable_swagger_spec_validation',
+        True
+    )
 
     enable_response_validation = registry.settings.get(
         'pyramid_swagger.enable_response_validation',
         False
     )
+
+    if enable_swagger_spec_validation:
+        with open(schema_path) as f:
+            validate_swagger_spec(f.read())
+    schema_resolver = load_schema(schema_path)
 
     def validator_tween(request):
         schema_data = swagger_schema_for_request(

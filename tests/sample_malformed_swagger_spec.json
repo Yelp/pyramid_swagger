@@ -10,10 +10,10 @@
             "operations": [
                 {
                     "method": "GET",
-                    "nickname": "required_body",
                     "type": "object",
                     "parameters": [
                         {
+                            "paramType": "query",
                             "name": "content",
                             "required": true
                         }

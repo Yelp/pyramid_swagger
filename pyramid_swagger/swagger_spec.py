@@ -1,6 +1,7 @@
 """
 Methods for interacting with the Swagger Spec directly.
 """
+from __future__ import unicode_literals
 from pkg_resources import resource_filename
 from jsonschema.validators import RefResolver
 import simplejson

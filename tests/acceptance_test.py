@@ -1,4 +1,5 @@
 import pytest
+import jsonschema.exceptions
 import pyramid_swagger
 import mock
 import simplejson
@@ -249,3 +250,23 @@ def test_pyramid_swagger_import():
     registry = Registry('testing')
     config = Configurator(registry=registry)
     pyramid_swagger.includeme(config)
+
+
+def test_bad_schema_validated_on_tween_creation_by_default():
+    settings = {
+        'pyramid_swagger.schema_path':
+            'tests/sample_malformed_swagger_spec.json',
+    }
+    registry = get_registry(settings=settings)
+    with pytest.raises(jsonschema.exceptions.ValidationError):
+        validation_tween_factory(mock.ANY, registry)
+
+
+def test_bad_schema_not_validated_if_spec_validation_is_disabled():
+    settings = {
+        'pyramid_swagger.schema_path':
+            'tests/sample_malformed_swagger_spec.json',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+    }
+    registry = get_registry(settings=settings)
+    validation_tween_factory(mock.ANY, registry)
