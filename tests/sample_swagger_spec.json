@@ -5,6 +5,27 @@
     "apis": [
 
         {
+            "path": "/optional_body",
+            "description": "can take a body",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "optional_body",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "body",
+                            "name": "content",
+                            "type": "array",
+                            "items": { "type": "array", "items": { "type": "number" }},
+                            "required": false
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
             "path": "/required_body",
             "description": "requires a body",
             "operations": [

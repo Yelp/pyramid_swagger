@@ -6,6 +6,6 @@ import pyramid
 
 def includeme(config):
     config.add_tween(
-        "pyramid_swagger.tweens.validation_tween_factory",
+        "pyramid_swagger.tween.validation_tween_factory",
         under=pyramid.tweens.EXCVIEW
     )

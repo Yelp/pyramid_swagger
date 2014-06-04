@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import re
 
 import jsonschema.exceptions
 import simplejson
-from jsonschema.validators import Draft3Validator
-from jsonschema.validators import Draft4Validator
-from pyramid.httpexceptions import HTTPClientError
-from pyramid.httpexceptions import HTTPInternalServerError
+from jsonschema.validators import Draft3Validator, Draft4Validator
+from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
 from .load_schema import load_schema
 
@@ -22,8 +21,8 @@ EXTENDED_TYPES = {
 skip_validation_re = re.compile(r'/(static)\b')
 
 
-def extract_relevant_schema(request, schema_resolver):
-    for (s_path, s_method), value in schema_resolver.schema_map.items():
+def swagger_schema_for_request(request, schema_map):
+    for (s_path, s_method), value in schema_map.items():
         if partial_path_match(request.path, s_path):
             return value
 
@@ -46,7 +45,10 @@ def validation_tween_factory(handler, registry):
     )
 
     def validator_tween(request):
-        schema_data = extract_relevant_schema(request, schema_resolver)
+        schema_data = swagger_schema_for_request(
+            request,
+            schema_resolver.schema_map
+        )
 
         # Bail early if we cannot find a relevant entry in the Swagger spec.
         if schema_data is None:
@@ -193,6 +195,11 @@ def prepare_body(response):
 def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
     """Validates if p1 and p2 matches, ignoring any kwargs in the string.
 
+    We need this to ensure we can match Swagger patterns like:
+        /foo/{id}
+    against the observed pyramid path
+        /foo/1
+
     :param p1: path of a url
     :type p1: string
     :param p2: path of a url
@@ -201,14 +208,14 @@ def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
     :type kwarg_re: regex string
     :returns: boolean
     """
-    splitted_p1 = p1.split('/')
-    splitted_p2 = p2.split('/')
+    split_p1 = p1.split('/')
+    split_p2 = p2.split('/')
     pat = re.compile(kwarg_re)
-    if len(splitted_p1) != len(splitted_p2):
+    if len(split_p1) != len(split_p2):
         return False
-    for pos, partial_path in enumerate(splitted_p1):
-        if pat.match(partial_path) or pat.match(splitted_p2[pos]):
+    for pos, (partial_p1, partial_p2) in enumerate(zip(split_p1, split_p2)):
+        if pat.match(partial_p1) or pat.match(partial_p2):
             continue
-        if not partial_path == splitted_p2[pos]:
+        if not partial_p1 == partial_p2:
             return False
     return True
