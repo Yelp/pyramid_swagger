@@ -51,6 +51,39 @@ def extract_query_param_schema(schema):
         return None
 
 
+def extract_path_schema(schema):
+    """Extract a schema for path variables for an endpoint.
+
+    As an example, this would take this swagger schema:
+        {
+            "paramType": "path",
+            "type": "string",
+            "enum": ["foo", "bar"],
+            "required": true
+        }
+    To this jsonschema:
+        {
+            "type": "string",
+            "enum": ["foo", "bar"],
+        }
+    Which we can then validate against a JSON object we construct from the
+    pyramid request.
+    """
+    properties = dict(
+        (s['name'], strip_swagger_markup(s))
+        for s in schema['parameters']
+        if s['paramType'] == 'path'
+    )
+    if properties:
+        return {
+            'type': 'object',
+            'properties': properties,
+            'additionalProperties': False,
+        }
+    else:
+        return None
+
+
 def extract_body_schema(schema, models_schema):
     """Turn a swagger endpoint schema into an equivalent one to validate our
     request.
@@ -129,6 +162,7 @@ def get_model_resolver(schema):
 class SchemaMap(namedtuple(
         'SM', [
             'request_query_schema',
+            'request_path_schema',
             'request_body_schema',
             'response_body_schema'
         ])):
@@ -154,6 +188,7 @@ def build_request_to_schemas_map(schema):
             key = (path, op['method'])
             request_to_schema[key] = SchemaMap(
                 request_query_schema=extract_query_param_schema(op),
+                request_path_schema=extract_path_schema(op),
                 request_body_schema=extract_body_schema(
                     op,
                     schema_models
