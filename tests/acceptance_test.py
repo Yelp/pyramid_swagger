@@ -90,28 +90,37 @@ def test_400_if_path_arg_is_wrong_type():
 
 def test_400_if_required_body_is_missing():
     request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/required_body',
+        method='POST',
+        path='/sample_post',
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
 
 
-def test_200_if_required_body_is_present():
+def test_400_if_body_has_missing_required_arg():
     request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/required_body',
-        body=simplejson.dumps([[1, 2]]),
-        json_body=[[1, 2]],
+        method='POST',
+        path='/sample_post',
+        json_body={'bar': 'test'},
+    )
+    with pytest.raises(HTTPClientError):
+        _validate_against_tween(request)
+
+
+def test_200_if_body_has_missing_optional_arg():
+    request = pyramid.testing.DummyRequest(
+        method='POST',
+        path='/sample_post',
+        json_body={'foo': 'test'},
     )
     _validate_against_tween(request)
 
 
-@pytest.mark.xfail(reason='new test still buggy')
-def test_200_if_optional_body_is_missing():
+def test_200_if_required_body_is_present():
     request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/optional_body',
+        method='POST',
+        path='/sample_post',
+        json_body={'foo': 'test', 'bar': 'test'},
     )
     _validate_against_tween(request)
 

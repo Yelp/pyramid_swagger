@@ -5,40 +5,17 @@
     "apis": [
 
         {
-            "path": "/optional_body",
-            "description": "can take a body",
+            "path": "/sample_post",
             "operations": [
                 {
-                    "method": "GET",
-                    "nickname": "optional_body",
+                    "method": "POST",
+                    "nickname": "sample_post",
                     "type": "object",
                     "parameters": [
                         {
                             "paramType": "body",
                             "name": "content",
-                            "type": "array",
-                            "items": { "type": "array", "items": { "type": "number" }},
-                            "required": false
-                        }
-                    ]
-                }
-            ]
-        },
-
-        {
-            "path": "/required_body",
-            "description": "requires a body",
-            "operations": [
-                {
-                    "method": "GET",
-                    "nickname": "required_body",
-                    "type": "object",
-                    "parameters": [
-                        {
-                            "paramType": "body",
-                            "name": "content",
-                            "type": "array",
-                            "items": { "type": "array", "items": { "type": "number" }},
+                            "type": "body_model",
                             "required": true
                         }
                     ],
@@ -107,6 +84,16 @@
 
     ],
     "models": {
+	"body_model": {
+            "id": "body_model",
+            "type": "object",
+            "required": [ "foo" ],
+	    "additionalProperties": false,
+            "properties": {
+                "foo": { "type": "string" },
+                "bar": { "type": "string" }
+            }
+        },
         "provider_response": {
             "id": "provider_response",
             "description": "Results of a geocoder query(unstructured, structured or reverse) from a provider",

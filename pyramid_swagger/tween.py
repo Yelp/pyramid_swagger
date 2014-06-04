@@ -53,9 +53,9 @@ def validation_tween_factory(handler, registry):
         # Bail early if we cannot find a relevant entry in the Swagger spec.
         if schema_data is None:
             raise HTTPClientError(
-                'Could not find the relevant path (%s) '
-                'in the Swagger spec. Perhaps you forgot'
-                'to add it?'.format(request.path)
+                'Could not find the relevant path ({0})'
+                ' in the Swagger spec. Perhaps you forgot'
+                ' to add it?'.format(request.path)
             )
 
         _validate_request(
@@ -154,8 +154,8 @@ def validate_incoming_request(request, schema_map, resolver):
 
         # Body validation
         if schema_map.request_body_schema:
-            body = getattr(request, 'json_body', None)
-            Draft3Validator(
+            body = getattr(request, 'json_body', {})
+            Draft4Validator(
                 schema_map.request_body_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
