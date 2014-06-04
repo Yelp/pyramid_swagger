@@ -152,6 +152,13 @@ def validate_incoming_request(request, schema_map, resolver):
                 types=EXTENDED_TYPES,
             ).validate(dict(request.params))
 
+        if schema_map.request_path_schema:
+            Draft3Validator(
+                schema_map.request_path_schema,
+                resolver=resolver,
+                types=EXTENDED_TYPES,
+            ).validate(dict(request.matchdict))
+
         # Body validation
         if schema_map.request_body_schema:
             body = getattr(request, 'json_body', {})
