@@ -40,9 +40,9 @@ def _validate_against_tween(request, response=None, settings=None):
 def test_400_if_required_query_args_absent():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': 'sf, ca'},  # No locale
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={},
+        matchdict={'path_arg': 'path_arg1'}
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
@@ -51,20 +51,19 @@ def test_400_if_required_query_args_absent():
 def test_200_if_optional_query_args_absent():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': 'sf, ca', 'locale': 'en_US'},  # No from_country
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},  # no `optional_arg` arg
+        matchdict={'path_arg': 'path_arg1'}
     )
     _validate_against_tween(request)
 
 
-@pytest.mark.xfail(reason='github.com/striglia/pyramid_swagger/issues/11')
 def test_400_if_request_arg_is_wrong_type():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': '1.0', 'locale': 'en_US'},
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 1.0},
+        matchdict={'path_arg': 'path_arg1'}
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
@@ -82,9 +81,9 @@ def test_400_if_path_not_in_swagger():
 def test_400_if_path_arg_is_wrong_type():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/invalid_arg/forward_unstructured',
-        params={'query': 'sf, ca', 'locale': 'en_US'},
-        matchdict={'api_provider': 'invalid_arg'}
+        path='/sample/invalid_arg/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'invalid_arg'}
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
@@ -139,9 +138,9 @@ def test_200_if_required_body_is_primitives():
 def test_response_validation_disabled_by_default():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': 'sf, ca', 'locale': 'en_US'},
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'}
     )
     # Omit the logging_info key from the response. If response validation
     # occurs, we'll fail it.
@@ -158,9 +157,9 @@ def test_response_validation_disabled_by_default():
 def test_500_when_response_is_missing_required_field():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': 'sf, ca', 'locale': 'en_US'},
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'}
     )
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
@@ -178,9 +177,9 @@ def test_500_when_response_is_missing_required_field():
 def test_500_when_response_arg_is_wrong_type():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': 'sf, ca', 'locale': 'en_US'},
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'}
     )
     data = {
         'raw_response': 1.0,
@@ -201,9 +200,9 @@ def test_500_when_response_arg_is_wrong_type():
 def test_response_validation_success():
     request = pyramid.testing.DummyRequest(
         method='GET',
-        path='/geocoder/bing/forward_unstructured',
-        params={'query': 'sf, ca', 'locale': 'en_US'},
-        matchdict={'api_provider': 'bing'}
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'}
     )
     data = {
         'raw_response': 'foo',

@@ -1,7 +1,7 @@
 {
     "apiVersion": "0.1",
     "swaggerVersion": "1.2",
-    "basePath": "/geocoder",
+    "basePath": "/",
     "apis": [
 
         {
@@ -44,59 +44,33 @@
         },
 
         {
-            "path": "/geocoder/{api_provider}/forward_unstructured",
-            "description": "Forward Unstructured Geocoding",
+            "path": "/sample/{path_arg}/resource",
             "operations": [
                 {
                     "method": "GET",
-                    "nickname": "forward_unstructured",
-                    "type": "provider_response",
+                    "nickname": "standard",
+                    "type": "standard_response",
                     "parameters": [
                         {
                             "paramType": "path",
-                            "name": "api_provider",
-                            "description": "The external provider you wish to use",
+                            "name": "path_arg",
                             "type": "string",
-                            "enum": ["apple", "bing", "google_v3", "nokia", "static", "tomtom"],
+                            "enum": ["path_arg1", "path_arg2"],
                             "required": true
                         },
                         {
                             "paramType": "query",
-                            "name": "query",
-                            "description": "Location to query",
-                            "type": "string",
-                            "required": true
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "locale",
-                            "description": "Locale to use for localization",
+                            "name": "required_arg",
                             "type": "string",
                             "required": true
                         },
                         {
                             "paramType": "query",
-                            "name": "bounds",
-                            "description": "Bounding box for hinting",
-                            "type": "string",
-                            "required": false
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "from_country",
-                            "description": "ISO 3166-1 alpha-2 country to bias by",
-                            "type": "string",
-                            "required": false
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "ignore_cache",
-                            "description": "Bypass the geocoder cache (true/false)",
+                            "name": "optional_arg",
                             "type": "string",
                             "required": false
                         }
-                    ],
-                    "summary": "Geocode an unstructured string"
+                    ]
                 }
             ]
         }
@@ -113,9 +87,8 @@
                 "bar": { "type": "string" }
             }
         },
-        "provider_response": {
-            "id": "provider_response",
-            "description": "Results of a geocoder query(unstructured, structured or reverse) from a provider",
+        "standard_response": {
+            "id": "standard_response",
             "type": "object",
             "required": [ "raw_response", "logging_info" ],
 	    "additionalProperties": false,
