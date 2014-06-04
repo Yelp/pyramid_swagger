@@ -1,0 +1,101 @@
+{
+    "apiVersion": "0.1",
+    "swaggerVersion": "1.2",
+    "basePath": "http://localhost:9999/sample",
+    "apis": [
+
+        {
+            "path": "/required_body",
+            "description": "requires a body",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "required_body",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "name": "content",
+                            "required": true
+                        }
+                    ],
+                    "summary": "Tests required body parameters"
+                }
+            ]
+        },
+
+        {
+            "path": "/geocoder/{api_provider}/forward_unstructured",
+            "description": "Forward Unstructured Geocoding",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "forward_unstructured",
+                    "type": "provider_response",
+                    "parameters": [
+                        {
+                            "paramType": "path",
+                            "name": "api_provider",
+                            "description": "The external provider you wish to use",
+                            "type": "string",
+                            "enum": ["apple", "bing", "google_v3", "nokia", "static", "tomtom"],
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "query",
+                            "description": "Location to query",
+                            "type": "string",
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "locale",
+                            "description": "Locale to use for localization",
+                            "type": "string",
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "bounds",
+                            "description": "Bounding box for hinting",
+                            "type": "string",
+                            "required": false
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "from_country",
+                            "description": "ISO 3166-1 alpha-2 country to bias by",
+                            "type": "string",
+                            "required": false
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "ignore_cache",
+                            "description": "Bypass the geocoder cache (true/false)",
+                            "type": "string",
+                            "required": false
+                        }
+                    ],
+                    "summary": "Geocode an unstructured string"
+                }
+            ]
+        }
+
+    ],
+    "models": {
+        "provider_response": {
+            "description": "Results of a geocoder query(unstructured, structured or reverse) from a provider",
+            "type": "object",
+            "required": [ "raw_response", "logging_info" ],
+	    "additionalProperties": false,
+            "properties": {
+                "raw_response": {
+                    "type": "string"
+                },
+                "logging_info": {
+                    "type": "object"
+                }
+            }
+        }
+    }
+}
