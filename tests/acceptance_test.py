@@ -42,7 +42,7 @@ def test_400_if_required_query_args_absent():
         method='GET',
         path='/sample/path_arg1/resource',
         params={},
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
@@ -53,7 +53,7 @@ def test_200_if_optional_query_args_absent():
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},  # no `optional_arg` arg
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     _validate_against_tween(request)
 
@@ -63,7 +63,7 @@ def test_400_if_request_arg_is_wrong_type():
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 1.0},
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
@@ -83,7 +83,7 @@ def test_400_if_path_arg_is_wrong_type():
         method='GET',
         path='/sample/invalid_arg/resource',
         params={'required_arg': 'test'},
-        matchdict={'path_arg': 'invalid_arg'}
+        matchdict={'path_arg': 'invalid_arg'},
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
@@ -140,7 +140,7 @@ def test_response_validation_disabled_by_default():
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     # Omit the logging_info key from the response. If response validation
     # occurs, we'll fail it.
@@ -159,7 +159,7 @@ def test_500_when_response_is_missing_required_field():
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
@@ -179,7 +179,7 @@ def test_500_when_response_arg_is_wrong_type():
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     data = {
         'raw_response': 1.0,
@@ -202,7 +202,7 @@ def test_response_validation_success():
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
-        matchdict={'path_arg': 'path_arg1'}
+        matchdict={'path_arg': 'path_arg1'},
     )
     data = {
         'raw_response': 'foo',
