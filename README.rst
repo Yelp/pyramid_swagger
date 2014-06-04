@@ -14,4 +14,4 @@ In particular, in currently offers two main features:
 * Response validation (and automatic 5xx errors). Disabled by default, enabled
   via a registry setting.
 
-Full documentation is available at https://readthedocs.org/projects/pyramid-swagger/
+Full documentation is available at http://pyramid-swagger.readthedocs.org/.
