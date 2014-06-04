@@ -1,4 +1,5 @@
 import pytest
+import pyramid_swagger
 import mock
 import simplejson
 from pyramid.httpexceptions import HTTPClientError
@@ -10,9 +11,7 @@ from pyramid.response import Response
 import pyramid.testing
 
 
-def get_registry(settings=None):
-    if settings is None:
-        settings = {}
+def get_registry(settings):
     registry = Registry('testing')
     config = Configurator(registry=registry)
     if getattr(registry, 'settings', None) is None:
@@ -116,11 +115,20 @@ def test_200_if_body_has_missing_optional_arg():
     _validate_against_tween(request)
 
 
-def test_200_if_required_body_is_present():
+def test_200_if_required_body_is_model():
     request = pyramid.testing.DummyRequest(
         method='POST',
         path='/sample_post',
         json_body={'foo': 'test', 'bar': 'test'},
+    )
+    _validate_against_tween(request)
+
+
+def test_200_if_required_body_is_primitives():
+    request = pyramid.testing.DummyRequest(
+        method='POST',
+        path='/post_with_primitive_body',
+        json_body=["foo", "bar"],
     )
     _validate_against_tween(request)
 
@@ -203,3 +211,9 @@ def test_response_validation_success():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     _validate_against_tween(request, response=response, settings=settings)
+
+
+def test_pyramid_swagger_import():
+    registry = Registry('testing')
+    config = Configurator(registry=registry)
+    pyramid_swagger.includeme(config)

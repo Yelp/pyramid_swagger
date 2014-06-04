@@ -18,8 +18,27 @@
                             "type": "body_model",
                             "required": true
                         }
-                    ],
-                    "summary": "Tests required body parameters"
+                    ]
+                }
+            ]
+        },
+
+        {
+            "path": "/post_with_primitive_body",
+            "operations": [
+                {
+                    "method": "POST",
+                    "nickname": "post_with_primitive_body",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "body",
+                            "name": "content",
+                            "type": "array",
+                            "items": [{"type": "string"}],
+                            "required": true
+                        }
+                    ]
                 }
             ]
         },
