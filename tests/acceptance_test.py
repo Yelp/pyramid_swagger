@@ -33,6 +33,7 @@ def _validate_against_tween(request, response=None, settings=None):
     settings = settings or dict({
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': False,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     registry = get_registry(settings=settings)
     validation_tween_factory(handler, registry)(request)
@@ -177,6 +178,7 @@ def test_response_validation_disabled_by_default():
     )
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     _validate_against_tween(request, response=response, settings=settings)
 
@@ -191,6 +193,7 @@ def test_500_when_response_is_missing_required_field():
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     # Omit the logging_info key from the response.
     response = mock.Mock(
@@ -215,6 +218,7 @@ def test_500_when_response_arg_is_wrong_type():
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = mock.Mock(
         content=simplejson.dumps(data),
@@ -238,6 +242,7 @@ def test_response_validation_success():
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = mock.Mock(
         content=simplejson.dumps(data),
