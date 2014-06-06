@@ -6,6 +6,7 @@ The tests here all use the sample swagger spec stored in swagger.json at the
 root of this package.
 """
 import mock
+from pyramid.response import Response
 import pyramid.testing
 import simplejson
 from pyramid_swagger import tween
@@ -47,9 +48,9 @@ def test_validation_content_type_with_json():
         method='GET',
         path='/status',
     )
-    response = mock.Mock(
-        content=simplejson.dumps({'status': 'good'}),
-        headers={'header1': 'application/json; charset=UTF-8'},
+    response = Response(
+        body=simplejson.dumps({'status': 'good'}),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     validate_outgoing_response(request, response, fake_schema, None)
 
@@ -60,8 +61,8 @@ def test_raw_string():
         method='GET',
         path='/status/version',
     )
-    response = mock.Mock(
-        content='abe1351f',
-        headers={'header1': 'application/text; charset=UTF-8'},
+    response = Response(
+        body='abe1351f',
+        headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
     validate_outgoing_response(request, response, fake_schema, None)
