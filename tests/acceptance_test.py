@@ -1,4 +1,5 @@
 import pytest
+import jsonschema.exceptions
 import pyramid_swagger
 import simplejson
 from pyramid.httpexceptions import HTTPClientError
@@ -31,6 +32,7 @@ def _validate_against_tween(request, response=None, settings=None):
     settings = settings or dict({
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': False,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     registry = get_registry(settings=settings)
     validation_tween_factory(handler, registry)(request)
@@ -175,6 +177,7 @@ def test_response_validation_disabled_by_default():
     )
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     _validate_against_tween(request, response=response, settings=settings)
 
@@ -189,6 +192,7 @@ def test_500_when_response_is_missing_required_field():
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     # Omit the logging_info key from the response.
     response = Response(
@@ -213,6 +217,7 @@ def test_500_when_response_arg_is_wrong_type():
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = Response(
         body=simplejson.dumps(data),
@@ -236,6 +241,7 @@ def test_response_validation_success():
     settings = {
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = Response(
         body=simplejson.dumps(data),
@@ -248,3 +254,23 @@ def test_pyramid_swagger_import():
     registry = Registry('testing')
     config = Configurator(registry=registry)
     pyramid_swagger.includeme(config)
+
+
+def test_bad_schema_validated_on_tween_creation_by_default():
+    settings = {
+        'pyramid_swagger.schema_path':
+            'tests/sample_malformed_swagger_spec.json',
+    }
+    registry = get_registry(settings=settings)
+    with pytest.raises(jsonschema.exceptions.ValidationError):
+        validation_tween_factory(mock.ANY, registry)
+
+
+def test_bad_schema_not_validated_if_spec_validation_is_disabled():
+    settings = {
+        'pyramid_swagger.schema_path':
+            'tests/sample_malformed_swagger_spec.json',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+    }
+    registry = get_registry(settings=settings)
+    validation_tween_factory(mock.ANY, registry)
