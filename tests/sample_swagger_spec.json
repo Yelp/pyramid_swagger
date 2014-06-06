@@ -44,6 +44,37 @@
         },
 
         {
+            "path": "/get_with_non_string_query_args",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "get_with_non_string_query_args",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "query",
+                            "name": "int_arg",
+                            "type": "integer",
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "float_arg",
+                            "type": "float",
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "boolean_arg",
+                            "type": "boolean",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
             "path": "/sample/{path_arg}/resource",
             "operations": [
                 {
@@ -69,6 +100,37 @@
                             "name": "optional_arg",
                             "type": "string",
                             "required": false
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
+            "path": "/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "sample_nonstring",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "path",
+                            "name": "int_arg",
+                            "type": "integer",
+                            "required": true
+                        },
+                        {
+                            "paramType": "path",
+                            "name": "float_arg",
+                            "type": "float",
+                            "required": true
+                        },
+                        {
+                            "paramType": "path",
+                            "name": "boolean_arg",
+                            "type": "boolean",
+                            "required": true
                         }
                     ]
                 }

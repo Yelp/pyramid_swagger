@@ -126,6 +126,31 @@ def _validate_response(request, response, schema_data, schema_resolver):
         raise HTTPInternalServerError(str(exc))
 
 
+def cast_request_param(request_schema, param_name, param_value):
+    """Try to cast a request param (e.g. query arg, POST data) from a string to
+    its specified type in the schema. This allows validating non-string params.
+
+    :param schema_map: request schema
+    :type schema_map: dict
+    :param param_name: param name
+    :type: string
+    :param param_name: param value
+    :type: string
+    """
+    type_to_cast_fn = {
+        'integer': int,
+        'float': float,
+        'boolean': bool,
+    }
+
+    param_type = request_schema['properties'].get(param_name, {}).get('type')
+    try:
+        return type_to_cast_fn.get(param_type, lambda x: x)(param_value)
+    except ValueError:
+        # Ignore type error, let jsonschema validation handle incorrect types
+        return param_value
+
+
 def validate_incoming_request(request, schema_map, resolver):
     """Validates an incoming request against our schemas.
 
@@ -146,18 +171,28 @@ def validate_incoming_request(request, schema_map, resolver):
             # may be nice in the future to do the necessary munging to make
             # everything Draft4 compatible, although the Swagger UI will
             # probably never truly support Draft4.
+            request_query_params = dict(
+                (k, cast_request_param(schema_map.request_query_schema, k, v))
+                for k, v
+                in request.params.items()
+            )
             Draft3Validator(
                 schema_map.request_query_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
-            ).validate(dict(request.params))
+            ).validate(request_query_params)
 
         if schema_map.request_path_schema:
+            request_path_params = dict(
+                (k, cast_request_param(schema_map.request_path_schema, k, v))
+                for k, v
+                in request.matchdict.items()
+            )
             Draft3Validator(
                 schema_map.request_path_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
-            ).validate(dict(request.matchdict))
+            ).validate(request_path_params)
 
         # Body validation
         if schema_map.request_body_schema:

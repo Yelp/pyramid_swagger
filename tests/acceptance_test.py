@@ -58,7 +58,7 @@ def test_200_if_optional_query_args_absent():
     _validate_against_tween(request)
 
 
-def test_400_if_request_arg_is_wrong_type():
+def test_200_if_request_arg_is_wrong_type():
     request = pyramid.testing.DummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
@@ -67,6 +67,19 @@ def test_400_if_request_arg_is_wrong_type():
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
+
+
+def test_200_if_request_arg_types_are_not_strings():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/get_with_non_string_query_args',
+        params={
+            'int_arg': '5',
+            'float_arg': '3.14',
+            'boolean_arg': 'true',
+        }
+    )
+    _validate_against_tween(request)
 
 
 def test_400_if_path_not_in_swagger():
@@ -87,6 +100,19 @@ def test_400_if_path_arg_is_wrong_type():
     )
     with pytest.raises(HTTPClientError):
         _validate_against_tween(request)
+
+
+def test_200_if_path_arg_types_are_not_strings():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample/nonstring/3/1.4/false',
+        matchdict={
+            'int_arg': '3',
+            'float_arg': '1.4',
+            'boolean_arg': 'false'
+        },
+    )
+    _validate_against_tween(request)
 
 
 def test_400_if_required_body_is_missing():
