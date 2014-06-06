@@ -3,6 +3,7 @@ import jsonschema.exceptions
 import pyramid_swagger
 import simplejson
 from pyramid.httpexceptions import HTTPClientError
+import mock
 from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.config import Configurator
 from pyramid_swagger.tween import validation_tween_factory
