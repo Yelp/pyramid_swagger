@@ -1,6 +1,5 @@
 import pytest
 import pyramid_swagger
-import mock
 import simplejson
 from pyramid.httpexceptions import HTTPClientError
 from pyramid.httpexceptions import HTTPInternalServerError
@@ -170,8 +169,8 @@ def test_response_validation_disabled_by_default():
     )
     # Omit the logging_info key from the response. If response validation
     # occurs, we'll fail it.
-    response = mock.Mock(
-        content=simplejson.dumps({'raw_response': 'foo'}),
+    response = Response(
+        body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     settings = {
@@ -192,8 +191,8 @@ def test_500_when_response_is_missing_required_field():
         'pyramid_swagger.enable_response_validation': True,
     }
     # Omit the logging_info key from the response.
-    response = mock.Mock(
-        content=simplejson.dumps({'raw_response': 'foo'}),
+    response = Response(
+        body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     with pytest.raises(HTTPInternalServerError):
@@ -215,8 +214,8 @@ def test_500_when_response_arg_is_wrong_type():
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
     }
-    response = mock.Mock(
-        content=simplejson.dumps(data),
+    response = Response(
+        body=simplejson.dumps(data),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     with pytest.raises(HTTPInternalServerError):
@@ -238,8 +237,8 @@ def test_response_validation_success():
         'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
         'pyramid_swagger.enable_response_validation': True,
     }
-    response = mock.Mock(
-        content=simplejson.dumps(data),
+    response = Response(
+        body=simplejson.dumps(data),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     _validate_against_tween(request, response=response, settings=settings)

@@ -228,10 +228,20 @@ def validate_outgoing_response(request, response, schema_map, resolver):
 
 
 def prepare_body(response):
-    if 'application/json; charset=UTF-8' in response.headers.values():
-        return simplejson.loads(response.content)
+    # content_type and charset must both be set to access response.text
+    if response.content_type is None:
+        raise HTTPClientError(
+            'Response validation error: Content-Type must be set'
+        )
+    if response.charset is None:
+        raise HTTPClientError(
+            'Response validation error: Content-Type charset must be set'
+        )
+
+    if 'application/json' in response.content_type:
+        return simplejson.loads(response.text)
     else:
-        return response.content
+        return response.text
 
 
 def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
