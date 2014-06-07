@@ -93,6 +93,7 @@ def test_400_if_path_not_in_swagger():
         _validate_against_tween(request)
 
 
+@pytest.mark.xfail(reason='Issue #13')
 def test_400_if_path_arg_is_wrong_type():
     request = pyramid.testing.DummyRequest(
         method='GET',
@@ -104,6 +105,7 @@ def test_400_if_path_arg_is_wrong_type():
         _validate_against_tween(request)
 
 
+@pytest.mark.xfail(reason='Issue #13')
 def test_200_if_path_arg_types_are_not_strings():
     request = pyramid.testing.DummyRequest(
         method='GET',

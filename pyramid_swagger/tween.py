@@ -193,18 +193,6 @@ def validate_incoming_request(request, schema_map, resolver):
                 types=EXTENDED_TYPES,
             ).validate(request_query_params)
 
-        if schema_map.request_path_schema:
-            request_path_params = dict(
-                (k, cast_request_param(schema_map.request_path_schema, k, v))
-                for k, v
-                in request.matchdict.items()
-            )
-            Draft3Validator(
-                schema_map.request_path_schema,
-                resolver=resolver,
-                types=EXTENDED_TYPES,
-            ).validate(request_path_params)
-
         # Body validation
         if schema_map.request_body_schema:
             body = getattr(request, 'json_body', {})
