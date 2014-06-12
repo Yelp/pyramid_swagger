@@ -120,7 +120,7 @@ def get_model_resolver(schema):
 
 
 class SchemaMap(namedtuple(
-        'SM', [
+        'SchemaMap', [
             'request_query_schema',
             'request_body_schema',
             'response_body_schema'

@@ -22,8 +22,14 @@ skip_validation_re = re.compile(ur'/(static)\b')
 
 def extract_relevant_schema(request, schema_resolver):
     for (s_path, s_method), value in schema_resolver.schema_map.iteritems():
-        if partial_path_match(request.path, s_path):
+        if partial_path_match(request.path, s_path) and (s_method == request.method):
             return value
+
+    raise HTTPClientError(
+        'Could not find the relevant path (%s) '
+        'in the Swagger spec. Perhaps you forgot'
+        'to add it?'.format(request.path)
+    )
 
 
 def validation_tween_factory(handler, registry):
@@ -40,14 +46,6 @@ def validation_tween_factory(handler, registry):
 
     def validator_tween(request):
         schema_data = extract_relevant_schema(request, schema_resolver)
-
-        # Bail early if we cannot find a relevant entry in the Swagger spec.
-        if schema_data is None:
-            raise HTTPClientError(
-                'Could not find the relevant path (%s) '
-                'in the Swagger spec. Perhaps you forgot'
-                'to add it?'.format(request.path)
-            )
 
         # If we found a matching entry, validate the request against it.
         try:
