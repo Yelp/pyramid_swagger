@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 
 import jsonschema.exceptions
@@ -6,6 +7,7 @@ import simplejson
 from jsonschema.validators import Draft3Validator
 from jsonschema.validators import Draft4Validator
 from pyramid.httpexceptions import HTTPClientError
+from pyramid.httpexceptions import HTTPInternalServerError
 
 from .load_schema import load_schema
 
@@ -17,11 +19,11 @@ EXTENDED_TYPES = {
 
 
 # We don't always care about validating every endpoint (e.g. static resources)
-skip_validation_re = re.compile(ur'/(static)\b')
+skip_validation_re = re.compile(r'/(static)\b')
 
 
 def extract_relevant_schema(request, schema_resolver):
-    for (s_path, s_method), value in schema_resolver.schema_map.iteritems():
+    for (s_path, s_method), value in schema_resolver.schema_map.items():
         if partial_path_match(request.path, s_path) and (s_method == request.method):
             return value
 
@@ -44,23 +46,80 @@ def validation_tween_factory(handler, registry):
         'swagger.json'
     ))
 
+    enable_response_validation = registry.settings.get(
+        'pyramid_swagger.enable_response_validation',
+        False
+    )
+
     def validator_tween(request):
         schema_data = extract_relevant_schema(request, schema_resolver)
 
-        # If we found a matching entry, validate the request against it.
-        try:
-            validate_incoming_request(
+        _validate_request(
+            request,
+            schema_data,
+            schema_resolver.resolver
+        )
+        response = handler(request)
+        if enable_response_validation:
+            _validate_response(
                 request,
+                response,
                 schema_data,
                 schema_resolver.resolver
             )
-            return handler(request)
-        except jsonschema.exceptions.ValidationError as exc:
-            # This will alter our stack trace slightly, but Pyramid knows how
-            # to render it. And the real value is in the message anyway.
-            raise HTTPClientError(str(exc))
+
+        return response
 
     return validator_tween
+
+
+def _validate_request(request, schema_data, resolver):
+    """ Validates a request and raises an HTTPClientError on failure.
+
+    :param request: the request object to validate
+    :type request: Pyramid request object passed into a view
+    :param schema_map: our mapping from request data to schemas (see
+        load_schema)
+    :type schema_map: dict
+    :param resolver: the request object to validate
+    :type resolver: Pyramid request object passed into a view
+    """
+    try:
+        validate_incoming_request(
+            request,
+            schema_data,
+            resolver
+        )
+    except jsonschema.exceptions.ValidationError as exc:
+        # This will alter our stack trace slightly, but Pyramid knows how
+        # to render it. And the real value is in the message anyway.
+        raise HTTPClientError(str(exc))
+
+
+def _validate_response(request, response, schema_data, schema_resolver):
+    """ Validates a response and raises an HTTPInternalServerError on failure.
+
+    :param request: the request object
+    :type request: Pyramid request object passed into a view
+    :param response: the response object to validate
+    :type response: Pyramid response object passed into a view
+    :param schema_map: our mapping from request data to schemas (see
+        load_schema)
+    :type schema_map: dict
+    :param resolver: the request object to validate
+    :type resolver: Pyramid request object passed into a view
+    """
+    try:
+        validate_outgoing_response(
+            request,
+            response,
+            schema_data,
+            schema_resolver
+        )
+    except jsonschema.exceptions.ValidationError as exc:
+        # This will alter our stack trace slightly, but Pyramid knows how
+        # to render it. And the real value is in the message anyway.
+        raise HTTPInternalServerError(str(exc))
 
 
 def validate_incoming_request(request, schema_map, resolver):
@@ -91,11 +150,12 @@ def validate_incoming_request(request, schema_map, resolver):
 
         # Body validation
         if schema_map.request_body_schema:
+            body = getattr(request, 'json_body', None)
             Draft3Validator(
                 schema_map.request_body_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
-            ).validate(request.json_body)
+            ).validate(body)
 
 
 def validate_outgoing_response(request, response, schema_map, resolver):

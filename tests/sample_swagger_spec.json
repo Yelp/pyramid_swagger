@@ -5,6 +5,28 @@
     "apis": [
 
         {
+            "path": "/required_body",
+            "description": "requires a body",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "required_body",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "body",
+                            "name": "content",
+                            "type": "array",
+                            "items": { "type": "array", "items": { "type": "number" }},
+                            "required": true
+                        }
+                    ],
+                    "summary": "Tests required body parameters"
+                }
+            ]
+        },
+
+        {
             "path": "/geocoder/{api_provider}/forward_unstructured",
             "description": "Forward Unstructured Geocoding",
             "operations": [

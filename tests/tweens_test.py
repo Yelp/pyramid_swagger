@@ -10,7 +10,7 @@ def test_extract_relevant_schema_diff_methods():
         path="/foo/bar",
         method="GET"
     )
-    mock_resolver = mock.Mock(schema_map=mock.Mock(iteritems=mock.Mock(return_value=[
+    mock_resolver = mock.Mock(schema_map=mock.Mock(items=mock.Mock(return_value=[
         (('/foo/{bars}', 'PUT'), 1234),
         (('/foo/{bars}', 'GET'), 666)
     ])))
