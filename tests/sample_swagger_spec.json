@@ -1,94 +1,156 @@
 {
     "apiVersion": "0.1",
     "swaggerVersion": "1.2",
-    "basePath": "/geocoder",
+    "basePath": "http://localhost:9999/sample",
     "apis": [
 
         {
-            "path": "/required_body",
-            "description": "requires a body",
+            "path": "/sample_post",
             "operations": [
                 {
-                    "method": "GET",
-                    "nickname": "required_body",
+                    "method": "POST",
+                    "nickname": "sample_post",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "body",
+                            "name": "content",
+                            "type": "body_model",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
+            "path": "/post_with_primitive_body",
+            "operations": [
+                {
+                    "method": "POST",
+                    "nickname": "post_with_primitive_body",
                     "type": "object",
                     "parameters": [
                         {
                             "paramType": "body",
                             "name": "content",
                             "type": "array",
-                            "items": { "type": "array", "items": { "type": "number" }},
+                            "items": { "type": "string" },
                             "required": true
                         }
-                    ],
-                    "summary": "Tests required body parameters"
+                    ]
                 }
             ]
         },
 
         {
-            "path": "/geocoder/{api_provider}/forward_unstructured",
-            "description": "Forward Unstructured Geocoding",
+            "path": "/get_with_non_string_query_args",
             "operations": [
                 {
                     "method": "GET",
-                    "nickname": "forward_unstructured",
-                    "type": "provider_response",
+                    "nickname": "get_with_non_string_query_args",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "query",
+                            "name": "int_arg",
+                            "type": "integer",
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "float_arg",
+                            "type": "float",
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "boolean_arg",
+                            "type": "boolean",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
+            "path": "/sample/{path_arg}/resource",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "standard",
+                    "type": "standard_response",
                     "parameters": [
                         {
                             "paramType": "path",
-                            "name": "api_provider",
-                            "description": "The external provider you wish to use",
+                            "name": "path_arg",
                             "type": "string",
-                            "enum": ["apple", "bing", "google_v3", "nokia", "static", "tomtom"],
+                            "enum": ["path_arg1", "path_arg2"],
                             "required": true
                         },
                         {
                             "paramType": "query",
-                            "name": "query",
-                            "description": "Location to query",
-                            "type": "string",
-                            "required": true
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "locale",
-                            "description": "Locale to use for localization",
+                            "name": "required_arg",
                             "type": "string",
                             "required": true
                         },
                         {
                             "paramType": "query",
-                            "name": "bounds",
-                            "description": "Bounding box for hinting",
-                            "type": "string",
-                            "required": false
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "from_country",
-                            "description": "ISO 3166-1 alpha-2 country to bias by",
-                            "type": "string",
-                            "required": false
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "ignore_cache",
-                            "description": "Bypass the geocoder cache (true/false)",
+                            "name": "optional_arg",
                             "type": "string",
                             "required": false
                         }
-                    ],
-                    "summary": "Geocode an unstructured string"
+                    ]
+                }
+            ]
+        },
+
+        {
+            "path": "/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "sample_nonstring",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "paramType": "path",
+                            "name": "int_arg",
+                            "type": "integer",
+                            "required": true
+                        },
+                        {
+                            "paramType": "path",
+                            "name": "float_arg",
+                            "type": "float",
+                            "required": true
+                        },
+                        {
+                            "paramType": "path",
+                            "name": "boolean_arg",
+                            "type": "boolean",
+                            "required": true
+                        }
+                    ]
                 }
             ]
         }
 
     ],
     "models": {
-        "provider_response": {
-            "id": "provider_response",
-            "description": "Results of a geocoder query(unstructured, structured or reverse) from a provider",
+	"body_model": {
+            "id": "body_model",
+            "type": "object",
+            "required": [ "foo" ],
+	    "additionalProperties": false,
+            "properties": {
+                "foo": { "type": "string" },
+                "bar": { "type": "string" }
+            }
+        },
+        "standard_response": {
+            "id": "standard_response",
             "type": "object",
             "required": [ "raw_response", "logging_info" ],
 	    "additionalProperties": false,

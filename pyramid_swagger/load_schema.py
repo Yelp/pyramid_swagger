@@ -3,6 +3,7 @@
 Module to load swagger specs and build efficient data structures for querying
 them during request validation.
 """
+from __future__ import unicode_literals
 from collections import namedtuple
 
 import simplejson
@@ -51,7 +52,40 @@ def extract_query_param_schema(schema):
         return None
 
 
-def extract_body_schema(schema):
+def extract_path_schema(schema):
+    """Extract a schema for path variables for an endpoint.
+
+    As an example, this would take this swagger schema:
+        {
+            "paramType": "path",
+            "type": "string",
+            "enum": ["foo", "bar"],
+            "required": true
+        }
+    To this jsonschema:
+        {
+            "type": "string",
+            "enum": ["foo", "bar"],
+        }
+    Which we can then validate against a JSON object we construct from the
+    pyramid request.
+    """
+    properties = dict(
+        (s['name'], strip_swagger_markup(s))
+        for s in schema['parameters']
+        if s['paramType'] == 'path'
+    )
+    if properties:
+        return {
+            'type': 'object',
+            'properties': properties,
+            'additionalProperties': False,
+        }
+    else:
+        return None
+
+
+def extract_body_schema(schema, models_schema):
     """Turn a swagger endpoint schema into an equivalent one to validate our
     request.
 
@@ -82,7 +116,14 @@ def extract_body_schema(schema):
         if s['paramType'] == 'body'
     ]
     if matching_body_schemas:
-        return strip_swagger_markup(matching_body_schemas[0])
+        schema = matching_body_schemas[0]
+        type_ref = extract_validatable_type(schema['type'], models_schema)
+        # Unpleasant, but we are forced to replace 'type' defns with proper
+        # jsonschema refs.
+        if '$ref' in type_ref:
+            del schema['type']
+            schema.update(type_ref)
+        return strip_swagger_markup(schema)
     else:
         return None
 
@@ -122,6 +163,7 @@ def get_model_resolver(schema):
 class SchemaMap(namedtuple(
         'SchemaMap', [
             'request_query_schema',
+            'request_path_schema',
             'request_body_schema',
             'response_body_schema'
         ])):
@@ -138,31 +180,51 @@ def build_request_to_schemas_map(schema):
     """Take the swagger schema and build a map from incoming path to a
     jsonschema for requests and responses."""
     request_to_schema = {}
+    schema_models = schema['models']
     for api in schema['apis']:
         path = api['path']
         for op in api['operations']:
-            key = (path, op['method'])
-            request_query_schema = extract_query_param_schema(op)
-            request_body_schema = extract_body_schema(op)
-
-            model_name = op['type']
-            if model_name in schema['models']:
-                response_body_schema = dict(schema['models'][model_name])
-            else:
-                response_body_schema = {
-                    "id": "default",
-                    "description": "primitive type container",
-                    "type": model_name,
-                }
-
             # Now that we have the necessary info for this particular
             # path/method combination, build our dict.
+            key = (path, op['method'])
             request_to_schema[key] = SchemaMap(
-                request_query_schema=request_query_schema,
-                request_body_schema=request_body_schema,
-                response_body_schema=response_body_schema,
+                request_query_schema=extract_query_param_schema(op),
+                request_path_schema=extract_path_schema(op),
+                request_body_schema=extract_body_schema(
+                    op,
+                    schema_models
+                ),
+                response_body_schema=extract_response_body_schema(
+                    op,
+                    schema_models
+                ),
             )
     return request_to_schema
+
+
+def extract_response_body_schema(op, schema_models):
+    if op['type'] in schema_models:
+        return extract_validatable_type(op['type'], schema_models)
+    else:
+        return {
+            'type': op['type'],
+        }
+
+
+def extract_validatable_type(type_name, models):
+    """Returns a jsonschema-compatible typename from the Swagger type.
+
+    This is necessary because for our Swagger specs to be compatible with
+    swagger-ui, they must not use a $ref to internal models.
+
+    :returns: A key-value that jsonschema can validate. Key will be either
+        'type' or '$ref' as is approriate.
+    :rtype: dict
+    """
+    if type_name in models:
+        return {'$ref': type_name}
+    else:
+        return {'type': type_name}
 
 
 class SchemaAndResolver(namedtuple('SAR', ['schema_map', 'resolver'])):

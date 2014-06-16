@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
 import re
 
 import jsonschema.exceptions
 import simplejson
-from jsonschema.validators import Draft3Validator
-from jsonschema.validators import Draft4Validator
-from pyramid.httpexceptions import HTTPClientError
-from pyramid.httpexceptions import HTTPInternalServerError
+from jsonschema.validators import Draft3Validator, Draft4Validator
+from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
+from .swagger_spec import validate_swagger_spec
 from .load_schema import load_schema
 
 
@@ -22,14 +22,14 @@ EXTENDED_TYPES = {
 skip_validation_re = re.compile(r'/(static)\b')
 
 
-def extract_relevant_schema(request, schema_resolver):
-    for (s_path, s_method), value in schema_resolver.schema_map.items():
+def swagger_schema_for_request(request, schema_map):
+    for (s_path, s_method), value in schema_map.items():
         if partial_path_match(request.path, s_path) and (s_method == request.method):
             return value
 
     raise HTTPClientError(
-        'Could not find the relevant path (%s) '
-        'in the Swagger spec. Perhaps you forgot'
+        'Could not find the relevant path ({0}) '
+        'in the Swagger spec. Perhaps you forgot '
         'to add it?'.format(request.path)
     )
 
@@ -41,18 +41,31 @@ def validation_tween_factory(handler, registry):
     delegating to the relevant matching view.
     """
     # Pre-load the schema outside our tween
-    schema_resolver = load_schema(registry.settings.get(
+    schema_path = registry.settings.get(
         'pyramid_swagger.schema_path',
         'swagger.json'
-    ))
+    )
+
+    enable_swagger_spec_validation = registry.settings.get(
+        'pyramid_swagger.enable_swagger_spec_validation',
+        True
+    )
 
     enable_response_validation = registry.settings.get(
         'pyramid_swagger.enable_response_validation',
         False
     )
 
+    if enable_swagger_spec_validation:
+        with open(schema_path) as f:
+            validate_swagger_spec(f.read())
+    schema_resolver = load_schema(schema_path)
+
     def validator_tween(request):
-        schema_data = extract_relevant_schema(request, schema_resolver)
+        schema_data = swagger_schema_for_request(
+            request,
+            schema_resolver.schema_map
+        )
 
         _validate_request(
             request,
@@ -122,6 +135,31 @@ def _validate_response(request, response, schema_data, schema_resolver):
         raise HTTPInternalServerError(str(exc))
 
 
+def cast_request_param(request_schema, param_name, param_value):
+    """Try to cast a request param (e.g. query arg, POST data) from a string to
+    its specified type in the schema. This allows validating non-string params.
+
+    :param schema_map: request schema
+    :type schema_map: dict
+    :param param_name: param name
+    :type: string
+    :param param_name: param value
+    :type: string
+    """
+    type_to_cast_fn = {
+        'integer': int,
+        'float': float,
+        'boolean': bool,
+    }
+
+    param_type = request_schema['properties'].get(param_name, {}).get('type')
+    try:
+        return type_to_cast_fn.get(param_type, lambda x: x)(param_value)
+    except ValueError:
+        # Ignore type error, let jsonschema validation handle incorrect types
+        return param_value
+
+
 def validate_incoming_request(request, schema_map, resolver):
     """Validates an incoming request against our schemas.
 
@@ -142,16 +180,21 @@ def validate_incoming_request(request, schema_map, resolver):
             # may be nice in the future to do the necessary munging to make
             # everything Draft4 compatible, although the Swagger UI will
             # probably never truly support Draft4.
+            request_query_params = dict(
+                (k, cast_request_param(schema_map.request_query_schema, k, v))
+                for k, v
+                in request.params.items()
+            )
             Draft3Validator(
                 schema_map.request_query_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
-            ).validate(dict(request.params))
+            ).validate(request_query_params)
 
         # Body validation
         if schema_map.request_body_schema:
-            body = getattr(request, 'json_body', None)
-            Draft3Validator(
+            body = getattr(request, 'json_body', {})
+            Draft4Validator(
                 schema_map.request_body_schema,
                 resolver=resolver,
                 types=EXTENDED_TYPES,
@@ -182,14 +225,29 @@ def validate_outgoing_response(request, response, schema_map, resolver):
 
 
 def prepare_body(response):
-    if 'application/json; charset=UTF-8' in response.headers.values():
-        return simplejson.loads(response.content)
+    # content_type and charset must both be set to access response.text
+    if response.content_type is None:
+        raise HTTPClientError(
+            'Response validation error: Content-Type must be set'
+        )
+    if response.charset is None:
+        raise HTTPClientError(
+            'Response validation error: Content-Type charset must be set'
+        )
+
+    if 'application/json' in response.content_type:
+        return simplejson.loads(response.text)
     else:
-        return response.content
+        return response.text
 
 
 def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
     """Validates if p1 and p2 matches, ignoring any kwargs in the string.
+
+    We need this to ensure we can match Swagger patterns like:
+        /foo/{id}
+    against the observed pyramid path
+        /foo/1
 
     :param p1: path of a url
     :type p1: string
@@ -199,14 +257,14 @@ def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
     :type kwarg_re: regex string
     :returns: boolean
     """
-    splitted_p1 = p1.split('/')
-    splitted_p2 = p2.split('/')
+    split_p1 = p1.split('/')
+    split_p2 = p2.split('/')
     pat = re.compile(kwarg_re)
-    if len(splitted_p1) != len(splitted_p2):
+    if len(split_p1) != len(split_p2):
         return False
-    for pos, partial_path in enumerate(splitted_p1):
-        if pat.match(partial_path) or pat.match(splitted_p2[pos]):
+    for pos, (partial_p1, partial_p2) in enumerate(zip(split_p1, split_p2)):
+        if pat.match(partial_p1) or pat.match(partial_p2):
             continue
-        if not partial_path == splitted_p2[pos]:
+        if not partial_p1 == partial_p2:
             return False
     return True

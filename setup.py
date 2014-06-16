@@ -35,6 +35,10 @@ setup(
     keywords='pyramid swagger validation',
 
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
+    package_data={
+        'pyramid_swagger': ['pyramid_swagger/swagger_spec_schemas/v1.2/*'],
+    },
+    include_package_data=True,
     install_requires=[
         'jsonschema',
         'pyramid',
