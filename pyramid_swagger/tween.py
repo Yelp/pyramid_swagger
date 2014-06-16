@@ -24,7 +24,10 @@ skip_validation_re = re.compile(r'/(static)\b')
 
 def swagger_schema_for_request(request, schema_map):
     for (s_path, s_method), value in schema_map.items():
-        if partial_path_match(request.path, s_path) and (s_method == request.method):
+        if (
+            partial_path_match(request.path, s_path) and
+            (s_method == request.method)
+        ):
             return value
 
     raise HTTPClientError(
