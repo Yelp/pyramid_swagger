@@ -29,6 +29,8 @@ def supported_methods(spec_method):
 
     Details: HEAD is not part of the swagger spec, but sometimes GET
     consumers will want to support it.
+
+    See also https://github.com/wordnik/swagger-core/issues/85
     """
     return {
         'GET': ('HEAD', 'GET')

@@ -37,8 +37,8 @@ def test_swagger_schema_for_request_not_found():
 
 
 def test_head_for_get():
-    """Tests that swagger_schema_for_request() raises exceptions when
-    a path is not found.
+    """Tests that swagger_schema_for_request() routes HEAD
+    requests to GET schemas.
     """
     mock_request = mock.Mock(
         path="/foo/bar",
