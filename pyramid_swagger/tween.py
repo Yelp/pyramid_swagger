@@ -22,11 +22,24 @@ EXTENDED_TYPES = {
 skip_validation_re = re.compile(r'/(static)\b')
 
 
+def supported_methods(spec_method):
+    """Returns a collection of methods which are supported for a given
+    specification method. This is because we don't want to fail
+    validation for HEAD requests to GET endpoints.
+
+    Details: HEAD is not part of the swagger spec, but sometimes GET
+    consumers will want to support it.
+    """
+    return {
+        'GET': ('HEAD', 'GET')
+    }.get(spec_method, (spec_method,))
+
+
 def swagger_schema_for_request(request, schema_map):
     for (s_path, s_method), value in schema_map.items():
         if (
             partial_path_match(request.path, s_path) and
-            (s_method == request.method)
+            (request.method in supported_methods(s_method))
         ):
             return value
 
