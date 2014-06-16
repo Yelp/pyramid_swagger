@@ -34,18 +34,3 @@ def test_swagger_schema_for_request_not_found():
         swagger_schema_for_request(mock_request, mock_schema_map)
     assert '/foo/bar' in str(excinfo)
     assert 'Could not find ' in str(excinfo)
-
-
-def test_head_for_get():
-    """Tests that swagger_schema_for_request() routes HEAD
-    requests to GET schemas.
-    """
-    mock_request = mock.Mock(
-        path="/foo/bar",
-        method="HEAD"
-    )
-    mock_schema_map = mock.Mock(items=mock.Mock(return_value=[
-        (('/foo/{bars}', 'GET'), 666)
-    ]))
-    # we just want no exception to be raised
-    swagger_schema_for_request(mock_request, mock_schema_map)
