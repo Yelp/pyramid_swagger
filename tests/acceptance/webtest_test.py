@@ -1,7 +1,4 @@
-import tests.acceptance.app
 import pytest
-import mock
-from pyramid.view import view_config
 
 
 @pytest.fixture
@@ -63,6 +60,15 @@ def test_400_if_path_not_in_swagger(test_app):
     assert res.status_code == 400
 
 
+def test_400_if_request_arg_is_wrong_type_but_not_castable(test_app):
+    res = test_app.get(
+        '/get_with_non_string_query_args',
+        params={'float_arg': 'foobar'},
+        expect_errors=True,
+    )
+    assert res.status_code == 400
+
+
 @pytest.mark.xfail(reason='Issue #13')
 def test_400_if_path_arg_is_wrong_type(test_app):
     res = test_app.get(
@@ -74,7 +80,7 @@ def test_400_if_path_arg_is_wrong_type(test_app):
 
 
 @pytest.mark.xfail(reason='Issue #13')
-def test_200_if_path_arg_types_are_not_strings(test_app):
+def test_200_if_path_arg_is_wrong_type_but_castable(test_app):
     res = test_app.get(
         '/sample/nonstring/3/1.4/false',
         expect_errors=True,

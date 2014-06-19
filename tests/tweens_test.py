@@ -3,8 +3,11 @@
 import mock
 import pytest
 from pyramid.httpexceptions import HTTPClientError
+from pyramid.httpexceptions import HTTPInternalServerError
+from pyramid.response import Response
 
 from pyramid_swagger.tween import swagger_schema_for_request
+from pyramid_swagger.tween import prepare_body
 
 
 def test_swagger_schema_for_request_different_methods():
@@ -34,3 +37,10 @@ def test_swagger_schema_for_request_not_found():
         swagger_schema_for_request(mock_request, mock_schema_map)
     assert '/foo/bar' in str(excinfo)
     assert 'Could not find ' in str(excinfo)
+
+
+def test_response_charset_missing_raises_5xx():
+    with pytest.raises(HTTPInternalServerError):
+        prepare_body(
+            Response(content_type='foo')
+        )
