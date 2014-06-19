@@ -70,7 +70,6 @@ def test_400_if_request_arg_is_wrong_type_but_not_castable(test_app):
     assert res.status_code == 400
 
 
-@pytest.mark.xfail(reason='Issue #13')
 def test_400_if_path_arg_is_wrong_type(test_app):
     res = test_app.get(
         '/sample/invalid_arg/resource',
@@ -80,11 +79,9 @@ def test_400_if_path_arg_is_wrong_type(test_app):
     assert res.status_code == 400
 
 
-@pytest.mark.xfail(reason='Issue #13')
 def test_200_if_path_arg_is_wrong_type_but_castable(test_app):
     res = test_app.get(
         '/sample/nonstring/3/1.4/false',
-        expect_errors=True,
     )
     assert res.status_code == 200
 

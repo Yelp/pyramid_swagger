@@ -3,7 +3,7 @@ from pyramid.view import view_config
 
 
 @view_config(route_name='sample_nonstring', renderer='json')
-def sample_nonstring(request, int_arg, float_arg, boolean_arg):
+def sample_nonstring(request):
     return {}
 
 

@@ -1,6 +1,7 @@
 import pytest
 import jsonschema.exceptions
 import pyramid_swagger
+import pyramid_swagger.tween
 import simplejson
 import mock
 from pyramid.httpexceptions import HTTPInternalServerError
@@ -35,7 +36,9 @@ def _validate_against_tween(request, response=None, settings=None):
         'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     registry = get_registry(settings=settings)
-    validation_tween_factory(handler, registry)(request)
+    # Let's make request validation a no-op so we can focus our tests.
+    with mock.patch.object(pyramid_swagger.tween, '_validate_request'):
+        validation_tween_factory(handler, registry)(request)
 
 
 def test_response_validation_disabled_by_default():
