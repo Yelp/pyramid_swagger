@@ -30,7 +30,7 @@ def _validate_against_tween(request, response=None, settings=None):
     def handler(request):
         return response or Response()
     settings = settings or dict({
-        'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
+        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     })
@@ -52,7 +52,7 @@ def test_response_validation_disabled_by_default():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     settings = {
-        'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
+        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     _validate_against_tween(request, response=response, settings=settings)
@@ -66,7 +66,7 @@ def test_500_when_response_is_missing_required_field():
         matchdict={'path_arg': 'path_arg1'},
     )
     settings = {
-        'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
+        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_response_validation': True,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
@@ -91,7 +91,7 @@ def test_500_when_response_arg_is_wrong_type():
         'logging_info': {'foo': 'bar'}
     }
     settings = {
-        'pyramid_swagger.schema_path': 'tests/sample_swagger_spec.json',
+        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_response_validation': True,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }

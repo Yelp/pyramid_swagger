@@ -4,11 +4,12 @@ import pytest
 @pytest.fixture
 def test_app(settings=None):
     """Fixture for setting up a test test_app with particular settings."""
-    from app import main
+    from .app import main
     from webtest import TestApp
     settings = settings or dict({
         'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_response_validation': False,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     return TestApp(main({}, **settings))
 
