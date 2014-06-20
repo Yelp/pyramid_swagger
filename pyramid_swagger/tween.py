@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from pyramid.interfaces import IRoutesMapper
 
 import re
 
@@ -63,6 +64,7 @@ def validation_tween_factory(handler, registry):
         with open(schema_path) as f:
             validate_swagger_spec(f.read())
     schema_resolver = load_schema(schema_path)
+    route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
         schema_data = swagger_schema_for_request(
@@ -71,6 +73,7 @@ def validation_tween_factory(handler, registry):
         )
 
         _validate_request(
+            route_mapper,
             request,
             schema_data,
             schema_resolver.resolver
@@ -89,7 +92,7 @@ def validation_tween_factory(handler, registry):
     return validator_tween
 
 
-def _validate_request(request, schema_data, resolver):
+def _validate_request(route_mapper, request, schema_data, resolver):
     """ Validates a request and raises an HTTPClientError on failure.
 
     :param request: the request object to validate
@@ -102,6 +105,7 @@ def _validate_request(request, schema_data, resolver):
     """
     try:
         validate_incoming_request(
+            route_mapper,
             request,
             schema_data,
             resolver
@@ -163,7 +167,7 @@ def cast_request_param(request_schema, param_name, param_value):
         return param_value
 
 
-def validate_incoming_request(request, schema_map, resolver):
+def validate_incoming_request(route_mapper, request, schema_map, resolver):
     """Validates an incoming request against our schemas.
 
     :param request: the request object to validate
@@ -193,6 +197,21 @@ def validate_incoming_request(request, schema_map, resolver):
                 resolver=resolver,
                 types=EXTENDED_TYPES,
             ).validate(request_query_params)
+
+        if schema_map.request_path_schema:
+            # We don't have access to this yet but let's go ahead and build the
+            # matchdict so we can validate it.
+            info = route_mapper(request)
+            matchdict = dict(
+                (k, cast_request_param(schema_map.request_path_schema, k, v))
+                for k, v
+                in info.get('match', {}).items()
+            )
+            Draft3Validator(
+                schema_map.request_path_schema,
+                resolver=resolver,
+                types=EXTENDED_TYPES,
+            ).validate(matchdict)
 
         # Body validation
         if schema_map.request_body_schema:
@@ -229,13 +248,9 @@ def validate_outgoing_response(request, response, schema_map, resolver):
 
 def prepare_body(response):
     # content_type and charset must both be set to access response.text
-    if response.content_type is None:
-        raise HTTPClientError(
-            'Response validation error: Content-Type must be set'
-        )
-    if response.charset is None:
-        raise HTTPClientError(
-            'Response validation error: Content-Type charset must be set'
+    if response.content_type is None or response.charset is None:
+        raise HTTPInternalServerError(
+            'Response validation error: Content-Type and charset must be set'
         )
 
     if 'application/json' in response.content_type:

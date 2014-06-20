@@ -7,7 +7,7 @@ from pyramid_swagger.swagger_spec import validate_swagger_spec
 
 @pytest.mark.skipif(sys.version_info >= (3, 2), reason='See Issue #20')
 def test_spec_validation_on_sample_spec():
-    with open('tests/sample_swagger_spec.json') as f:
+    with open('tests/acceptance/app/swagger.json') as f:
         sample_json = f.read()
     validate_swagger_spec(sample_json)
 
