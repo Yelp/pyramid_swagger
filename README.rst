@@ -6,7 +6,6 @@
 
 .. image:: https://landscape.io/github/striglia/pyramid_swagger/master/landscape.png
    :target: https://landscape.io/github/striglia/pyramid_swagger/master
-      :alt: Code Health
 
 pyramid_swagger
 =======================
