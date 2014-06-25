@@ -4,6 +4,9 @@
 .. image:: https://coveralls.io/repos/striglia/pyramid_swagger/badge.png?branch=master
   :target: https://coveralls.io/r/striglia/pyramid_swagger?branch=master
 
+.. image:: https://landscape.io/github/striglia/pyramid_swagger/master/landscape.png
+   :target: https://landscape.io/github/striglia/pyramid_swagger/master
+      :alt: Code Health
 
 pyramid_swagger
 =======================
