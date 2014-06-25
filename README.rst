@@ -1,5 +1,8 @@
-.. image:: https://travis-ci.org/striglia/pyramid_swagger.png
-  :target: https://travis-ci.org/striglia/pyramid_swagger
+.. image:: https://travis-ci.org/striglia/pyramid_swagger.png?branch=master
+  :target: https://travis-ci.org/striglia/pyramid_swagger?branch=master
+
+.. image:: https://coveralls.io/repos/striglia/pyramid_swagger/badge.png?branch=master
+  :target: https://coveralls.io/r/striglia/pyramid_swagger?branch=master
 
 
 pyramid_swagger
