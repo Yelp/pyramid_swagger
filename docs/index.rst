@@ -12,8 +12,7 @@ your interfaces in a Pyramid webapp.
 In particular, in currently offers the following main features:
 
 * Request validation (and automatic 4xx errors)
-* Response validation (and automatic 5xx errors). Disabled by default, enabled
-  via a registry setting.
+* Response validation (and automatic 5xx errors).
 * Swagger spec validation
 
 Each assumes your swagger spec is available at "swagger.json" in the project's
