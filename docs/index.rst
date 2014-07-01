@@ -9,8 +9,8 @@ Welcome to pyramid_swagger's documentation!
 This project offers convenient tools for using Swagger to define and validate
 your interfaces in a Pyramid webapp.
 
-It's purpose is to enforce your Swagger spec as well as serving the
-spec over HTTP to outside clients, all with minimal effort.
+It's purpose is to enforce your Swagger-defined api as well as serving it over
+HTTP to outside clients, all with minimal effort.
 
 Features include:
 
