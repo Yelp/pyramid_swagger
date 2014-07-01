@@ -1,26 +1,33 @@
 Configuring pyramid_swagger
 ===========================================
 
-By default, pyramid_swagger assumes your swagger spec is available at
+The pyramid_swagger library is intended to require very little configuration to
+get up and running.
+
+Currently, pyramid_swagger assumes your api declaration is available at
 "swagger.json" in the project's root, although you are free to configure this
 location via Pyramid's registry.
 
-A few relevant settings for your PasteDeploy .ini file:::
+A few relevant settings for your PasteDeploy .ini file:
+
+.. code-block:: ini
 
         [app:main]
-        # Add the pyramid_swagger request validation tween to your app
+        # Add the pyramid_swagger validation tween to your app (minimum required)
         pyramid.includes = pyramid_swagger
 
-        # Point pyramid_swagger at your swagger spec (defaults to swagger.json)
+        # Point pyramid_swagger at your api declaration (defaults to swagger.json)
         pyramid_swagger.schema_path = "swagger.json"
 
-        # Enable/disable response validation (off by default)
+        # Enable/disable response validation (false by default)
         pyramid_swagger.enable_response_validation = true
 
-        # Enable/disable swagger spec validation (on by default)
+        # Enable/disable swagger spec validation (true by default)
         pyramid_swagger.enable_swagger_spec_validation = true
 
-note that, equivalently, you can add these from your webapp:::
+note that, equivalently, you can add these during webapp configuration:
+
+.. code-block:: python
 
         def main(global_config, **settings):
             # ...
