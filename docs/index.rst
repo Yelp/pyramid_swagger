@@ -26,6 +26,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   quickstart
    configuration
    external_resources
    glossary

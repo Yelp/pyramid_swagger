@@ -4,16 +4,12 @@ Configuring pyramid_swagger
 The pyramid_swagger library is intended to require very little configuration to
 get up and running.
 
-Currently, pyramid_swagger assumes your api declaration is available at
-"swagger.json" in the project's root, although you are free to configure this
-location via Pyramid's registry.
-
-A few relevant settings for your PasteDeploy .ini file:
+A few relevant settings for your PasteDeploy .ini file (and their default settings):
 
 .. code-block:: ini
 
         [app:main]
-        # Add the pyramid_swagger validation tween to your app (minimum required)
+        # Add the pyramid_swagger validation tween to your app (required)
         pyramid.includes = pyramid_swagger
 
         # Point pyramid_swagger at your api declaration (defaults to swagger.json)
