@@ -6,19 +6,16 @@
 Welcome to pyramid_swagger's documentation!
 ===========================================
 
-This project offers convenient tools for using Swagger to define and validate
-your interfaces in a Pyramid webapp.
-
-It's purpose is to enforce your Swagger-defined api as well as serving it over
-HTTP to outside clients, all with minimal effort.
+This project offers convenient tools for using `Swagger <https://helloreverb.com/developers/swagger>`_ to define and validate
+your interfaces in a `Pyramid <http://www.pylonsproject.org/>`_ webapp.
 
 Features include:
 
-* Request validation (and automatic 4xx errors)
-
-* Response validation (and automatic 5xx errors).
+* Request and response validation
 
 * Swagger spec validation
+
+* Serving the swagger schema to interested clients (e.g. `Swagger UI <https://github.com/wordnik/swagger-ui>`_)
 
 
 Contents:
