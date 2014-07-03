@@ -183,31 +183,31 @@ def build_request_to_schemas_map(schema):
     schema_models = schema['models']
     for api in schema['apis']:
         path = api['path']
-        for op in api['operations']:
+        for operation in api['operations']:
             # Now that we have the necessary info for this particular
             # path/method combination, build our dict.
-            key = (path, op['method'])
+            key = (path, operation['method'])
             request_to_schema[key] = SchemaMap(
-                request_query_schema=extract_query_param_schema(op),
-                request_path_schema=extract_path_schema(op),
+                request_query_schema=extract_query_param_schema(operation),
+                request_path_schema=extract_path_schema(operation),
                 request_body_schema=extract_body_schema(
-                    op,
+                    operation,
                     schema_models
                 ),
                 response_body_schema=extract_response_body_schema(
-                    op,
+                    operation,
                     schema_models
                 ),
             )
     return request_to_schema
 
 
-def extract_response_body_schema(op, schema_models):
-    if op['type'] in schema_models:
-        return extract_validatable_type(op['type'], schema_models)
+def extract_response_body_schema(operation, schema_models):
+    if operation['type'] in schema_models:
+        return extract_validatable_type(operation['type'], schema_models)
     else:
         return {
-            'type': op['type'],
+            'type': operation['type'],
         }
 
 
@@ -250,8 +250,8 @@ def load_schema(schema_path):
 
     :returns: SchemaAndResolver
     """
-    with open(schema_path, 'r') as f:
-        schema = simplejson.load(f)
+    with open(schema_path, 'r') as schema_file:
+        schema = simplejson.load(schema_file)
     return SchemaAndResolver(
         schema_map=build_request_to_schemas_map(schema),
         resolver=get_model_resolver(schema),

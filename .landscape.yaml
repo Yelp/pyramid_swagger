@@ -1,3 +1,4 @@
 strictness: veryhigh
 ignore-paths:
     - docs
+    - setup.py

@@ -20,14 +20,14 @@ EXTENDED_TYPES = {
 
 
 # We don't always care about validating every endpoint (e.g. static resources)
-skip_validation_re = re.compile(r'/(static)\b')
+SKIP_VALIDATION_RE = re.compile(r'/(static)\b')
 
 
 def swagger_schema_for_request(request, schema_map):
     for (s_path, s_method), value in schema_map.items():
         if (
-            partial_path_match(request.path, s_path) and
-            (s_method == request.method)
+                partial_path_match(request.path, s_path) and
+                (s_method == request.method)
         ):
             return value
 
@@ -61,8 +61,8 @@ def validation_tween_factory(handler, registry):
     )
 
     if enable_swagger_spec_validation:
-        with open(schema_path) as f:
-            validate_swagger_spec(f.read())
+        with open(schema_path) as schema_file:
+            validate_swagger_spec(schema_file.read())
     schema_resolver = load_schema(schema_path)
     route_mapper = registry.queryUtility(IRoutesMapper)
 
@@ -180,7 +180,7 @@ def validate_incoming_request(route_mapper, request, schema_map, resolver):
     :returns: None
     """
     # Static URLs are skipped
-    if not skip_validation_re.match(request.path):
+    if not SKIP_VALIDATION_RE.match(request.path):
         if schema_map.request_query_schema:
             # You'll notice we use Draft3 some places and Draft4 in others.
             # Unfortunately this is just Swagger's inconsistency showing. It
@@ -237,7 +237,7 @@ def validate_outgoing_response(request, response, schema_map, resolver):
     :type resolver: a jsonschema resolver or None
     :returns: None
     """
-    if not skip_validation_re.match(request.path):
+    if not SKIP_VALIDATION_RE.match(request.path):
         body = prepare_body(response)
         Draft4Validator(
             schema_map.response_body_schema,
@@ -259,28 +259,28 @@ def prepare_body(response):
         return response.text
 
 
-def partial_path_match(p1, p2, kwarg_re=r'\{.*\}'):
-    """Validates if p1 and p2 matches, ignoring any kwargs in the string.
+def partial_path_match(path1, path2, kwarg_re=r'\{.*\}'):
+    """Validates if path1 and path2 matches, ignoring any kwargs in the string.
 
     We need this to ensure we can match Swagger patterns like:
         /foo/{id}
     against the observed pyramid path
         /foo/1
 
-    :param p1: path of a url
-    :type p1: string
-    :param p2: path of a url
-    :type p2: string
+    :param path1: path of a url
+    :type path1: string
+    :param path2: path of a url
+    :type path2: string
     :param kwarg_re: regex pattern to identify kwargs
     :type kwarg_re: regex string
     :returns: boolean
     """
-    split_p1 = p1.split('/')
-    split_p2 = p2.split('/')
+    split_p1 = path1.split('/')
+    split_p2 = path2.split('/')
     pat = re.compile(kwarg_re)
     if len(split_p1) != len(split_p2):
         return False
-    for pos, (partial_p1, partial_p2) in enumerate(zip(split_p1, split_p2)):
+    for partial_p1, partial_p2 in zip(split_p1, split_p2):
         if pat.match(partial_p1) or pat.match(partial_p2):
             continue
         if not partial_p1 == partial_p2:
