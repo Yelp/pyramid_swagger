@@ -13,7 +13,7 @@ Creating your first API declaration
 
 Creating your initial API declaration can be intimidating but don't fear, it's not nearly as much work as it might initially appear.
 
-To create your first API declaration, I encourage you to take a look at Swagger's official `PetStore example <petstore.swagger.wordnik.com>`_ and the associated API declarations `here <http://petstore.swagger.wordnik.com/api/api-docs/pet>`_ `, here <http://petstore.swagger.wordnik.com/api/api-docs/user>`_, `and here <http://petstore.swagger.wordnik.com/api/api-docs/store>`_. You'll notice that there are many features, but the core part of building a Swagger API is documenting each endpoint.
+To create your first API declaration, I encourage you to take a look at Swagger's official `PetStore example <http://petstore.swagger.wordnik.com>`_. You can even see the raw JSON for the associated API declarations, like the `Pet resource. <http://petstore.swagger.wordnik.com/api/api-docs/pet>`_. You'll notice that Swagger has a lot of details, but the core part of building a schema is documenting each endpoint's inputs and outputs.
 
 For your intial attempt, documenting an endpoint can be simplified to some basic components:
 
