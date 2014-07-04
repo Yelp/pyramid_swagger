@@ -57,7 +57,7 @@ def validation_tween_factory(handler, registry):
 
     enable_response_validation = registry.settings.get(
         'pyramid_swagger.enable_response_validation',
-        False
+        True
     )
 
     if enable_swagger_spec_validation:

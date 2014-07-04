@@ -32,7 +32,6 @@ def _validate_against_tween(request, response=None, settings=None):
         return response or Response()
     settings = settings or dict({
         'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
-        'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     registry = get_registry(settings=settings)
@@ -41,7 +40,7 @@ def _validate_against_tween(request, response=None, settings=None):
         validation_tween_factory(handler, registry)(request)
 
 
-def test_response_validation_disabled_by_default():
+def test_response_validation_enabled_by_default():
     request = pyramid.testing.DummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
@@ -58,7 +57,8 @@ def test_response_validation_disabled_by_default():
         'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
-    _validate_against_tween(request, response=response, settings=settings)
+    with pytest.raises(HTTPInternalServerError):
+        _validate_against_tween(request, response=response, settings=settings)
 
 
 def test_500_when_response_is_missing_required_field():
@@ -70,7 +70,6 @@ def test_500_when_response_is_missing_required_field():
     )
     settings = {
         'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
-        'pyramid_swagger.enable_response_validation': True,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     # Omit the logging_info key from the response.
@@ -95,7 +94,6 @@ def test_500_when_response_arg_is_wrong_type():
     }
     settings = {
         'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
-        'pyramid_swagger.enable_response_validation': True,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = Response(
