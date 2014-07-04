@@ -19,8 +19,8 @@ def validate_swagger_spec(swagger_spec_json):
         'pyramid_swagger',
         'swagger_spec_schemas/v1.2/apiDeclaration.json'
     )
-    with open(api_spec_path) as f:
-        schema = simplejson.loads(f.read())
+    with open(api_spec_path) as schema_file:
+        schema = simplejson.loads(schema_file.read())
         resolver = RefResolver(
             "file://{0}".format(api_spec_path),
             schema

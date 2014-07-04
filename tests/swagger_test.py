@@ -15,12 +15,12 @@ from pyramid_swagger.tween import validate_outgoing_response
 
 
 def test_validation_skips_path_properly():
-    assert tween.skip_validation_re.match('/static')
-    assert tween.skip_validation_re.match('/static/foobar')
-    assert not tween.skip_validation_re.match('/staticgeo')
+    assert tween.SKIP_VALIDATION_RE.match('/static')
+    assert tween.SKIP_VALIDATION_RE.match('/static/foobar')
+    assert not tween.SKIP_VALIDATION_RE.match('/staticgeo')
 
-    assert not tween.skip_validation_re.match('/v1/reverse-many')
-    assert not tween.skip_validation_re.match(
+    assert not tween.SKIP_VALIDATION_RE.match('/v1/reverse-many')
+    assert not tween.SKIP_VALIDATION_RE.match(
         '/geocoder/bing/forward_unstructured'
     )
 
