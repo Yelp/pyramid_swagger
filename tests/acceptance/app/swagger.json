@@ -107,6 +107,32 @@
         },
 
         {
+            "path": "/skip/{path_arg}/resource",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "standard",
+                    "type": "standard_response",
+                    "parameters": [
+                        {
+                            "paramType": "path",
+                            "name": "path_arg",
+                            "type": "string",
+                            "enum": ["path_arg1", "path_arg2"],
+                            "required": true
+                        },
+                        {
+                            "paramType": "query",
+                            "name": "required_arg",
+                            "type": "string",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
             "path": "/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}",
             "operations": [
                 {

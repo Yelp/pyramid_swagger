@@ -10,6 +10,7 @@ def test_app(settings=None):
         'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
         'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': False,
+        'pyramid_swagger.skip_validation': [r'/(skip)\b'],
     })
     return TestApp(main({}, **settings))
 
@@ -127,5 +128,12 @@ def test_200_if_required_body_is_primitives(test_app):
         '/post_with_primitive_body',
         ['foo', 'bar'],
         expect_errors=True,
+    )
+    assert res.status_code == 200
+
+
+def test_200_skip_validation_with_wrong_path(test_app):
+    res = test_app.get(
+        '/skip/test_request/resource'
     )
     assert res.status_code == 200
