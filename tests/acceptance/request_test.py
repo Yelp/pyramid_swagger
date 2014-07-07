@@ -7,7 +7,7 @@ def test_app(settings=None):
     from .app import main
     from webtest import TestApp
     settings = settings or dict({
-        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
         'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': False,
     })
