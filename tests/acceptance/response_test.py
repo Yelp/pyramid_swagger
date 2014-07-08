@@ -11,3 +11,15 @@ def test_200_for_normal_response_validation():
         {'foo': 'test', 'bar': 'test'},
     )
     assert res.status_code == 200
+
+
+def test_200_skip_validation_with_wrong_response():
+    settings = {
+        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.skip_validation': '/(sample)\\b',
+    }
+    res = test_app(settings).get(
+        '/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+    )
+    assert res.status_code == 200

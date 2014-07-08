@@ -21,6 +21,13 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Enable/disable swagger spec validation (true by default)
         pyramid_swagger.enable_swagger_spec_validation = true
 
+        # Skip validation for certain endpoints. Takes a list
+        # of regular expressions for the endpoints to skip
+        # Note: This are not raw strings, hence the double '\'
+        # (/(static)\\b, /(api-docs)\\b by default)
+        pyramid_swagger.skip_validation = /(static)\\b
+                                          /(api-docs)\\b
+
 Note that, equivalently, you can add these during webapp configuration:
 
 .. code-block:: python
@@ -30,5 +37,6 @@ Note that, equivalently, you can add these during webapp configuration:
             settings['pyramid_swagger.schema_path'] = 'swagger.json'
             settings['pyramid_swagger.enable_response_validation'] = True
             settings['pyramid_swagger.enable_swagger_spec_validation'] = True
+            settings['pyramid_swagger.skip_validation'] = ['/(static)\\b', '/(api-docs)\\b']
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')

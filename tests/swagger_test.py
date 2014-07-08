@@ -8,6 +8,7 @@ root of this package.
 import mock
 from pyramid.response import Response
 import pyramid.testing
+import re
 import simplejson
 from pyramid_swagger import tween
 from pyramid_swagger.tween import partial_path_match
@@ -15,12 +16,13 @@ from pyramid_swagger.tween import validate_outgoing_response
 
 
 def test_validation_skips_path_properly():
-    assert tween.SKIP_VALIDATION_RE.match('/static')
-    assert tween.SKIP_VALIDATION_RE.match('/static/foobar')
-    assert not tween.SKIP_VALIDATION_RE.match('/staticgeo')
+    expresion = re.compile(tween.SKIP_VALIDATION_DEFAULT[0])
+    assert expresion.match('/static')
+    assert expresion.match('/static/foobar')
+    assert not expresion.match('/staticgeo')
 
-    assert not tween.SKIP_VALIDATION_RE.match('/v1/reverse-many')
-    assert not tween.SKIP_VALIDATION_RE.match(
+    assert not expresion.match('/v1/reverse-many')
+    assert not expresion.match(
         '/geocoder/bing/forward_unstructured'
     )
 

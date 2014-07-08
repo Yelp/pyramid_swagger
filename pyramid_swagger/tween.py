@@ -18,9 +18,11 @@ EXTENDED_TYPES = {
     'int': (int,),
 }
 
-
 # We don't always care about validating every endpoint (e.g. static resources)
-SKIP_VALIDATION_RE = re.compile(r'/(static)\b')
+SKIP_VALIDATION_DEFAULT = [
+    '/(static)\\b',
+    '/(api-docs)\\b'
+]
 
 
 def swagger_schema_for_request(request, schema_map):
@@ -60,6 +62,18 @@ def validation_tween_factory(handler, registry):
         True
     )
 
+    # Static URLs and /api-docs skip validation by default
+    skip_validation = registry.settings.get(
+        'pyramid_swagger.skip_validation',
+        SKIP_VALIDATION_DEFAULT
+    )
+    if isinstance(skip_validation, list):
+        skip_validation = [
+            re.compile(endpoint) for endpoint in skip_validation
+        ]
+    else:
+        skip_validation = [re.compile(skip_validation)]
+
     if enable_swagger_spec_validation:
         with open(schema_path) as schema_file:
             validate_swagger_spec(schema_file.read())
@@ -67,6 +81,12 @@ def validation_tween_factory(handler, registry):
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
+
+        # Skip validation for the specified endpoints
+        for skip_validation_re in skip_validation:
+            if skip_validation_re.match(request.path):
+                return handler(request)
+
         schema_data = swagger_schema_for_request(
             request,
             schema_resolver.schema_map
@@ -179,48 +199,46 @@ def validate_incoming_request(route_mapper, request, schema_map, resolver):
     :type resolver: Pyramid request object passed into a view
     :returns: None
     """
-    # Static URLs are skipped
-    if not SKIP_VALIDATION_RE.match(request.path):
-        if schema_map.request_query_schema:
-            # You'll notice we use Draft3 some places and Draft4 in others.
-            # Unfortunately this is just Swagger's inconsistency showing. It
-            # may be nice in the future to do the necessary munging to make
-            # everything Draft4 compatible, although the Swagger UI will
-            # probably never truly support Draft4.
-            request_query_params = dict(
-                (k, cast_request_param(schema_map.request_query_schema, k, v))
-                for k, v
-                in request.params.items()
-            )
-            Draft3Validator(
-                schema_map.request_query_schema,
-                resolver=resolver,
-                types=EXTENDED_TYPES,
-            ).validate(request_query_params)
+    if schema_map.request_query_schema:
+        # You'll notice we use Draft3 some places and Draft4 in others.
+        # Unfortunately this is just Swagger's inconsistency showing. It
+        # may be nice in the future to do the necessary munging to make
+        # everything Draft4 compatible, although the Swagger UI will
+        # probably never truly support Draft4.
+        request_query_params = dict(
+            (k, cast_request_param(schema_map.request_query_schema, k, v))
+            for k, v
+            in request.params.items()
+        )
+        Draft3Validator(
+            schema_map.request_query_schema,
+            resolver=resolver,
+            types=EXTENDED_TYPES,
+        ).validate(request_query_params)
 
-        if schema_map.request_path_schema:
-            # We don't have access to this yet but let's go ahead and build the
-            # matchdict so we can validate it.
-            info = route_mapper(request)
-            matchdict = dict(
-                (k, cast_request_param(schema_map.request_path_schema, k, v))
-                for k, v
-                in info.get('match', {}).items()
-            )
-            Draft3Validator(
-                schema_map.request_path_schema,
-                resolver=resolver,
-                types=EXTENDED_TYPES,
-            ).validate(matchdict)
+    if schema_map.request_path_schema:
+        # We don't have access to this yet but let's go ahead and build the
+        # matchdict so we can validate it.
+        info = route_mapper(request)
+        matchdict = dict(
+            (k, cast_request_param(schema_map.request_path_schema, k, v))
+            for k, v
+            in info.get('match', {}).items()
+        )
+        Draft3Validator(
+            schema_map.request_path_schema,
+            resolver=resolver,
+            types=EXTENDED_TYPES,
+        ).validate(matchdict)
 
-        # Body validation
-        if schema_map.request_body_schema:
-            body = getattr(request, 'json_body', {})
-            Draft4Validator(
-                schema_map.request_body_schema,
-                resolver=resolver,
-                types=EXTENDED_TYPES,
-            ).validate(body)
+    # Body validation
+    if schema_map.request_body_schema:
+        body = getattr(request, 'json_body', {})
+        Draft4Validator(
+            schema_map.request_body_schema,
+            resolver=resolver,
+            types=EXTENDED_TYPES,
+        ).validate(body)
 
 
 def validate_outgoing_response(request, response, schema_map, resolver):
@@ -237,13 +255,12 @@ def validate_outgoing_response(request, response, schema_map, resolver):
     :type resolver: a jsonschema resolver or None
     :returns: None
     """
-    if not SKIP_VALIDATION_RE.match(request.path):
-        body = prepare_body(response)
-        Draft4Validator(
-            schema_map.response_body_schema,
-            resolver=resolver,
-            types=EXTENDED_TYPES,
-        ).validate(body)
+    body = prepare_body(response)
+    Draft4Validator(
+        schema_map.response_body_schema,
+        resolver=resolver,
+        types=EXTENDED_TYPES,
+    ).validate(body)
 
 
 def prepare_body(response):

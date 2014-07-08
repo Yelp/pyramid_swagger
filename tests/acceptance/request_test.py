@@ -146,3 +146,14 @@ def test_400_if_extra_query_args(test_app):
         expect_errors=True,
     )
     assert res.status_code == 400
+
+
+def test_200_skip_validation_with_wrong_path():
+    settings = {
+        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.skip_validation': ['/(sample)\\b'],
+    }
+    res = test_app(settings).get(
+        '/sample/test_request/resource'
+    )
+    assert res.status_code == 200
