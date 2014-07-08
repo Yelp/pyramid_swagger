@@ -7,8 +7,9 @@ from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.response import Response
 
 from pyramid_swagger.load_schema import SchemaAndResolver
-from pyramid_swagger.tween import schema_and_resolver_for_request
 from pyramid_swagger.tween import prepare_body
+from pyramid_swagger.tween import schema_and_resolver_for_request
+from pyramid_swagger.tween import validation_tween_factory
 
 
 def test_swagger_schema_for_request_different_methods():
@@ -53,4 +54,13 @@ def test_response_charset_missing_raises_5xx():
     with pytest.raises(HTTPInternalServerError):
         prepare_body(
             Response(content_type='foo')
+        )
+
+
+def test_unconfigured_schema_dir_raises_error():
+    """If we send a settings dict without schema_dir, fail fast."""
+    with pytest.raises(ValueError):
+        validation_tween_factory(
+            mock.ANY,
+            mock.Mock(settings={})
         )
