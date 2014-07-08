@@ -129,3 +129,20 @@ def test_200_if_required_body_is_primitives(test_app):
         expect_errors=True,
     )
     assert res.status_code == 200
+
+
+def test_400_if_extra_body_args(test_app):
+    res = test_app.post_json(
+        '/sample_post',
+        {'foo': 'test', 'bar': 'test', 'made_up_argument': 1},
+        expect_errors=True,
+    )
+    assert res.status_code == 400
+
+
+def test_400_if_extra_query_args(test_app):
+    res = test_app.get(
+        '/sample/path_arg1/resource?made_up_argument=1',
+        expect_errors=True,
+    )
+    assert res.status_code == 400
