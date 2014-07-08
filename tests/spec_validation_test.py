@@ -3,8 +3,8 @@ import pytest
 
 import sys
 import simplejson
-from pyramid_swagger.swagger_spec import validate_api_declaration
-from pyramid_swagger.swagger_spec import validate_resource_listing
+from pyramid_swagger.ingest import validate_api_declaration
+from pyramid_swagger.ingest import validate_resource_listing
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 2), reason='See Issue #20')
