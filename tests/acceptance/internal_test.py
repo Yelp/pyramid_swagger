@@ -112,7 +112,7 @@ def test_pyramid_swagger_import():
 
 def test_bad_schema_validated_on_tween_creation_by_default():
     settings = {
-        'pyramid_swagger.schema_path':
+        'pyramid_swagger.schema_directory':
             'tests/sample_schemas/bad_app/',
     }
     registry = get_registry(settings=settings)
@@ -122,7 +122,7 @@ def test_bad_schema_validated_on_tween_creation_by_default():
 
 def test_bad_schema_not_validated_if_spec_validation_is_disabled():
     settings = {
-        'pyramid_swagger.schema_path':
+        'pyramid_swagger.schema_directory':
             'tests/sample_schemas/bad_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }

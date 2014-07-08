@@ -9,8 +9,7 @@ import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
-from .swagger_spec import validate_swagger_spec
-from .load_schema import load_schema
+from .ingest import ingest_schema_files
 
 
 EXTENDED_TYPES = {
@@ -23,13 +22,20 @@ EXTENDED_TYPES = {
 SKIP_VALIDATION_RE = re.compile(r'/(static)\b')
 
 
-def swagger_schema_for_request(request, schema_map):
-    for (s_path, s_method), value in schema_map.items():
-        if (
-                partial_path_match(request.path, s_path) and
-                (s_method == request.method)
-        ):
-            return value
+def schema_and_resolver_for_request(request, schema_resolvers):
+    """Takes a request and returns the relevant schema, ready for validation.
+
+    :returns: (schema_map, resolver) for this particular request.
+    """
+    for schema_resolver in schema_resolvers:
+        schema_map = schema_resolver.schema_map
+        resolver = schema_resolver.resolver
+        for (s_path, s_method), value in schema_map.items():
+            if (
+                    partial_path_match(request.path, s_path) and
+                    (s_method == request.method)
+            ):
+                return (value, resolver)
 
     raise HTTPClientError(
         'Could not find the relevant path ({0}) '
@@ -44,10 +50,10 @@ def validation_tween_factory(handler, registry):
     Note this is very simple -- it validates requests and responses while
     delegating to the relevant matching view.
     """
-    # Pre-load the schema outside our tween
-    schema_path = registry.settings.get(
-        'pyramid_swagger.schema_path',
-        'swagger.json'
+    # By default, assume cwd contains the swagger schemas.
+    schema_dir = registry.settings.get(
+        'pyramid_swagger.schema_directory',
+        None
     )
 
     enable_swagger_spec_validation = registry.settings.get(
@@ -60,23 +66,23 @@ def validation_tween_factory(handler, registry):
         True
     )
 
-    if enable_swagger_spec_validation:
-        with open(schema_path) as schema_file:
-            validate_swagger_spec(schema_file.read())
-    schema_resolver = load_schema(schema_path)
+    schema_resolvers = ingest_schema_files(
+        schema_dir,
+        enable_swagger_spec_validation
+    )
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
-        schema_data = swagger_schema_for_request(
+        schema_data, resolver = schema_and_resolver_for_request(
             request,
-            schema_resolver.schema_map
+            schema_resolvers
         )
 
         _validate_request(
             route_mapper,
             request,
             schema_data,
-            schema_resolver.resolver
+            resolver
         )
         response = handler(request)
         if enable_response_validation:
@@ -84,7 +90,7 @@ def validation_tween_factory(handler, registry):
                 request,
                 response,
                 schema_data,
-                schema_resolver.resolver
+                resolver
             )
 
         return response

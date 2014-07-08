@@ -8,21 +8,40 @@ import simplejson
 import jsonschema
 
 
-def validate_swagger_spec(swagger_spec_json):
-    """Validate a swagger spec.
+def validate_swagger_schemas(resource_listing_json, resources):
+    validate_resource_listing(resource_listing_json)
+    for resource in resources:
+        with open(resource) as resource_file:
+            resource_json = simplejson.load(resource_file)
+        validate_api_declaration(resource_json)
 
-    :param swagger_spec_json: The spec to validate, as JSON
-    :type swagger_spec_json: string
+
+def validate_resource_listing(resource_listing_json):
+    resource_spec_path = resource_filename(
+        'pyramid_swagger',
+        'swagger_spec_schemas/v1.2/resourceListing.json'
+    )
+    validate_jsonschema(resource_spec_path, resource_listing_json)
+
+
+def validate_api_declaration(api_declaration_json):
+    """Validate a swagger schema.
+
+    :param schema_dir: the directory schema files live inside
+    :type schema_dir: string
     """
-    swagger_spec = simplejson.loads(swagger_spec_json)
     api_spec_path = resource_filename(
         'pyramid_swagger',
         'swagger_spec_schemas/v1.2/apiDeclaration.json'
     )
-    with open(api_spec_path) as schema_file:
+    validate_jsonschema(api_spec_path, api_declaration_json)
+
+
+def validate_jsonschema(spec_path, json_object):
+    with open(spec_path) as schema_file:
         schema = simplejson.loads(schema_file.read())
         resolver = RefResolver(
-            "file://{0}".format(api_spec_path),
+            "file://{0}".format(spec_path),
             schema
         )
-        jsonschema.validate(swagger_spec, schema, resolver=resolver)
+        jsonschema.validate(json_object, schema, resolver=resolver)
