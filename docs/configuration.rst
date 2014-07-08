@@ -37,6 +37,6 @@ Note that, equivalently, you can add these during webapp configuration:
             settings['pyramid_swagger.schema_path'] = 'swagger.json'
             settings['pyramid_swagger.enable_response_validation'] = True
             settings['pyramid_swagger.enable_swagger_spec_validation'] = True
-            settings['pyramid_swagger.skip_validation'] = [r'/(static)\b', r'/(api-docs)\b']
+            settings['pyramid_swagger.skip_validation'] = ['/(static)\\b', '/(api-docs)\\b']
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')
