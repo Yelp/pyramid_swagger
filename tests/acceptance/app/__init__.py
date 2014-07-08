@@ -30,11 +30,6 @@ def sample_post(request):
     return {}
 
 
-@view_config(route_name='skip_validation', renderer='json')
-def skip_validation(request):
-    return {}
-
-
 def main(global_config, **settings):
     """ Very basic pyramid app """
     config = Configurator(settings=settings)
@@ -52,8 +47,6 @@ def main(global_config, **settings):
     )
     config.add_route('post_with_primitive_body', '/post_with_primitive_body')
     config.add_route('sample_post', '/sample_post')
-
-    config.add_route('skip_validation', '/skip/{string}/resource')
 
     config.scan()
     return config.make_wsgi_app()
