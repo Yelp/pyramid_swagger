@@ -55,6 +55,10 @@ def validation_tween_factory(handler, registry):
         'pyramid_swagger.schema_directory',
         None
     )
+    if schema_dir is None:
+        raise ValueError(
+            'Configuration missing for "pyramid_swagger.schema_directory"!'
+        )
 
     enable_swagger_spec_validation = registry.settings.get(
         'pyramid_swagger.enable_swagger_spec_validation',
