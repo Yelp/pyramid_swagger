@@ -23,8 +23,10 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
 
         # Skip validation for certain endpoints. Takes a list
         # of regular expressions for the endpoints to skip
-        # ([r'/(static)\b', r'/(api-docs)\b'] by default)
-        pyramid_swagger.skip_validation = [r'/(static)\b', r'/(api-docs)\b']
+        # Note: This are not raw strings, hence the double '\'
+        # (/(static)\\b, /(api-docs)\\b by default)
+        pyramid_swagger.skip_validation = /(static)\\b
+                                          /(api-docs)\\b
 
 Note that, equivalently, you can add these during webapp configuration:
 

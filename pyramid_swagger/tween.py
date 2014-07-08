@@ -18,9 +18,11 @@ EXTENDED_TYPES = {
     'int': (int,),
 }
 
-
 # We don't always care about validating every endpoint (e.g. static resources)
-SKIP_VALIDATION_RE = re.compile(r'/(static)\b')
+SKIP_VALIDATION_DEFAULT = [
+    '/(static)\\b',
+    '/(api-docs)\\b'
+]
 
 
 def swagger_schema_for_request(request, schema_map):
@@ -63,12 +65,14 @@ def validation_tween_factory(handler, registry):
     # Static URLs and /api-docs skip validation by default
     skip_validation = registry.settings.get(
         'pyramid_swagger.skip_validation',
-        [
-            r'/(static)\b',
-            r'/(api-docs)\b'
-        ]
+        SKIP_VALIDATION_DEFAULT
     )
-    skip_validation = [re.compile(endpoint) for endpoint in skip_validation]
+    if isinstance(skip_validation, list):
+        skip_validation = [
+            re.compile(endpoint) for endpoint in skip_validation
+        ]
+    else:
+        skip_validation = [re.compile(skip_validation)]
 
     if enable_swagger_spec_validation:
         with open(schema_path) as schema_file:
