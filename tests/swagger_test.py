@@ -11,7 +11,6 @@ import pyramid.testing
 import re
 import simplejson
 from pyramid_swagger import tween
-from pyramid_swagger.tween import partial_path_match
 from pyramid_swagger.tween import validate_outgoing_response
 
 
@@ -24,21 +23,6 @@ def test_validation_skips_path_properly():
     assert not expresion.match('/v1/reverse-many')
     assert not expresion.match(
         '/geocoder/bing/forward_unstructured'
-    )
-
-
-def test_partial_path_match():
-    assert partial_path_match(
-        '/v1/bing/forward_unstructured',
-        '/v1/bing/forward_unstructured'
-    )
-    assert partial_path_match(
-        '/v1/{api_provider}/forward_unstructured',
-        '/v1/bing/forward_unstructured'
-    )
-    assert not partial_path_match(
-        '/v1/google/forward_unstructured',
-        '/v1/bing/forward_unstructured'
     )
 
 
