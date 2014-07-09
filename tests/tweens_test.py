@@ -11,6 +11,7 @@ from pyramid.response import Response
 
 from pyramid_swagger import tween
 from pyramid_swagger.tween import prepare_body
+from pyramid_swagger.tween import should_skip_validation
 from pyramid_swagger.tween import validate_outgoing_response
 from pyramid_swagger.tween import validation_tween_factory
 
@@ -33,13 +34,13 @@ def test_unconfigured_schema_dir_raises_error():
 
 def test_validation_skips_path_properly():
     skip_res = [re.compile(r) for r in tween.SKIP_VALIDATION_DEFAULT]
-    assert any([s.match('/static') for s in skip_res])
-    assert any([s.match('/static/foobar') for s in skip_res])
-    assert any([s.match('/api-docs') for s in skip_res])
-    assert any([s.match('/api-docs/foobar') for s in skip_res])
+    assert should_skip_validation(skip_res, '/static')
+    assert should_skip_validation(skip_res, '/static/foobar')
+    assert should_skip_validation(skip_res, '/api-docs')
+    assert should_skip_validation(skip_res, '/api-docs/foobar')
 
-    assert not any([s.match('/sample') for s in skip_res])
-    assert not any([s.match('/sample/resources') for s in skip_res])
+    assert not should_skip_validation(skip_res, '/sample')
+    assert not should_skip_validation(skip_res, '/sample/resources')
 
 
 # TODO: Should probably be migrated to acceptance tests after we make mocking
