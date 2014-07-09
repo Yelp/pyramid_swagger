@@ -9,7 +9,10 @@ from pkg_resources import resource_filename
 from .load_schema import load_schema
 
 
-def find_resource_names(api_docs_json, schema_dir):
+API_DOCS_FILENAME = 'api_docs.json'
+
+
+def find_resource_names(api_docs_json):
     return [
         api['path'].lstrip('/')
         for api in api_docs_json['apis']
@@ -25,21 +28,21 @@ def ingest_schema_files(schema_dir, should_validate_schemas):
         Swagger 1.2 spec.
     :type should_validate_schemas: bool
     """
-    resource_listing = os.path.join(schema_dir, 'api_docs.json')
+    resource_listing = os.path.join(schema_dir, API_DOCS_FILENAME)
     with open(resource_listing) as resource_listing_file:
         resource_listing_json = simplejson.load(resource_listing_file)
 
-    resource_filenames = [
+    resource_filepaths = [
         os.path.join(schema_dir, '{0}.json'.format(x))
-        for x in find_resource_names(resource_listing_json, schema_dir)
+        for x in find_resource_names(resource_listing_json)
     ]
 
     if should_validate_schemas:
-        validate_swagger_schemas(resource_listing_json, resource_filenames)
+        validate_swagger_schemas(resource_listing_json, resource_filepaths)
 
     return [
         load_schema(resource)
-        for resource in resource_filenames
+        for resource in resource_filepaths
     ]
 
 
