@@ -35,8 +35,11 @@ def test_validation_skips_path_properly():
     skip_res = [re.compile(r) for r in tween.SKIP_VALIDATION_DEFAULT]
     assert any([s.match('/static') for s in skip_res])
     assert any([s.match('/static/foobar') for s in skip_res])
+    assert any([s.match('/api-docs') for s in skip_res])
+    assert any([s.match('/api-docs/foobar') for s in skip_res])
 
     assert not any([s.match('/sample') for s in skip_res])
+    assert not any([s.match('/sample/resources') for s in skip_res])
 
 
 # TODO: Should probably be migrated to acceptance tests after we make mocking

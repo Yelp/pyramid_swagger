@@ -22,7 +22,7 @@ EXTENDED_TYPES = {
 # We don't always care about validating every endpoint (e.g. static resources)
 SKIP_VALIDATION_DEFAULT = [
     '/(static)\\b',
-    '/(api-docs)\\b'
+    '/(api-docs).*'
 ]
 
 

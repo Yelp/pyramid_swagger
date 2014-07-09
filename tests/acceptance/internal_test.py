@@ -104,12 +104,6 @@ def test_500_when_response_arg_is_wrong_type():
         _validate_against_tween(request, response=response, settings=settings)
 
 
-def test_pyramid_swagger_import():
-    registry = Registry('testing')
-    config = Configurator(registry=registry)
-    pyramid_swagger.includeme(config)
-
-
 def test_bad_schema_validated_on_tween_creation_by_default():
     settings = {
         'pyramid_swagger.schema_directory':

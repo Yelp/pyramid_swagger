@@ -43,7 +43,13 @@ def build_schema_mapping(schema_dir):
 
 
 def ingest_resources(listing, mapping, should_validate_schemas):
-    """Consume the Swagger schemas and produce a queryable datastructure."""
+    """Consume the Swagger schemas and produce a queryable datastructure.
+
+    :param listing: Filepath to a resource listing
+    :type listing: string
+    :param mapping: Map from resource name to filepath of its api declaration
+    :type mapping: dict
+    """
     resource_filepaths = mapping.values()
     if should_validate_schemas:
         validate_swagger_schemas(
