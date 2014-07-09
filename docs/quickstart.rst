@@ -46,7 +46,7 @@ Well you need one other ingredient -- a resource listing. These break up your se
           ]
         }
 
-Now place the API declaration you wrote previously in :samp:`swagger_schema/sample.json`. You'll notice that our path is named the same as our API declaration file -- this is not by accident! 
+Now place the API declaration you wrote previously in :samp:`swagger_schema/sample.json`. You'll notice that our path is named the same as our API declaration file -- this is not by accident! The path has no relation to the paths described in your API declaration, it is only used internally to help Swagger discover your schemas.
 
 Add pyramid_swagger to your webapp
 -----------------------------------
