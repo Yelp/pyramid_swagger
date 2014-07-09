@@ -1,0 +1,13 @@
+{
+  "swaggerVersion": "1.2",
+  "apis": [
+    {
+      "path": "/sample",
+      "description": "Sample valid api declaration."
+    },
+    {
+      "path": "/other_sample",
+      "description": "Two heads are better than one."
+    }
+  ]
+}

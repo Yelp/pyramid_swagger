@@ -30,9 +30,23 @@ You may find that the process of writing your API down in the Swagger format is 
 Where to put your API declaration
 -----------------------------------
 
-Great, so we have one large JSON file containing our API declaration for all endpoints our service supports. Where do we put it?
+Great, so we have one large JSON file containing our API declaration for all endpoints our service supports. What now?
 
-The default location pyramid_swagger looks is the :samp:`swagger.json` file in the root of your application. In the event you want to configure this location, :doc:`see options here </configuration>`.
+Well you need one other ingredient -- a resource listing. These break up your service into logical resources. To get started, let's just create an extremely simple one. Write the following into :samp:`swagger_schema/api_docs.json`.
+
+.. code-block:: json
+
+        {
+          "swaggerVersion": "1.2",
+          "apis": [
+            {
+              "path": "/sample",
+              "description": "Sample valid api declaration."
+            }
+          ]
+        }
+
+Now place the API declaration you wrote previously in :samp:`swagger_schema/sample.json`. You'll notice that our path is named the same as our API declaration file -- this is not by accident! The path has no relation to the paths described in your API declaration, it is only used internally to help Swagger discover your schemas.
 
 Add pyramid_swagger to your webapp
 -----------------------------------
@@ -45,6 +59,7 @@ We'll show you the .ini method here, but you can read how to imperatively add th
 
         [app:main]
         pyramid.includes = pyramid_swagger
+        pyramid_swagger.schema_directory = "swagger_schema/"
 
 With that, when your app starts you will get the benefit of:
 

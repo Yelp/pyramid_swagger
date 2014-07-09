@@ -31,7 +31,7 @@ def _validate_against_tween(request, response=None, settings=None):
     def handler(request):
         return response or Response()
     settings = settings or dict({
-        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     registry = get_registry(settings=settings)
@@ -54,7 +54,7 @@ def test_response_validation_enabled_by_default():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     settings = {
-        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     with pytest.raises(HTTPInternalServerError):
@@ -69,7 +69,7 @@ def test_500_when_response_is_missing_required_field():
         matchdict={'path_arg': 'path_arg1'},
     )
     settings = {
-        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     # Omit the logging_info key from the response.
@@ -93,7 +93,7 @@ def test_500_when_response_arg_is_wrong_type():
         'logging_info': {'foo': 'bar'}
     }
     settings = {
-        'pyramid_swagger.schema_path': 'tests/acceptance/app/swagger.json',
+        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = Response(
@@ -112,8 +112,8 @@ def test_pyramid_swagger_import():
 
 def test_bad_schema_validated_on_tween_creation_by_default():
     settings = {
-        'pyramid_swagger.schema_path':
-            'tests/sample_malformed_swagger_spec.json',
+        'pyramid_swagger.schema_directory':
+            'tests/sample_schemas/bad_app/',
     }
     registry = get_registry(settings=settings)
     with pytest.raises(jsonschema.exceptions.ValidationError):
@@ -122,8 +122,8 @@ def test_bad_schema_validated_on_tween_creation_by_default():
 
 def test_bad_schema_not_validated_if_spec_validation_is_disabled():
     settings = {
-        'pyramid_swagger.schema_path':
-            'tests/sample_malformed_swagger_spec.json',
+        'pyramid_swagger.schema_directory':
+            'tests/sample_schemas/bad_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     registry = get_registry(settings=settings)

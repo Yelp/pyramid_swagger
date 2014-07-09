@@ -7,7 +7,7 @@ swagger api-docs (often swagger api)
   The preferred term for the resource listing and associated api declarations. This is so-named to avoid confusion with the Swagger Specification and the actual implementation of your service.
 
 resource listing
-  The top-level declaration of the various Swagger resources your service exposes. Each service must have an associated api declaration.
+  The top-level declaration of the various Swagger resources your service exposes. Each resource must have an associated api declaration.
 
 api declaration
   The description of each endpoint a particular Swagger service provides, with complete input and output declared.
