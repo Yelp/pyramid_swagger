@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 """Unit tests for tweens.py"""
 import mock
+import pyramid.testing
 import pytest
+import simplejson
 from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.response import Response
 
+
+from pyramid_swagger import tween
 from pyramid_swagger.tween import prepare_body
+from pyramid_swagger.tween import validate_outgoing_response
 from pyramid_swagger.tween import validation_tween_factory
 
 
@@ -23,3 +28,42 @@ def test_unconfigured_schema_dir_raises_error():
             mock.ANY,
             mock.Mock(settings={})
         )
+
+
+def test_validation_skips_path_properly():
+    assert tween.SKIP_VALIDATION_RE.match('/static')
+    assert tween.SKIP_VALIDATION_RE.match('/static/foobar')
+    assert not tween.SKIP_VALIDATION_RE.match('/staticgeo')
+
+    assert not tween.SKIP_VALIDATION_RE.match('/v1/reverse-many')
+    assert not tween.SKIP_VALIDATION_RE.match(
+        '/geocoder/bing/forward_unstructured'
+    )
+
+
+# TODO: Should probably be migrated to acceptance tests after we make mocking
+# schemas easier there.
+def test_validation_content_type_with_json():
+    fake_schema = mock.Mock(response_body_schema={'type': 'object'})
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/status',
+    )
+    response = Response(
+        body=simplejson.dumps({'status': 'good'}),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+    validate_outgoing_response(request, response, fake_schema, None)
+
+
+def test_raw_string():
+    fake_schema = mock.Mock(response_body_schema={'type': 'string'})
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/status/version',
+    )
+    response = Response(
+        body='abe1351f',
+        headers={'Content-Type': 'application/text; charset=UTF-8'},
+    )
+    validate_outgoing_response(request, response, fake_schema, None)
