@@ -8,8 +8,18 @@ import simplejson
 from jsonschema.validators import RefResolver
 
 
-def validate_swagger_schemas(resource_listing_json, resources):
-    validate_resource_listing(resource_listing_json)
+def validate_swagger_schemas(resource_listing, resources):
+    """Validate the structure of Swagger schemas against the spec.
+
+    :param resource_listing: A filepath to a Swagger resource listing
+    :type resource_listing: string
+    :param resources: A list of filespaths to Swagger API declarations
+    :type resources: [string]
+    :raises: jsonschema ValidationErrors on malformed schemas
+    """
+    with open(resource_listing) as listing_file:
+        validate_resource_listing(simplejson.load(listing_file))
+
     for resource in resources:
         with open(resource) as resource_file:
             resource_json = simplejson.load(resource_file)

@@ -4,8 +4,11 @@ service.
 """
 import re
 
-from .ingest import ingest_schema_files
-from pyramid.httpexceptions import HTTPClientError
+
+class PathNotMatchedError(Exception):
+    """Raised when a SwaggerSchema object is given a request it cannot match
+    against its stored schema."""
+    pass
 
 
 class SwaggerSchema(object):
@@ -15,11 +18,8 @@ class SwaggerSchema(object):
     json objects against their schemas.
     """
 
-    def __init__(self, schema_dir, enable_swagger_spec_validation):
-        self.schema_resolvers = ingest_schema_files(
-            schema_dir,
-            enable_swagger_spec_validation
-        )
+    def __init__(self, schema_resolvers):
+        self.schema_resolvers = schema_resolvers
 
     def schema_and_resolver_for_request(self, request):
         """Takes a request and returns the relevant schema, ready for
@@ -37,9 +37,9 @@ class SwaggerSchema(object):
                 ):
                     return (value, resolver)
 
-        raise HTTPClientError(
+        raise PathNotMatchedError(
             'Could not find the relevant path ({0}) '
-            'in the Swagger spec. Perhaps you forgot '
+            'in the Swagger schema. Perhaps you forgot '
             'to add it?'.format(request.path)
         )
 

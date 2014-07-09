@@ -3,17 +3,30 @@ Unit tests for the SwaggerSchema class.
 """
 import mock
 import pytest
-from pyramid.httpexceptions import HTTPClientError
 
+from pyramid_swagger.ingest import build_schema_mapping
+from pyramid_swagger.ingest import ingest_resources
+from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.model import SwaggerSchema
 from pyramid_swagger.model import partial_path_match
 
 
-def test_swagger_schema_for_request_different_methods():
+@pytest.fixture
+def schema():
+    schema_dir = 'tests/sample_schemas/good_app/'
+    enable_swagger_spec_validation = True
+
+    listing, mapping = build_schema_mapping(schema_dir)
+    return SwaggerSchema(ingest_resources(
+        listing,
+        mapping,
+        enable_swagger_spec_validation,
+    ))
+
+
+def test_swagger_schema_for_request_different_methods(schema):
     """Tests that schema_and_resolver_for_request() checks the request
     method."""
-    schema = SwaggerSchema('tests/sample_schemas/good_app/', True)
-
     # There exists a GET and POST for this endpoint. We should be able to call
     # either and have them pass validation.
     mock_request = mock.Mock(
@@ -37,19 +50,17 @@ def test_swagger_schema_for_request_different_methods():
     )
 
 
-def test_swagger_schema_for_request_not_found():
+def test_swagger_schema_for_request_not_found(schema):
     """Tests that schema_and_resolver_for_request() raises exceptions when
     a path is not found.
     """
-    schema = SwaggerSchema('tests/sample_schemas/good_app/', True)
-
     # There exists a GET and POST for this endpoint. We should be able to call
     # either and have them pass validation.
     mock_request = mock.Mock(
         path="/does_not_exist",
         method="GET"
     )
-    with pytest.raises(HTTPClientError) as excinfo:
+    with pytest.raises(PathNotMatchedError) as excinfo:
         schema.schema_and_resolver_for_request(mock_request)
     assert '/does_not_exist' in str(excinfo)
     assert 'Could not find ' in str(excinfo)

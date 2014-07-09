@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Unit tests for tweens.py"""
 import mock
+import re
 import pyramid.testing
 import pytest
 import simplejson
@@ -31,14 +32,11 @@ def test_unconfigured_schema_dir_raises_error():
 
 
 def test_validation_skips_path_properly():
-    assert tween.SKIP_VALIDATION_RE.match('/static')
-    assert tween.SKIP_VALIDATION_RE.match('/static/foobar')
-    assert not tween.SKIP_VALIDATION_RE.match('/staticgeo')
+    skip_res = [re.compile(r) for r in tween.SKIP_VALIDATION_DEFAULT]
+    assert any([s.match('/static') for s in skip_res])
+    assert any([s.match('/static/foobar') for s in skip_res])
 
-    assert not tween.SKIP_VALIDATION_RE.match('/v1/reverse-many')
-    assert not tween.SKIP_VALIDATION_RE.match(
-        '/geocoder/bing/forward_unstructured'
-    )
+    assert not any([s.match('/sample') for s in skip_res])
 
 
 # TODO: Should probably be migrated to acceptance tests after we make mocking

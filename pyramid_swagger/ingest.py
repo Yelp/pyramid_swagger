@@ -17,26 +17,39 @@ def find_resource_names(api_docs_json):
     ]
 
 
-def ingest_schema_files(schema_dir, should_validate_schemas):
-    """Consume the Swagger schemas and produce a queryable datastructure.
+def build_schema_mapping(schema_dir):
+    """Discovers schema file locations and relations.
 
     :param schema_dir: the directory schema files live inside
     :type schema_dir: string
-    :param should_validate_schemas: If True, will validate schemas against the
-        Swagger 1.2 spec.
-    :type should_validate_schemas: bool
+    :returns: A tuple of (resource listing filepath, mapping) where the mapping
+        is between resource name and file path
+    :rtype: (string, dict)
     """
+    def resource_name_to_filepath(name):
+        return os.path.join(schema_dir, '{0}.json'.format(name))
+
     resource_listing = os.path.join(schema_dir, API_DOCS_FILENAME)
     with open(resource_listing) as resource_listing_file:
         resource_listing_json = simplejson.load(resource_listing_file)
 
-    resource_filepaths = [
-        os.path.join(schema_dir, '{0}.json'.format(x))
-        for x in find_resource_names(resource_listing_json)
-    ]
+    return (
+        resource_listing,
+        dict(
+            (resource, resource_name_to_filepath(resource))
+            for resource in find_resource_names(resource_listing_json)
+        )
+    )
 
+
+def ingest_resources(listing, mapping, should_validate_schemas):
+    """Consume the Swagger schemas and produce a queryable datastructure."""
+    resource_filepaths = mapping.values()
     if should_validate_schemas:
-        validate_swagger_schemas(resource_listing_json, resource_filepaths)
+        validate_swagger_schemas(
+            listing,
+            resource_filepaths
+        )
 
     return [
         load_schema(resource)

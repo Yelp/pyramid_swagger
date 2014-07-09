@@ -8,6 +8,9 @@ import jsonschema.exceptions
 import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
+from .ingest import build_schema_mapping
+from .ingest import ingest_resources
+from .model import PathNotMatchedError
 from .model import SwaggerSchema
 
 
@@ -61,10 +64,12 @@ def validation_tween_factory(handler, registry):
     else:
         skip_validation = [re.compile(skip_validation)]
 
-    schema = SwaggerSchema(
-        schema_dir,
-        enable_swagger_spec_validation
-    )
+    listing, mapping = build_schema_mapping(schema_dir)
+    schema = SwaggerSchema(ingest_resources(
+        listing,
+        mapping,
+        enable_swagger_spec_validation,
+    ))
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
@@ -73,9 +78,7 @@ def validation_tween_factory(handler, registry):
             if skip_validation_re.match(request.path):
                 return handler(request)
 
-        schema_data, resolver = schema.schema_and_resolver_for_request(
-            request,
-        )
+        schema_data, resolver = find_schema_for_request(schema, request)
 
         _validate_request(
             route_mapper,
@@ -95,6 +98,13 @@ def validation_tween_factory(handler, registry):
         return response
 
     return validator_tween
+
+
+def find_schema_for_request(schema, request):
+    try:
+        return schema.schema_and_resolver_for_request(request)
+    except PathNotMatchedError as exc:
+        raise HTTPClientError(str(exc))
 
 
 def _validate_request(route_mapper, request, schema_data, resolver):
