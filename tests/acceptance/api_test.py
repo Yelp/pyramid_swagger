@@ -8,6 +8,7 @@ def test_app(settings=None):
     from webtest import TestApp
     settings = settings or dict({
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     return TestApp(main({}, **settings))
 

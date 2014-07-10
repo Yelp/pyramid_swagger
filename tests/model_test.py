@@ -14,7 +14,7 @@ from pyramid_swagger.model import partial_path_match
 @pytest.fixture
 def schema():
     schema_dir = 'tests/sample_schemas/good_app/'
-    enable_swagger_spec_validation = True
+    enable_swagger_spec_validation = False
 
     listing, mapping = build_schema_mapping(schema_dir)
     return SwaggerSchema(ingest_resources(
