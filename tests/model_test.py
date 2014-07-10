@@ -34,7 +34,7 @@ def test_swagger_schema_for_request_different_methods(schema):
         method="GET"
     )
     value, _ = schema.schema_and_resolver_for_request(mock_request)
-    assert value.request_body_schema == None
+    assert value.request_body_schema is None
 
     mock_request = mock.Mock(
         path="/sample",
