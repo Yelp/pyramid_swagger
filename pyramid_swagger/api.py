@@ -63,9 +63,10 @@ def register_api_declaration(config, resource_name, api_declaration):
 
     # NOTE: This means our resource paths are currently constrained to be valid
     # pyramid routes! (minus the leading /)
-    config.add_route(resource_name, '/api-docs/{0}'.format(resource_name))
+    route_name = 'apidocs-{0}'.format(resource_name)
+    config.add_route(route_name, '/api-docs/{0}'.format(resource_name))
     config.add_view(
         view_for_api_declaration,
-        route_name=resource_name,
+        route_name=route_name,
         renderer='json'
     )
