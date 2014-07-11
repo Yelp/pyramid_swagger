@@ -81,6 +81,24 @@ def test_500_when_response_is_missing_required_field():
         _validate_against_tween(request, response=response, settings=settings)
 
 
+def test_200_when_response_is_void():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
+        params={'required_arg': 'test'},
+        matchdict={'int_arg': '1', 'float_arg': '2.0', 'boolean_arg': 'true'},
+    )
+    settings = {
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+    }
+    response = Response(
+        body=simplejson.dumps(None),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+    _validate_against_tween(request, response=response, settings=settings)
+
+
 def test_500_when_response_arg_is_wrong_type():
     request = pyramid.testing.DummyRequest(
         method='GET',

@@ -269,6 +269,9 @@ def validate_outgoing_response(request, response, schema_map, resolver):
     :returns: None
     """
     body = prepare_body(response)
+    # Short circuit if we are supposed to not validate anything.
+    if schema_map.response_body_schema.get('type') == 'void' and body is None:
+        return
     Draft4Validator(
         schema_map.response_body_schema,
         resolver=resolver,
