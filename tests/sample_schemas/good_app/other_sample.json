@@ -42,7 +42,7 @@
                 {
                     "method": "GET",
                     "nickname": "sample_nonstring",
-                    "type": "object",
+                    "type": "void",
                     "parameters": [
                         {
                             "paramType": "path",
