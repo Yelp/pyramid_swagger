@@ -56,17 +56,24 @@ def register_api_declaration(config, resource_name, api_declaration):
     :param api_declaration: JSON representing an api declaration
     :type api_declaration: dict
     """
-    def view_for_api_declaration(request):
-        # Thanks to the magic of closures, this means we gracefully return JSON
-        # without file IO at request time.
-        return api_declaration
-
     # NOTE: This means our resource paths are currently constrained to be valid
     # pyramid routes! (minus the leading /)
     route_name = 'apidocs-{0}'.format(resource_name)
     config.add_route(route_name, '/api-docs/{0}'.format(resource_name))
     config.add_view(
-        view_for_api_declaration,
+        build_api_declaration_view(api_declaration),
         route_name=route_name,
         renderer='json'
     )
+
+
+def build_api_declaration_view(api_declaration_json):
+    """Thanks to the magic of closures, this means we gracefully return JSON
+    without file IO at request time."""
+    def view_for_api_declaration(request):
+        # Note that we rewrite basePath to always point at this server's root.
+        return dict(
+            api_declaration_json,
+            basePath=str(request.application_url),
+        )
+    return view_for_api_declaration
