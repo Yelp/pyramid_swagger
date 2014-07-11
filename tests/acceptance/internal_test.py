@@ -31,7 +31,7 @@ def _validate_against_tween(request, response=None, settings=None):
     def handler(request):
         return response or Response()
     settings = settings or dict({
-        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     })
     registry = get_registry(settings=settings)
@@ -54,7 +54,7 @@ def test_response_validation_enabled_by_default():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     settings = {
-        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     with pytest.raises(HTTPInternalServerError):
@@ -69,7 +69,7 @@ def test_500_when_response_is_missing_required_field():
         matchdict={'path_arg': 'path_arg1'},
     )
     settings = {
-        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     # Omit the logging_info key from the response.
@@ -93,7 +93,7 @@ def test_500_when_response_arg_is_wrong_type():
         'logging_info': {'foo': 'bar'}
     }
     settings = {
-        'pyramid_swagger.schema_directory': 'tests/acceptance/app/',
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     response = Response(
@@ -102,12 +102,6 @@ def test_500_when_response_arg_is_wrong_type():
     )
     with pytest.raises(HTTPInternalServerError):
         _validate_against_tween(request, response=response, settings=settings)
-
-
-def test_pyramid_swagger_import():
-    registry = Registry('testing')
-    config = Configurator(registry=registry)
-    pyramid_swagger.includeme(config)
 
 
 def test_bad_schema_validated_on_tween_creation_by_default():

@@ -1,53 +1,19 @@
 # -*- coding: utf-8 -*-
 """Unit tests for tweens.py"""
 import mock
+import re
+import pyramid.testing
 import pytest
-from pyramid.httpexceptions import HTTPClientError
+import simplejson
 from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.response import Response
 
-from pyramid_swagger.load_schema import SchemaAndResolver
+
+from pyramid_swagger import tween
 from pyramid_swagger.tween import prepare_body
-from pyramid_swagger.tween import schema_and_resolver_for_request
+from pyramid_swagger.tween import should_skip_validation
+from pyramid_swagger.tween import validate_outgoing_response
 from pyramid_swagger.tween import validation_tween_factory
-
-
-def test_swagger_schema_for_request_different_methods():
-    """Tests that schema_and_resolver_for_request() checks the request
-    method."""
-    mock_request = mock.Mock(
-        path="/foo/bar",
-        method="GET"
-    )
-    mock_schema_map = mock.Mock(items=mock.Mock(return_value=[
-        (('/foo/{bars}', 'PUT'), 1234),
-        (('/foo/{bars}', 'GET'), 666)
-    ]))
-    sar = SchemaAndResolver(
-        schema_map=mock_schema_map,
-        resolver=mock.ANY,
-    )
-    value, _ = schema_and_resolver_for_request(mock_request, [sar])
-    assert value == 666
-
-
-def test_swagger_schema_for_request_not_found():
-    """Tests that schema_and_resolver_for_request() raises exceptions when
-    a path is not found.
-    """
-    mock_request = mock.Mock(
-        path="/foo/bar",
-        method="GET"
-    )
-    mock_schema_map = mock.Mock(items=mock.Mock(return_value=[]))
-    sar = SchemaAndResolver(
-        schema_map=mock_schema_map,
-        resolver=mock.ANY,
-    )
-    with pytest.raises(HTTPClientError) as excinfo:
-        schema_and_resolver_for_request(mock_request, [sar])
-    assert '/foo/bar' in str(excinfo)
-    assert 'Could not find ' in str(excinfo)
 
 
 def test_response_charset_missing_raises_5xx():
@@ -64,3 +30,42 @@ def test_unconfigured_schema_dir_raises_error():
             mock.ANY,
             mock.Mock(settings={})
         )
+
+
+def test_validation_skips_path_properly():
+    skip_res = [re.compile(r) for r in tween.SKIP_VALIDATION_DEFAULT]
+    assert should_skip_validation(skip_res, '/static')
+    assert should_skip_validation(skip_res, '/static/foobar')
+    assert should_skip_validation(skip_res, '/api-docs')
+    assert should_skip_validation(skip_res, '/api-docs/foobar')
+
+    assert not should_skip_validation(skip_res, '/sample')
+    assert not should_skip_validation(skip_res, '/sample/resources')
+
+
+# TODO: Should probably be migrated to acceptance tests after we make mocking
+# schemas easier there.
+def test_validation_content_type_with_json():
+    fake_schema = mock.Mock(response_body_schema={'type': 'object'})
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/status',
+    )
+    response = Response(
+        body=simplejson.dumps({'status': 'good'}),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+    validate_outgoing_response(request, response, fake_schema, None)
+
+
+def test_raw_string():
+    fake_schema = mock.Mock(response_body_schema={'type': 'string'})
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/status/version',
+    )
+    response = Response(
+        body='abe1351f',
+        headers={'Content-Type': 'application/text; charset=UTF-8'},
+    )
+    validate_outgoing_response(request, response, fake_schema, None)

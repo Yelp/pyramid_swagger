@@ -46,7 +46,7 @@ def main(global_config, **settings):
         '/get_with_non_string_query_args',
     )
     config.add_route('post_with_primitive_body', '/post_with_primitive_body')
-    config.add_route('sample_post', '/sample_post')
+    config.add_route('sample_post', '/sample')
 
     config.scan()
     return config.make_wsgi_app()

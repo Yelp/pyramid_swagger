@@ -5,8 +5,14 @@
     "apis": [
 
         {
-            "path": "/sample_post",
+            "path": "/sample",
             "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "sample_get",
+                    "type": "object",
+                    "parameters": []
+                },
                 {
                     "method": "POST",
                     "nickname": "sample_post",
@@ -72,71 +78,7 @@
                     ]
                 }
             ]
-        },
-
-        {
-            "path": "/sample/{path_arg}/resource",
-            "operations": [
-                {
-                    "method": "GET",
-                    "nickname": "standard",
-                    "type": "standard_response",
-                    "parameters": [
-                        {
-                            "paramType": "path",
-                            "name": "path_arg",
-                            "type": "string",
-                            "enum": ["path_arg1", "path_arg2"],
-                            "required": true
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "required_arg",
-                            "type": "string",
-                            "required": true
-                        },
-                        {
-                            "paramType": "query",
-                            "name": "optional_arg",
-                            "type": "string",
-                            "required": false
-                        }
-                    ]
-                }
-            ]
-        },
-
-        {
-            "path": "/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}",
-            "operations": [
-                {
-                    "method": "GET",
-                    "nickname": "sample_nonstring",
-                    "type": "object",
-                    "parameters": [
-                        {
-                            "paramType": "path",
-                            "name": "int_arg",
-                            "type": "integer",
-                            "required": true
-                        },
-                        {
-                            "paramType": "path",
-                            "name": "float_arg",
-                            "type": "float",
-                            "required": true
-                        },
-                        {
-                            "paramType": "path",
-                            "name": "boolean_arg",
-                            "type": "boolean",
-                            "required": true
-                        }
-                    ]
-                }
-            ]
         }
-
     ],
     "models": {
 	"body_model": {

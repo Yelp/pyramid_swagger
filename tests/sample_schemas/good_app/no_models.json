@@ -1,0 +1,19 @@
+{
+    "apiVersion": "0.1",
+    "swaggerVersion": "1.2",
+    "basePath": "http://localhost:9999/no_models",
+    "apis": [
+
+        {
+            "path": "/no_models",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "no_models_get",
+                    "type": "object",
+                    "parameters": []
+                }
+            ]
+        }
+    ]
+}

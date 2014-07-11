@@ -155,7 +155,7 @@ def get_model_resolver(schema):
     """
     models = dict(
         (k, strip_swagger_markup(v))
-        for k, v in schema['models'].items()
+        for k, v in schema.get('models', {}).items()
     )
     return RefResolver('', '', models)
 
@@ -180,7 +180,7 @@ def build_request_to_schemas_map(schema):
     """Take the swagger schema and build a map from incoming path to a
     jsonschema for requests and responses."""
     request_to_schema = {}
-    schema_models = schema['models']
+    schema_models = schema.get('models', {})
     for api in schema['apis']:
         path = api['path']
         for operation in api['operations']:
@@ -227,7 +227,9 @@ def extract_validatable_type(type_name, models):
         return {'type': type_name}
 
 
-class SchemaAndResolver(namedtuple('SAR', ['schema_map', 'resolver'])):
+class SchemaAndResolver(namedtuple(
+        'SAR',
+        ['request_to_schema_map', 'resolver'])):
     __slots__ = ()
 
 
@@ -253,6 +255,6 @@ def load_schema(schema_path):
     with open(schema_path, 'r') as schema_file:
         schema = simplejson.load(schema_file)
     return SchemaAndResolver(
-        schema_map=build_request_to_schemas_map(schema),
+        request_to_schema_map=build_request_to_schemas_map(schema),
         resolver=get_model_resolver(schema),
     )

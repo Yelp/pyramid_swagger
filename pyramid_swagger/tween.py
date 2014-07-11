@@ -8,8 +8,10 @@ import jsonschema.exceptions
 import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
-
-from .ingest import ingest_schema_files
+from .ingest import build_schema_mapping
+from .ingest import ingest_resources
+from .model import PathNotMatchedError
+from .model import SwaggerSchema
 
 
 EXTENDED_TYPES = {
@@ -20,30 +22,8 @@ EXTENDED_TYPES = {
 # We don't always care about validating every endpoint (e.g. static resources)
 SKIP_VALIDATION_DEFAULT = [
     '/(static)\\b',
-    '/(api-docs)\\b'
+    '/(api-docs).*'
 ]
-
-
-def schema_and_resolver_for_request(request, schema_resolvers):
-    """Takes a request and returns the relevant schema, ready for validation.
-
-    :returns: (schema_map, resolver) for this particular request.
-    """
-    for schema_resolver in schema_resolvers:
-        schema_map = schema_resolver.schema_map
-        resolver = schema_resolver.resolver
-        for (s_path, s_method), value in schema_map.items():
-            if (
-                    partial_path_match(request.path, s_path) and
-                    (s_method == request.method)
-            ):
-                return (value, resolver)
-
-    raise HTTPClientError(
-        'Could not find the relevant path ({0}) '
-        'in the Swagger spec. Perhaps you forgot '
-        'to add it?'.format(request.path)
-    )
 
 
 def validation_tween_factory(handler, registry):
@@ -52,54 +32,26 @@ def validation_tween_factory(handler, registry):
     Note this is very simple -- it validates requests and responses while
     delegating to the relevant matching view.
     """
-    # By default, assume cwd contains the swagger schemas.
-    schema_dir = registry.settings.get(
-        'pyramid_swagger.schema_directory',
-        None
-    )
-    if schema_dir is None:
-        raise ValueError(
-            'Configuration missing for "pyramid_swagger.schema_directory"!'
-        )
-
-    enable_swagger_spec_validation = registry.settings.get(
-        'pyramid_swagger.enable_swagger_spec_validation',
-        True
-    )
-
-    enable_response_validation = registry.settings.get(
-        'pyramid_swagger.enable_response_validation',
-        True
-    )
-
-    # Static URLs and /api-docs skip validation by default
-    skip_validation = registry.settings.get(
-        'pyramid_swagger.skip_validation',
-        SKIP_VALIDATION_DEFAULT
-    )
-    if isinstance(skip_validation, list):
-        skip_validation = [
-            re.compile(endpoint) for endpoint in skip_validation
-        ]
-    else:
-        skip_validation = [re.compile(skip_validation)]
-
-    schema_resolvers = ingest_schema_files(
+    (
         schema_dir,
-        enable_swagger_spec_validation
-    )
+        enable_swagger_spec_validation,
+        enable_response_validation,
+        skip_validation
+    ) = load_settings(registry)
+
+    listing, mapping = build_schema_mapping(schema_dir)
+    schema = SwaggerSchema(ingest_resources(
+        listing,
+        mapping,
+        enable_swagger_spec_validation,
+    ))
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
-        # Skip validation for the specified endpoints
-        for skip_validation_re in skip_validation:
-            if skip_validation_re.match(request.path):
-                return handler(request)
+        if should_skip_validation(skip_validation, request.path):
+            return handler(request)
 
-        schema_data, resolver = schema_and_resolver_for_request(
-            request,
-            schema_resolvers
-        )
+        schema_data, resolver = find_schema_for_request(schema, request)
 
         _validate_request(
             route_mapper,
@@ -121,14 +73,66 @@ def validation_tween_factory(handler, registry):
     return validator_tween
 
 
+def load_settings(registry):
+    # By default, assume cwd contains the swagger schemas.
+    schema_dir = registry.settings.get(
+        'pyramid_swagger.schema_directory',
+        None
+    )
+    if schema_dir is None:
+        raise ValueError(
+            'Configuration missing for "pyramid_swagger.schema_directory"!'
+        )
+
+    enable_swagger_spec_validation = registry.settings.get(
+        'pyramid_swagger.enable_swagger_spec_validation',
+        True
+    )
+
+    enable_response_validation = registry.settings.get(
+        'pyramid_swagger.enable_response_validation',
+        True
+    )
+    # Static URLs and /api-docs skip validation by default
+    skip_validation = registry.settings.get(
+        'pyramid_swagger.skip_validation',
+        SKIP_VALIDATION_DEFAULT
+    )
+    if isinstance(skip_validation, list):
+        skip_validation_res = [
+            re.compile(endpoint) for endpoint in skip_validation
+        ]
+    else:
+        skip_validation_res = [re.compile(skip_validation)]
+
+    return (
+        schema_dir,
+        enable_swagger_spec_validation,
+        enable_response_validation,
+        skip_validation_res,
+    )
+
+
+def should_skip_validation(skip_validation_res, path):
+    # Skip validation for the specified endpoints
+    return any(r.match(path) for r in skip_validation_res)
+
+
+def find_schema_for_request(schema, request):
+    try:
+        return schema.schema_and_resolver_for_request(request)
+    except PathNotMatchedError as exc:
+        raise HTTPClientError(str(exc))
+
+
 def _validate_request(route_mapper, request, schema_data, resolver):
     """ Validates a request and raises an HTTPClientError on failure.
 
     :param request: the request object to validate
     :type request: Pyramid request object passed into a view
-    :param schema_map: our mapping from request data to schemas (see
+    :param schema_data: our mapping from request data to schemas (see
         load_schema)
-    :type schema_map: dict
+    :type schema_data: dict
     :param resolver: the request object to validate
     :type resolver: Pyramid request object passed into a view
     """
@@ -152,9 +156,9 @@ def _validate_response(request, response, schema_data, schema_resolver):
     :type request: Pyramid request object passed into a view
     :param response: the response object to validate
     :type response: Pyramid response object passed into a view
-    :param schema_map: our mapping from request data to schemas (see
+    :param schema_data: our mapping from request data to schemas (see
         load_schema)
-    :type schema_map: dict
+    :type schema_data: dict
     :param resolver: the request object to validate
     :type resolver: Pyramid request object passed into a view
     """
@@ -175,8 +179,8 @@ def cast_request_param(request_schema, param_name, param_value):
     """Try to cast a request param (e.g. query arg, POST data) from a string to
     its specified type in the schema. This allows validating non-string params.
 
-    :param schema_map: request schema
-    :type schema_map: dict
+    :param request_schema: request schema
+    :type request_schema: dict
     :param param_name: param name
     :type: string
     :param param_name: param value
@@ -283,32 +287,3 @@ def prepare_body(response):
         return simplejson.loads(response.text)
     else:
         return response.text
-
-
-def partial_path_match(path1, path2, kwarg_re=r'\{.*\}'):
-    """Validates if path1 and path2 matches, ignoring any kwargs in the string.
-
-    We need this to ensure we can match Swagger patterns like:
-        /foo/{id}
-    against the observed pyramid path
-        /foo/1
-
-    :param path1: path of a url
-    :type path1: string
-    :param path2: path of a url
-    :type path2: string
-    :param kwarg_re: regex pattern to identify kwargs
-    :type kwarg_re: regex string
-    :returns: boolean
-    """
-    split_p1 = path1.split('/')
-    split_p2 = path2.split('/')
-    pat = re.compile(kwarg_re)
-    if len(split_p1) != len(split_p2):
-        return False
-    for partial_p1, partial_p2 in zip(split_p1, split_p2):
-        if pat.match(partial_p1) or pat.match(partial_p2):
-            continue
-        if not partial_p1 == partial_p2:
-            return False
-    return True
