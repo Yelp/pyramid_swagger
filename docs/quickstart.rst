@@ -66,3 +66,4 @@ With that, when your app starts you will get the benefit of:
 * 4xx errors for requests not matching your schema
 * 5xx errors for responses not matching your schema
 * Automatic validation for correctness of your API declaration at application startup
+* Serving of Swagger schemas at :samp:`/api-docs` and :samp:`/api-docs/sample`
