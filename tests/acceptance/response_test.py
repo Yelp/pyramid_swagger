@@ -4,6 +4,7 @@ from .request_test import test_app
 def test_200_for_normal_response_validation():
     settings = {
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
         'pyramid_swagger.enable_response_validation': True,
     }
     test_app(settings).post_json(
