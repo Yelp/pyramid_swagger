@@ -1,15 +1,16 @@
 import pytest
+from webtest import TestApp
+
+from .app import main
 
 
 @pytest.fixture
-def test_app(settings=None):
-    """Fixture for setting up a test test_app with particular settings."""
-    from .app import main
-    from webtest import TestApp
-    settings = settings or dict({
+def test_app():
+    """Fixture for setting up a test test_app."""
+    settings = {
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
-    })
+    }
     return TestApp(main({}, **settings))
 
 

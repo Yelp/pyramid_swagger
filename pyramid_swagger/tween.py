@@ -130,9 +130,9 @@ def _validate_request(route_mapper, request, schema_data, resolver):
 
     :param request: the request object to validate
     :type request: Pyramid request object passed into a view
-    :param schema_map: our mapping from request data to schemas (see
+    :param schema_data: our mapping from request data to schemas (see
         load_schema)
-    :type schema_map: dict
+    :type schema_data: dict
     :param resolver: the request object to validate
     :type resolver: Pyramid request object passed into a view
     """
@@ -156,9 +156,9 @@ def _validate_response(request, response, schema_data, schema_resolver):
     :type request: Pyramid request object passed into a view
     :param response: the response object to validate
     :type response: Pyramid response object passed into a view
-    :param schema_map: our mapping from request data to schemas (see
+    :param schema_data: our mapping from request data to schemas (see
         load_schema)
-    :type schema_map: dict
+    :type schema_data: dict
     :param resolver: the request object to validate
     :type resolver: Pyramid request object passed into a view
     """
@@ -179,8 +179,8 @@ def cast_request_param(request_schema, param_name, param_value):
     """Try to cast a request param (e.g. query arg, POST data) from a string to
     its specified type in the schema. This allows validating non-string params.
 
-    :param schema_map: request schema
-    :type schema_map: dict
+    :param request_schema: request schema
+    :type request_schema: dict
     :param param_name: param name
     :type: string
     :param param_name: param value

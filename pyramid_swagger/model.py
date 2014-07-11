@@ -13,29 +13,38 @@ class PathNotMatchedError(Exception):
 
 class SwaggerSchema(object):
     """
-    This object contains the relevant logic for ingesting as series of
+    This object contains the relevant logic for ingesting a series of
     swagger-compliant files and exposes methods for efficiently checking
     json objects against their schemas.
     """
 
     def __init__(self, schema_resolvers):
+        """Store schema_resolvers for later use.
+
+        :param schema_resolvers: a list of resolvers, one per Swagger resource
+        :type schema_resolvers: list of
+            pyramid_swagger.load_schema.SchemaAndResolver objects
+        """
         self.schema_resolvers = schema_resolvers
 
     def schema_and_resolver_for_request(self, request):
         """Takes a request and returns the relevant schema, ready for
         validation.
 
+        :param request: A Pyramid request to fetch schemas for
+        :type request: pyramid.request.Request
         :returns: (schema_map, resolver) for this particular request.
+        :rtype: A tuple of (load_schema.SchemaMap, jsonschema.Resolver)
         """
         for schema_resolver in self.schema_resolvers:
-            schema_map = schema_resolver.schema_map
+            request_to_schema_map = schema_resolver.request_to_schema_map
             resolver = schema_resolver.resolver
-            for (s_path, s_method), value in schema_map.items():
+            for (path, method), schema_map in request_to_schema_map.items():
                 if (
-                        partial_path_match(request.path, s_path) and
-                        (s_method == request.method)
+                        partial_path_match(request.path, path) and
+                        (method == request.method)
                 ):
-                    return (value, resolver)
+                    return (schema_map, resolver)
 
         raise PathNotMatchedError(
             'Could not find the relevant path ({0}) '
