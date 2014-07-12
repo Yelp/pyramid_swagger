@@ -149,11 +149,9 @@ def _validate_request(route_mapper, request, schema_data, resolver):
         raise HTTPClientError(str(exc))
 
 
-def _validate_response(request, response, schema_data, schema_resolver):
+def _validate_response(response, schema_data, schema_resolver):
     """ Validates a response and raises an HTTPInternalServerError on failure.
 
-    :param request: the request object
-    :type request: Pyramid request object passed into a view
     :param response: the response object to validate
     :type response: Pyramid response object passed into a view
     :param schema_data: our mapping from request data to schemas (see
@@ -164,7 +162,6 @@ def _validate_response(request, response, schema_data, schema_resolver):
     """
     try:
         validate_outgoing_response(
-            request,
             response,
             schema_data,
             schema_resolver
@@ -254,11 +251,9 @@ def validate_incoming_request(route_mapper, request, schema_map, resolver):
         ).validate(body)
 
 
-def validate_outgoing_response(request, response, schema_map, resolver):
+def validate_outgoing_response(response, schema_map, resolver):
     """Validates response against our schemas.
 
-    :param request: the request object to validate
-    :type request: Pyramid request object passed into a view
     :param response: the response object to validate
     :type response: Requests response object
     :param schema_map: our mapping from request data to schemas (see
