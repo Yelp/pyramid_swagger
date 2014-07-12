@@ -2,7 +2,6 @@
 """Unit tests for tweens.py"""
 import mock
 import re
-import pyramid.testing
 import pytest
 import simplejson
 from pyramid.httpexceptions import HTTPInternalServerError
@@ -47,25 +46,17 @@ def test_validation_skips_path_properly():
 # schemas easier there.
 def test_validation_content_type_with_json():
     fake_schema = mock.Mock(response_body_schema={'type': 'object'})
-    request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/status',
-    )
     response = Response(
         body=simplejson.dumps({'status': 'good'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_outgoing_response(request, response, fake_schema, None)
+    validate_outgoing_response(response, fake_schema, None)
 
 
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
-    request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/status/version',
-    )
     response = Response(
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_outgoing_response(request, response, fake_schema, None)
+    validate_outgoing_response(response, fake_schema, None)

@@ -43,6 +43,7 @@ def validation_tween_factory(handler, registry):
     schema = SwaggerSchema(ingest_resources(
         listing,
         mapping,
+        schema_dir,
         enable_swagger_spec_validation,
     ))
     route_mapper = registry.queryUtility(IRoutesMapper)
@@ -62,7 +63,6 @@ def validation_tween_factory(handler, registry):
         response = handler(request)
         if enable_response_validation:
             _validate_response(
-                request,
                 response,
                 schema_data,
                 resolver

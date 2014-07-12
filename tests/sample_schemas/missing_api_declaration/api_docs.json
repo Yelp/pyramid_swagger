@@ -1,0 +1,9 @@
+{
+  "swaggerVersion": "1.2",
+  "apis": [
+    {
+      "path": "/missing",
+      "description": "An api declaration that does not exist."
+    }
+  ]
+}

@@ -20,6 +20,7 @@ def schema():
     return SwaggerSchema(ingest_resources(
         listing,
         mapping,
+        schema_dir,
         enable_swagger_spec_validation,
     ))
 
