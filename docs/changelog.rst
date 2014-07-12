@@ -1,6 +1,19 @@
 Changelog
 =========
 
+1.0.0 (2014-07-08)
+++++++++++++++++++
+
+* Initial fully functional release.
+* Your service now must supply both a resource listing and all accompanying api
+  declarations.
+* Swagger schemas are automatically served out of /api-docs by including the
+  library.
+* The api declaration basepath returned by hitting /api-docs/foo is guaranteed
+  to be Pyramid.request.application_url.
+* Void return types are now checked.
+
+
 0.5.0 (2014-07-08)
 ++++++++++++++++++
 
