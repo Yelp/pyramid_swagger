@@ -8,10 +8,8 @@ import jsonschema.exceptions
 import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
-from .ingest import build_schema_mapping
-from .ingest import ingest_resources
+from .ingest import compile_swagger_schema
 from .model import PathNotMatchedError
-from .model import SwaggerSchema
 
 
 EXTENDED_TYPES = {
@@ -39,13 +37,7 @@ def validation_tween_factory(handler, registry):
         skip_validation
     ) = load_settings(registry)
 
-    listing, mapping = build_schema_mapping(schema_dir)
-    schema = SwaggerSchema(ingest_resources(
-        listing,
-        mapping,
-        schema_dir,
-        enable_swagger_spec_validation,
-    ))
+    schema = compile_swagger_schema(schema_dir, enable_swagger_spec_validation)
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):

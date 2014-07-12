@@ -4,6 +4,7 @@ import os.path
 import simplejson
 
 from .load_schema import load_schema
+from .model import SwaggerSchema
 from .spec import validate_swagger_schemas
 
 
@@ -68,6 +69,24 @@ def _load_resource_listing(schema_dir):
     return resource_listing, resource_listing_json
 
 
+def compile_swagger_schema(schema_dir, should_validate_schemas):
+    """Build a SwaggerSchema from various files.
+
+    :param schema_dir: the directory schema files live inside
+    :type schema_dir: string
+    :param should_validate_schemas: if True, check schemas for correctness
+    :type should_validate_schemas: boolean
+    :returns: a SwaggerSchema object
+    """
+    listing, mapping = build_schema_mapping(schema_dir)
+    return SwaggerSchema(ingest_resources(
+        listing,
+        mapping,
+        schema_dir,
+        should_validate_schemas,
+    ))
+
+
 def ingest_resources(listing, mapping, schema_dir, should_validate_schemas):
     """Consume the Swagger schemas and produce a queryable datastructure.
 
@@ -77,6 +96,8 @@ def ingest_resources(listing, mapping, schema_dir, should_validate_schemas):
     :type mapping: dict
     :param schema_dir: the directory schema files live inside
     :type schema_dir: string
+    :param should_validate_schemas: if True, check schemas for correctness
+    :type should_validate_schemas: boolean
     :returns: A list of SchemaAndResolver objects
     """
     resource_filepaths = mapping.values()
