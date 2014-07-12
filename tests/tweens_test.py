@@ -9,10 +9,10 @@ from pyramid.response import Response
 
 
 from pyramid_swagger import tween
+from pyramid_swagger.tween import load_settings
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import should_skip_validation
 from pyramid_swagger.tween import validate_outgoing_response
-from pyramid_swagger.tween import validation_tween_factory
 
 
 def test_response_charset_missing_raises_5xx():
@@ -22,13 +22,9 @@ def test_response_charset_missing_raises_5xx():
         )
 
 
-def test_unconfigured_schema_dir_raises_error():
+def test_unconfigured_schema_dir_uses_swagger_schemas():
     """If we send a settings dict without schema_dir, fail fast."""
-    with pytest.raises(ValueError):
-        validation_tween_factory(
-            mock.ANY,
-            mock.Mock(settings={})
-        )
+    assert load_settings(mock.Mock(settings={}))[0] == 'swagger_schemas/'
 
 
 def test_validation_skips_path_properly():

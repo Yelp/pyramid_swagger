@@ -59,7 +59,6 @@ We'll show you the .ini method here, but you can read how to imperatively add th
 
         [app:main]
         pyramid.includes = pyramid_swagger
-        pyramid_swagger.schema_directory = "swagger_schema/"
 
 With that, when your app starts you will get the benefit of:
 

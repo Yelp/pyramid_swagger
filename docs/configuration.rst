@@ -12,7 +12,7 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Add the pyramid_swagger validation tween to your app (required)
         pyramid.includes = pyramid_swagger
 
-        # Point pyramid_swagger at the directory containing your api_docs.json (required!)
+        # Point pyramid_swagger at the directory containing your api_docs.json ('swagger_schemas/' by default)
         pyramid_swagger.schema_directory = "schemas/live/here"
 
         # Enable/disable response validation (true by default)
