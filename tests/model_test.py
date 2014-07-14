@@ -4,10 +4,8 @@ Unit tests for the SwaggerSchema class.
 import mock
 import pytest
 
-from pyramid_swagger.ingest import build_schema_mapping
-from pyramid_swagger.ingest import ingest_resources
+from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.model import PathNotMatchedError
-from pyramid_swagger.model import SwaggerSchema
 from pyramid_swagger.model import partial_path_match
 
 
@@ -16,13 +14,7 @@ def schema():
     schema_dir = 'tests/sample_schemas/good_app/'
     enable_swagger_spec_validation = False
 
-    listing, mapping = build_schema_mapping(schema_dir)
-    return SwaggerSchema(ingest_resources(
-        listing,
-        mapping,
-        schema_dir,
-        enable_swagger_spec_validation,
-    ))
+    return compile_swagger_schema(schema_dir, enable_swagger_spec_validation)
 
 
 def test_swagger_schema_for_request_different_methods(schema):

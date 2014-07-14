@@ -3,36 +3,31 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import simplejson
 
-from .ingest import ApiDeclarationNotFoundError
-from .ingest import build_schema_mapping
+from .ingest import compile_swagger_schema
+from .tween import load_settings
 
 
 def register_swagger_endpoints(config):
     """Create and register pyramid endpoints for /api-docs*.
 
     """
-    schema_dir = config.registry.settings.get(
-        'pyramid_swagger.schema_directory',
-        None
+    (
+        schema_dir,
+        enable_swagger_spec_validation, _, _,
+    ) = load_settings(config.registry)
+    swagger_schema = compile_swagger_schema(
+        schema_dir,
+        enable_swagger_spec_validation,
     )
-    resource_listing, resource_mapping = build_schema_mapping(schema_dir)
-    with open(resource_listing) as input_file:
+    with open(swagger_schema.resource_listing) as input_file:
         register_resource_listing(config, simplejson.load(input_file))
 
-    for name, filepath in resource_mapping.items():
-        try:
-            with open(filepath) as input_file:
-                register_api_declaration(
-                    config,
-                    name,
-                    simplejson.load(input_file)
-                )
-        except IOError:
-            raise ApiDeclarationNotFoundError(
-                'No api declaration found at {0}. Attempted to load the `{1}` '
-                'resource relative to the schema_directory `{2}`. Perhaps '
-                'your resource name and API declaration file do not '
-                'match?'.format(filepath, name, schema_dir)
+    for name, filepath in swagger_schema.api_declarations.items():
+        with open(filepath) as input_file:
+            register_api_declaration(
+                config,
+                name,
+                simplejson.load(input_file)
             )
 
 

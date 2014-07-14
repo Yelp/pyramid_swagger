@@ -79,12 +79,17 @@ def compile_swagger_schema(schema_dir, should_validate_schemas):
     :returns: a SwaggerSchema object
     """
     listing, mapping = build_schema_mapping(schema_dir)
-    return SwaggerSchema(ingest_resources(
+    schema_resolvers = ingest_resources(
         listing,
         mapping,
         schema_dir,
         should_validate_schemas,
-    ))
+    )
+    return SwaggerSchema(
+        listing,
+        mapping,
+        schema_resolvers,
+    )
 
 
 def ingest_resources(listing, mapping, schema_dir, should_validate_schemas):
@@ -101,11 +106,6 @@ def ingest_resources(listing, mapping, schema_dir, should_validate_schemas):
     :returns: A list of SchemaAndResolver objects
     """
     resource_filepaths = mapping.values()
-    if should_validate_schemas:
-        validate_swagger_schemas(
-            listing,
-            resource_filepaths
-        )
 
     ingested_resources = []
     for name, filepath in mapping.items():
@@ -120,4 +120,11 @@ def ingest_resources(listing, mapping, schema_dir, should_validate_schemas):
                 'your resource name and API declaration file do not '
                 'match?'.format(filepath, name, schema_dir)
             )
+
+    if should_validate_schemas:
+        validate_swagger_schemas(
+            listing,
+            resource_filepaths
+        )
+
     return ingested_resources
