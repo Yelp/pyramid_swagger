@@ -69,7 +69,7 @@ def load_settings(registry):
     # By default, assume cwd contains the swagger schemas.
     schema_dir = registry.settings.get(
         'pyramid_swagger.schema_directory',
-        'swagger_schemas/'
+        'api_docs/'
     )
 
     enable_swagger_spec_validation = registry.settings.get(

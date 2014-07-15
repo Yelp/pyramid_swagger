@@ -22,9 +22,9 @@ def test_response_charset_missing_raises_5xx():
         )
 
 
-def test_unconfigured_schema_dir_uses_swagger_schemas():
+def test_unconfigured_schema_dir_uses_api_docs():
     """If we send a settings dict without schema_dir, fail fast."""
-    assert load_settings(mock.Mock(settings={}))[0] == 'swagger_schemas/'
+    assert load_settings(mock.Mock(settings={}))[0] == 'api_docs/'
 
 
 def test_validation_skips_path_properly():
