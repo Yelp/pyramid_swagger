@@ -18,6 +18,7 @@ def test_200_skip_validation_with_wrong_response():
     settings = {
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.skip_validation': '/(sample)\\b',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
     }
     test_app(settings).get(
         '/sample/path_arg1/resource',
