@@ -3,24 +3,32 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import simplejson
 
-from .ingest import build_schema_mapping
+from .ingest import compile_swagger_schema
+from .tween import load_settings
 
 
 def register_swagger_endpoints(config):
     """Create and register pyramid endpoints for /api-docs*.
 
     """
-    schema_dir = config.registry.settings.get(
-        'pyramid_swagger.schema_directory',
-        None
+    (
+        schema_dir,
+        enable_swagger_spec_validation, _, _,
+    ) = load_settings(config.registry)
+    swagger_schema = compile_swagger_schema(
+        schema_dir,
+        enable_swagger_spec_validation,
     )
-    resource_listing, resource_mapping = build_schema_mapping(schema_dir)
-    with open(resource_listing) as input_file:
+    with open(swagger_schema.resource_listing) as input_file:
         register_resource_listing(config, simplejson.load(input_file))
 
-    for name, filepath in resource_mapping.items():
+    for name, filepath in swagger_schema.api_declarations.items():
         with open(filepath) as input_file:
-            register_api_declaration(config, name, simplejson.load(input_file))
+            register_api_declaration(
+                config,
+                name,
+                simplejson.load(input_file)
+            )
 
 
 def register_resource_listing(config, resource_listing):

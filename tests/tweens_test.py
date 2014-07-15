@@ -2,7 +2,6 @@
 """Unit tests for tweens.py"""
 import mock
 import re
-import pyramid.testing
 import pytest
 import simplejson
 from pyramid.httpexceptions import HTTPInternalServerError
@@ -10,10 +9,10 @@ from pyramid.response import Response
 
 
 from pyramid_swagger import tween
+from pyramid_swagger.tween import load_settings
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import should_skip_validation
 from pyramid_swagger.tween import validate_outgoing_response
-from pyramid_swagger.tween import validation_tween_factory
 
 
 def test_response_charset_missing_raises_5xx():
@@ -23,13 +22,9 @@ def test_response_charset_missing_raises_5xx():
         )
 
 
-def test_unconfigured_schema_dir_raises_error():
+def test_unconfigured_schema_dir_uses_api_docs():
     """If we send a settings dict without schema_dir, fail fast."""
-    with pytest.raises(ValueError):
-        validation_tween_factory(
-            mock.ANY,
-            mock.Mock(settings={})
-        )
+    assert load_settings(mock.Mock(settings={}))[0] == 'api_docs/'
 
 
 def test_validation_skips_path_properly():
@@ -47,25 +42,17 @@ def test_validation_skips_path_properly():
 # schemas easier there.
 def test_validation_content_type_with_json():
     fake_schema = mock.Mock(response_body_schema={'type': 'object'})
-    request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/status',
-    )
     response = Response(
         body=simplejson.dumps({'status': 'good'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_outgoing_response(request, response, fake_schema, None)
+    validate_outgoing_response(response, fake_schema, None)
 
 
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
-    request = pyramid.testing.DummyRequest(
-        method='GET',
-        path='/status/version',
-    )
     response = Response(
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_outgoing_response(request, response, fake_schema, None)
+    validate_outgoing_response(response, fake_schema, None)

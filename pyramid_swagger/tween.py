@@ -8,10 +8,8 @@ import jsonschema.exceptions
 import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
-from .ingest import build_schema_mapping
-from .ingest import ingest_resources
+from .ingest import compile_swagger_schema
 from .model import PathNotMatchedError
-from .model import SwaggerSchema
 
 
 EXTENDED_TYPES = {
@@ -39,12 +37,7 @@ def validation_tween_factory(handler, registry):
         skip_validation
     ) = load_settings(registry)
 
-    listing, mapping = build_schema_mapping(schema_dir)
-    schema = SwaggerSchema(ingest_resources(
-        listing,
-        mapping,
-        enable_swagger_spec_validation,
-    ))
+    schema = compile_swagger_schema(schema_dir, enable_swagger_spec_validation)
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
@@ -62,7 +55,6 @@ def validation_tween_factory(handler, registry):
         response = handler(request)
         if enable_response_validation:
             _validate_response(
-                request,
                 response,
                 schema_data,
                 resolver
@@ -77,12 +69,8 @@ def load_settings(registry):
     # By default, assume cwd contains the swagger schemas.
     schema_dir = registry.settings.get(
         'pyramid_swagger.schema_directory',
-        None
+        'api_docs/'
     )
-    if schema_dir is None:
-        raise ValueError(
-            'Configuration missing for "pyramid_swagger.schema_directory"!'
-        )
 
     enable_swagger_spec_validation = registry.settings.get(
         'pyramid_swagger.enable_swagger_spec_validation',
@@ -149,11 +137,9 @@ def _validate_request(route_mapper, request, schema_data, resolver):
         raise HTTPClientError(str(exc))
 
 
-def _validate_response(request, response, schema_data, schema_resolver):
+def _validate_response(response, schema_data, schema_resolver):
     """ Validates a response and raises an HTTPInternalServerError on failure.
 
-    :param request: the request object
-    :type request: Pyramid request object passed into a view
     :param response: the response object to validate
     :type response: Pyramid response object passed into a view
     :param schema_data: our mapping from request data to schemas (see
@@ -164,7 +150,6 @@ def _validate_response(request, response, schema_data, schema_resolver):
     """
     try:
         validate_outgoing_response(
-            request,
             response,
             schema_data,
             schema_resolver
@@ -254,11 +239,9 @@ def validate_incoming_request(route_mapper, request, schema_map, resolver):
         ).validate(body)
 
 
-def validate_outgoing_response(request, response, schema_map, resolver):
+def validate_outgoing_response(response, schema_map, resolver):
     """Validates response against our schemas.
 
-    :param request: the request object to validate
-    :type request: Pyramid request object passed into a view
     :param response: the response object to validate
     :type response: Requests response object
     :param schema_map: our mapping from request data to schemas (see

@@ -13,18 +13,25 @@ class PathNotMatchedError(Exception):
 
 class SwaggerSchema(object):
     """
-    This object contains the relevant logic for ingesting a series of
-    swagger-compliant files and exposes methods for efficiently checking
-    json objects against their schemas.
+    This object contains data structures representing your Swagger schema
+    and exposes methods for efficiently finding the relevant schemas for a
+    Pyramid request.
     """
 
-    def __init__(self, schema_resolvers):
+    def __init__(self, resource_listing, api_declarations, schema_resolvers):
         """Store schema_resolvers for later use.
 
+        :param resource_listing: Filepath to a resource listing
+        :type resource_listing: string
+        :param api_declarations: Map from resource name to filepath of its api
+            declaration
+        :type api_declarations: dict
         :param schema_resolvers: a list of resolvers, one per Swagger resource
         :type schema_resolvers: list of
             pyramid_swagger.load_schema.SchemaAndResolver objects
         """
+        self.resource_listing = resource_listing
+        self.api_declarations = api_declarations
         self.schema_resolvers = schema_resolvers
 
     def schema_and_resolver_for_request(self, request):
