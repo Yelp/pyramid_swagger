@@ -32,7 +32,7 @@ Where to put your API declaration
 
 Great, so we have one large JSON file containing our API declaration for all endpoints our service supports. What now?
 
-Well you need one other ingredient -- a resource listing. These break up your service into logical resources. To get started, let's just create an extremely simple one. Write the following into :samp:`swagger_schema/api_docs.json`.
+Well you need one other ingredient -- a resource listing. These break up your service into logical resources. To get started, let's just create an extremely simple one. Write the following into :samp:`api_docs/api_docs.json`.
 
 .. code-block:: json
 
@@ -46,7 +46,7 @@ Well you need one other ingredient -- a resource listing. These break up your se
           ]
         }
 
-Now place the API declaration you wrote previously in :samp:`swagger_schema/sample.json`. You'll notice that our path is named the same as our API declaration file -- this is not by accident! The path has no relation to the paths described in your API declaration, it is only used internally to help Swagger discover your schemas.
+Now place the API declaration you wrote previously in :samp:`api_docs/sample.json`. You'll notice that our path is named the same as our API declaration file -- this is not by accident! The path has no relation to the paths described in your API declaration, it is only used internally to help Swagger discover your schemas.
 
 Add pyramid_swagger to your webapp
 -----------------------------------
@@ -65,3 +65,4 @@ With that, when your app starts you will get the benefit of:
 * 4xx errors for requests not matching your schema
 * 5xx errors for responses not matching your schema
 * Automatic validation for correctness of your API declaration at application startup
+* Automatic serving of your Swagger schema from the /api-docs endpoint
