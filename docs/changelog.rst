@@ -1,6 +1,17 @@
 Changelog
 =========
 
+1.1.0 (2014-07-14)
+++++++++++++++++++
+
+* Swagger schema directory defaults to "api_docs/" rather than being a required
+  configuration line.
+* If the resource listing or API declarations are not at the filepaths
+  expected, readable errors are raised.
+* This changelog is now a part of the build documentation and backfilled to the
+  initial package version.
+
+
 1.0.0 (2014-07-08)
 ++++++++++++++++++
 
