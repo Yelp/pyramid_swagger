@@ -15,6 +15,8 @@ Changelog
 1.0.0 (2014-07-08)
 ++++++++++++++++++
 
+**Backwards Incompatible**
+
 * Initial fully functional release.
 * Your service now must supply both a resource listing and all accompanying api
   declarations.
