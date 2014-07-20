@@ -10,7 +10,7 @@ __all__ = [
 
 __title__ = "pyramid_swagger"
 __summary__ = "Swagger tools for use in pyramid webapps"
-__uri__ = ""
+__uri__ = "https://github.com/striglia/pyramid_swagger"
 
 __version__ = "1.1.0"
 

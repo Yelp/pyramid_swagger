@@ -1,6 +1,7 @@
 *pyc
 docs/_build
 docs/build
+build/
 dist/
 .coverage
 .tox

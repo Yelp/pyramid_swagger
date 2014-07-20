@@ -19,18 +19,21 @@ setup(
     description=about['__summary__'],
     long_description=long_description,
     license=about['__license__'],
+    url=about["__uri__"],
 
     author=about['__author__'],
     author_email=about['__email__'],
 
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Python Modules',
+        'Topic :: Software Development :: Libraries :: Python Modules',
 
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
     keywords='pyramid swagger validation',
 

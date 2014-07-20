@@ -7,6 +7,11 @@
 .. image:: https://landscape.io/github/striglia/pyramid_swagger/master/landscape.png
    :target: https://landscape.io/github/striglia/pyramid_swagger/master
 
+.. image:: https://pypip.in/py_versions/pyramid_swagger/badge.png
+    :target: https://pypi.python.org/pypi/pyramid_swagger/
+    :alt: Supported Python versions
+
+
 pyramid_swagger
 =======================
 
