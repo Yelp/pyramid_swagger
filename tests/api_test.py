@@ -7,7 +7,7 @@ from pyramid_swagger.api import register_swagger_endpoints
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
 from pyramid_swagger.ingest import ResourceListingNotFoundError
-from tests.acceptance.internal_test import get_registry
+from tests.acceptance.response_test import get_registry
 
 
 def test_basepath_rewriting():

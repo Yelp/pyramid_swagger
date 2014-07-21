@@ -206,7 +206,7 @@ def validate_incoming_request(route_mapper, request, schema_map, resolver):
         request_query_params = dict(
             (k, cast_request_param(schema_map.request_query_schema, k, v))
             for k, v
-            in request.params.items()
+            in request.GET.items()
         )
         Draft3Validator(
             schema_map.request_query_schema,

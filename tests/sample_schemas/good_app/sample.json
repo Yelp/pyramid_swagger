@@ -19,6 +19,12 @@
                     "type": "object",
                     "parameters": [
                         {
+                            "paramType": "query",
+                            "name": "optional_string",
+                            "type": "string",
+                            "required": false
+                        },
+                        {
                             "paramType": "body",
                             "name": "content",
                             "type": "body_model",
