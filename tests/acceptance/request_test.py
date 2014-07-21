@@ -1,4 +1,5 @@
 import pytest
+import simplejson
 
 
 @pytest.fixture
@@ -92,6 +93,16 @@ def test_400_if_required_body_is_missing(test_app):
         {},
         expect_errors=True,
         status=400
+    )
+
+
+def test_200_on_json_body_without_contenttype_header(test_app):
+    """See https://github.com/striglia/pyramid_swagger/issues/49."""
+    # We use .post to avoid sending a Content Type of application/json.
+    test_app.post(
+        '/sample?optional_string=bar',
+        simplejson.dumps({'foo': 'test'}),
+        status=200
     )
 
 
