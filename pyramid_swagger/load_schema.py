@@ -199,6 +199,7 @@ def build_request_to_schemas_map(schema):
                     schema_models
                 ),
             )
+
     return request_to_schema
 
 
@@ -206,9 +207,18 @@ def extract_response_body_schema(operation, schema_models):
     if operation['type'] in schema_models:
         return extract_validatable_type(operation['type'], schema_models)
     else:
-        return {
-            'type': operation['type'],
-        }
+        acceptable_fields = (
+            'type', '$ref', 'format', 'defaultValue', 'enum', 'minimum',
+            'maximum', 'items', 'uniqueItems'
+        )
+
+        schema = dict([
+            (field, operation[field])
+            for field in acceptable_fields
+            if field in operation
+        ])
+
+        return schema
 
 
 def extract_validatable_type(type_name, models):
