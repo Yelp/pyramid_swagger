@@ -1,6 +1,14 @@
 Changelog
 =========
 
+1.1.1 (2014-08-26)
+++++++++++++++++++
+
+* Fixes bug where response bodies were not validated correctly unless they were
+  a model or primitive type.
+* Fixes bug where POST bodies could be mis-parsed as query arguments.
+* Better backwards compatibility warnings in this changelog!
+
 1.1.0 (2014-07-14)
 ++++++++++++++++++
 
