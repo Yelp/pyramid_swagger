@@ -36,6 +36,21 @@
         },
 
         {
+            "path": "/sample_array_response",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "sample_get_array_response",
+                    "parameters": [],
+                    "type": "array",
+                    "items": {
+                        "$ref": "array_content_model"
+                    }
+                }
+            ]
+        },
+
+        {
             "path": "/post_with_primitive_body",
             "operations": [
                 {
@@ -87,11 +102,11 @@
         }
     ],
     "models": {
-	"body_model": {
+	    "body_model": {
             "id": "body_model",
             "type": "object",
             "required": [ "foo" ],
-	    "additionalProperties": false,
+	        "additionalProperties": false,
             "properties": {
                 "foo": { "type": "string" },
                 "bar": { "type": "string" }
@@ -101,13 +116,25 @@
             "id": "standard_response",
             "type": "object",
             "required": [ "raw_response", "logging_info" ],
-	    "additionalProperties": false,
+            "additionalProperties": false,
             "properties": {
                 "raw_response": {
                     "type": "string"
                 },
                 "logging_info": {
                     "type": "object"
+                }
+            }
+        },
+        "array_content_model": {
+            "id": "array_content_model",
+            "required": ["enum_value"],
+            "properties": {
+                "enum_value": {
+                    "type": "string",
+                    "enum": [
+                        "good_enum_value"
+                    ]
                 }
             }
         }

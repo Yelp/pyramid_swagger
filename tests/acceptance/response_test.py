@@ -122,6 +122,48 @@ def test_500_when_response_arg_is_wrong_type():
         _validate_against_tween(request, response=response, settings=settings)
 
 
+def test_500_for_bad_validated_array_response():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample_array_response',
+    )
+    settings = {
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+    }
+    data = [
+        {
+            "enum_value": "bad_enum_value",
+        }
+    ]
+    response = Response(
+        body=simplejson.dumps(data),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+    with pytest.raises(HTTPInternalServerError):
+        _validate_against_tween(request, response=response, settings=settings)
+
+
+def test_200_for_good_validated_array_response():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample_array_response',
+    )
+    settings = {
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+    }
+    data = [
+        {"enum_value": "good_enum_value"}
+    ]
+    response = Response(
+        body=simplejson.dumps(data),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+
+    _validate_against_tween(request, response=response, settings=settings)
+
+
 def test_200_for_normal_response_validation():
     settings = {
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
