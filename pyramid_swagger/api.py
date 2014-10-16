@@ -9,9 +9,7 @@ from .tween import load_settings
 
 
 def register_swagger_endpoints(config):
-    """Create and register pyramid endpoints for /api-docs*.
-
-    """
+    """Create and register pyramid endpoints for /api-docs*."""
     (
         schema_dir,
         enable_swagger_spec_validation, _, _,
@@ -33,7 +31,7 @@ def register_swagger_endpoints(config):
 
 
 def register_resource_listing(config, resource_listing):
-    """Registers an endpoint at /api-docs.
+    """Registers the endpoint /api-docs.
 
     :param config: Configurator instance for our webapp
     :type config: pyramid Configurator
