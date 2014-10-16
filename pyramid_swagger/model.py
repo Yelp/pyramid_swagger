@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 The core model we use to represent the entire ingested swagger schema for this
 service.

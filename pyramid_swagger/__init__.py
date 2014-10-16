@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Import this module to add the validation tween to your pyramid app.
 """
