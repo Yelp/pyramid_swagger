@@ -10,13 +10,10 @@ from .tween import load_settings
 
 def register_swagger_endpoints(config):
     """Create and register pyramid endpoints for /api-docs*."""
-    (
-        schema_dir,
-        enable_swagger_spec_validation, _, _,
-    ) = load_settings(config.registry)
+    settings = load_settings(config.registry)
     swagger_schema = compile_swagger_schema(
-        schema_dir,
-        enable_swagger_spec_validation,
+        settings.schema_dir,
+        settings.validate_swagger_spec,
     )
     with open(swagger_schema.resource_listing) as input_file:
         register_resource_listing(config, simplejson.load(input_file))
