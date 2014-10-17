@@ -13,9 +13,18 @@
 
 
 pyramid_swagger
-=======================
+===============
 
 This project offers convenient tools for using Swagger to define and validate
 your interfaces in a Pyramid webapp.
 
 Full documentation is available at http://pyramid-swagger.readthedocs.org/.
+
+Copyright
+---------
+
+Copyright © 2014 Scott Triglia. `License BSD 3-clause
+<http://opensource.org/licenses/BSD-3-Clause>`_.
+
+This is free software: you are free to change and redistribute it. There is
+NO WARRANTY, to the extent permitted by law.
