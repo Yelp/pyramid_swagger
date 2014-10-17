@@ -156,7 +156,7 @@ def _validate_response(response, schema_data, schema_resolver):
         )
     except jsonschema.exceptions.ValidationError as exc:
         # This will alter our stack trace slightly, but Pyramid knows how
-        # to render it. And the real value is in the message anyway.
+        # to render it and the real value is in the message anyway.
         raise HTTPInternalServerError(str(exc))
 
 

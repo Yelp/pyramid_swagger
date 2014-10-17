@@ -3,15 +3,18 @@ import simplejson
 
 
 @pytest.fixture
-def test_app(settings=None):
+def test_app(**overrides):
     """Fixture for setting up a test test_app with particular settings."""
     from .app import main
     from webtest import TestApp
-    settings = settings or dict({
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
-        'pyramid_swagger.enable_response_validation': False,
-        'pyramid_swagger.enable_swagger_spec_validation': False,
-    })
+    settings = dict(
+        {
+            'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+            'pyramid_swagger.enable_response_validation': False,
+            'pyramid_swagger.enable_swagger_spec_validation': False,
+        },
+        **overrides
+    )
     return TestApp(main({}, **settings))
 
 
@@ -160,13 +163,7 @@ def test_400_if_extra_query_args(test_app):
 
 
 def test_200_skip_validation_with_wrong_path():
-    settings = {
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
-        'pyramid_swagger.enable_response_validation': False,
-        'pyramid_swagger.enable_swagger_spec_validation': False,
-        'pyramid_swagger.skip_validation': ['/(sample)\\b'],
-    }
-    test_app(settings).get(
+    assert test_app(**{'pyramid_swagger.skip_validation': ['/(sample)\\b']}).get(
         '/sample/test_request/resource',
         status=200
     )
