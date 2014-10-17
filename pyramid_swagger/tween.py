@@ -38,10 +38,13 @@ Settings = namedtuple(
 
 
 def validation_tween_factory(handler, registry):
-    """Pyramid tween for performing request validation.
+    """Pyramid tween for performing validation.
 
-    Note this is very simple -- it validates requests and responses while
-    delegating to the relevant matching view.
+    Note this is very simple -- it validates requests, responses, and paths
+    while delegating to the relevant matching view.
+
+    If validate_path is disabled and an appropriate Swagger schema cannot be
+    found, then request and response validation is skipped.
     """
     settings = load_settings(registry)
     schema = compile_swagger_schema(
@@ -56,7 +59,14 @@ def validation_tween_factory(handler, registry):
                 request.path):
             return handler(request)
 
-        schema_data, resolver = find_schema_for_request(schema, request)
+        try:
+            schema_data, resolver = schema.schema_and_resolver_for_request(
+                request)
+        except PathNotMatchedError as exc:
+            if settings.validate_path is True:
+                raise HTTPClientError(str(exc))
+            else:
+                return handler(request)
 
         _validate_request(
             route_mapper,
@@ -115,13 +125,6 @@ def load_settings(registry):
 def should_skip_validation(skip_validation_res, path):
     # Skip validation for the specified endpoints
     return any(r.match(path) for r in skip_validation_res)
-
-
-def find_schema_for_request(schema, request):
-    try:
-        return schema.schema_and_resolver_for_request(request)
-    except PathNotMatchedError as exc:
-        raise HTTPClientError(str(exc))
 
 
 def _validate_request(route_mapper, request, schema_data, resolver):

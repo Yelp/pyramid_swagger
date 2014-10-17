@@ -41,23 +41,20 @@ class SwaggerSchema(object):
 
         :param request: A Pyramid request to fetch schemas for
         :type request: pyramid.request.Request
-        :returns: (schema_map, resolver) for this particular request.
+        :returns: (schema_map, resolver) for this particular request
         :rtype: A tuple of (load_schema.SchemaMap, jsonschema.Resolver)
         """
         for schema_resolver in self.schema_resolvers:
             request_to_schema_map = schema_resolver.request_to_schema_map
             resolver = schema_resolver.resolver
             for (path, method), schema_map in request_to_schema_map.items():
-                if (
-                        partial_path_match(request.path, path) and
-                        (method == request.method)
-                ):
+                if partial_path_match(request.path, path) \
+                        and method == request.method:
                     return (schema_map, resolver)
 
         raise PathNotMatchedError(
-            'Could not find the relevant path ({0}) '
-            'in the Swagger schema. Perhaps you forgot '
-            'to add it?'.format(request.path)
+            'Could not find the relevant path ({0}) in the Swagger schema. '
+            'Perhaps you forgot to add it?'.format(request.path)
         )
 
 

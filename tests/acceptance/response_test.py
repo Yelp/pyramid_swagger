@@ -10,6 +10,7 @@ from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.registry import Registry
 from pyramid.response import Response
 from pyramid_swagger.tween import validation_tween_factory
+from webtest import AppError
 
 
 def get_registry(settings):
@@ -145,3 +146,13 @@ def test_200_skip_validation_with_wrong_response():
     assert test_app(**{'pyramid_swagger.skip_validation': ['/(sample)\\b']}) \
         .get('/sample/path_arg1/resource', params={'required_arg': 'test'}) \
         .status_code == 200
+
+
+def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
+    """If path missing and validation is disabled we want to let something else
+    handle the error. TestApp throws an AppError, but Pyramid would throw a
+    HTTPNotFound exception.
+    """
+    with pytest.raises(AppError):
+        assert test_app(**{'pyramid_swagger.enable_path_validation': False}) \
+            .get('/this/path/doesnt/exist')
