@@ -2,8 +2,7 @@
     "apiVersion": "0.1",
     "swaggerVersion": "1.2",
     "basePath": "http://localhost:9999/sample",
-    "apis":
-    [
+    "apis": [
         {
             "path": "/sample",
             "operations": [
@@ -34,7 +33,6 @@
                 }
             ]
         },
-
         {
             "path": "/sample_array_response",
             "operations": [
@@ -49,7 +47,6 @@
                 }
             ]
         },
-
         {
             "path": "/post_with_primitive_body",
             "operations": [
@@ -69,7 +66,6 @@
                 }
             ]
         },
-
         {
             "path": "/get_with_non_string_query_args",
             "operations": [
@@ -102,11 +98,11 @@
         }
     ],
     "models": {
-	    "body_model": {
+        "body_model": {
             "id": "body_model",
             "type": "object",
             "required": [ "foo" ],
-	        "additionalProperties": false,
+            "additionalProperties": false,
             "properties": {
                 "foo": { "type": "string" },
                 "bar": { "type": "string" }

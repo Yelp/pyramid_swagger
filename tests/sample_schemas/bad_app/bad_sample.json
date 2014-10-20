@@ -3,7 +3,6 @@
     "swaggerVersion": "1.2",
     "basePath": "http://localhost:9999/sample",
     "apis": [
-
         {
             "path": "/required_body",
             "description": "requires a body",
