@@ -18,10 +18,9 @@ EXTENDED_TYPES = {
     'int': (int,),
 }
 
-# We don't always care about validating every endpoint (e.g. static resources)
-SKIP_VALIDATION_DEFAULT = [
-    '/(static)\\b',
-    '/(api-docs).*'
+DEFAULT_EXCLUDED_PATHS = [
+    r'^/static/?',
+    r'^/api-docs/?'
 ]
 
 
@@ -42,6 +41,8 @@ class Settings(namedtuple(
     :param validate_swagger_spec: check schema for correctness
     :param validate_response: check response vs schema
     :param validate_path: check if request path is in schema
+    :param exclude_paths: list of paths (in regex format) that should be
+        excluded from validation.
     :rtype: namedtuple
     """
 
@@ -63,9 +64,7 @@ def validation_tween_factory(handler, registry):
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
-        if should_skip_validation(
-                settings.skip_validation_regexes,
-                request.path):
+        if should_exclude_path(settings.exclude_paths, request.path):
             return handler(request)
 
         try:
@@ -99,16 +98,6 @@ def validation_tween_factory(handler, registry):
 
 
 def load_settings(registry):
-    # Static URLs and /api-docs skip validation by default
-    skip_validation_regexes = registry.settings.get(
-        'pyramid_swagger.skip_validation',
-        SKIP_VALIDATION_DEFAULT
-    )
-
-    if not isinstance(skip_validation_regexes, list) \
-            and not isinstance(skip_validation_regexes, tuple):
-        skip_validation_regexes = [skip_validation_regexes]
-
     return Settings(
         # By default, assume cwd contains the swagger schemas.
         schema_dir=registry.settings.get(
@@ -127,13 +116,33 @@ def load_settings(registry):
             'pyramid_swagger.enable_path_validation',
             True
         ),
-        skip_validation_regexes=map(re.compile, skip_validation_regexes),
+        exclude_paths=get_exclude_paths(registry),
     )
 
 
-def should_skip_validation(skip_validation_res, path):
+def get_exclude_paths(registry):
+    """Compiles a list of paths that should not be validated against.
+        :rtype: list of compiled validation regexes
+    """
+    # TODO(#63): remove deprecated `skip_validation` setting in v2.0.
+    regexes = registry.settings.get(
+        'pyramid_swagger.skip_validation',
+        registry.settings.get(
+            'pyramid_swagger.exclude_paths',
+            DEFAULT_EXCLUDED_PATHS
+        )
+    )
+
+    # being nice to users using strings :p
+    if not isinstance(regexes, list) and not isinstance(regexes, tuple):
+        regexes = [regexes]
+
+    return [re.compile(r) for r in regexes]
+
+
+def should_exclude_path(exclude_path_regexes, path):
     # Skip validation for the specified endpoints
-    return any(r.match(path) for r in skip_validation_res)
+    return any(r.match(path) for r in exclude_path_regexes)
 
 
 def _validate_request(route_mapper, request, schema_data, resolver):

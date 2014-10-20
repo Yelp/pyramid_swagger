@@ -4,15 +4,44 @@ import mock
 import re
 import pytest
 import simplejson
+from mock import Mock
 from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.response import Response
 
 
-from pyramid_swagger import tween
+from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
+from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import load_settings
 from pyramid_swagger.tween import prepare_body
-from pyramid_swagger.tween import should_skip_validation
+from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import validate_outgoing_response
+
+
+def test_default_exclude_paths():
+    assert get_exclude_paths(Mock(settings={})) \
+        == [re.compile(r) for r in DEFAULT_EXCLUDED_PATHS]
+
+
+def test_exclude_path_with_string():
+    path_string = r'/foo/'
+    assert get_exclude_paths(
+        Mock(settings={'pyramid_swagger.exclude_paths': path_string})) \
+        == [re.compile(r) for r in [path_string]]
+
+
+def test_exclude_path_with_overrides():
+    paths = [r'/foo/', r'/bar/']
+    assert get_exclude_paths(
+        Mock(settings={'pyramid_swagger.exclude_paths': paths})) \
+        == [re.compile(r) for r in paths]
+
+
+def test_exclude_path_with_old_setting():
+    # TODO(#63): remove deprecated `skip_validation` setting in v2.0.
+    paths = [r'/foo/', r'/bar/']
+    assert get_exclude_paths(
+        Mock(settings={'pyramid_swagger.skip_validation': paths})) \
+        == [re.compile(r) for r in paths]
 
 
 def test_response_charset_missing_raises_5xx():
@@ -28,14 +57,14 @@ def test_unconfigured_schema_dir_uses_api_docs():
 
 
 def test_validation_skips_path_properly():
-    skip_res = [re.compile(r) for r in tween.SKIP_VALIDATION_DEFAULT]
-    assert should_skip_validation(skip_res, '/static')
-    assert should_skip_validation(skip_res, '/static/foobar')
-    assert should_skip_validation(skip_res, '/api-docs')
-    assert should_skip_validation(skip_res, '/api-docs/foobar')
+    excluded_paths = [re.compile(r) for r in DEFAULT_EXCLUDED_PATHS]
+    assert should_exclude_path(excluded_paths, '/static')
+    assert should_exclude_path(excluded_paths, '/static/foobar')
+    assert should_exclude_path(excluded_paths, '/api-docs')
+    assert should_exclude_path(excluded_paths, '/api-docs/foobar')
 
-    assert not should_skip_validation(skip_res, '/sample')
-    assert not should_skip_validation(skip_res, '/sample/resources')
+    assert not should_exclude_path(excluded_paths, '/sample')
+    assert not should_exclude_path(excluded_paths, '/sample/resources')
 
 
 # TODO: Should probably be migrated to acceptance tests after we make mocking

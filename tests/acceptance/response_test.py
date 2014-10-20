@@ -142,8 +142,9 @@ def test_200_for_normal_response_validation():
         .status_code == 200
 
 
-def test_200_skip_validation_with_wrong_response():
-    assert test_app(**{'pyramid_swagger.skip_validation': ['/(sample)\\b']}) \
+def test_200_skip_validation_for_excluded_path():
+    # FIXME(#64): This test is broken and doesn't check anything.
+    assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
         .get('/sample/path_arg1/resource', params={'required_arg': 'test'}) \
         .status_code == 200
 

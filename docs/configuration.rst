@@ -18,15 +18,15 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Enable/disable response validation (true by default)
         pyramid_swagger.enable_response_validation = true
 
-        # Enable/disable swagger spec validation (true by default)
+        # Enable/disable minimal check if Swagger spec is correct (true by default)
         pyramid_swagger.enable_swagger_spec_validation = true
 
-        # Skip validation for certain endpoints. Takes a list
-        # of regular expressions for the endpoints to skip
-        # Note: This are not raw strings, hence the double '\'
-        # (/(static)\\b, /(api-docs)\\b by default)
-        pyramid_swagger.skip_validation = /(static)\\b
-                                          /(api-docs)\\b
+        # Enable/disable check if path is declared in Swagger spec (true by default)
+        pyramid_swagger.enable_path_validation = True
+
+        # Exclude certain endpoints from validation. Takes a list of regular
+        # expressions.
+        pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?']
 
 Note that, equivalently, you can add these during webapp configuration:
 
@@ -37,6 +37,6 @@ Note that, equivalently, you can add these during webapp configuration:
             settings['pyramid_swagger.schema_directory'] = 'schemas/live/here/'
             settings['pyramid_swagger.enable_response_validation'] = True
             settings['pyramid_swagger.enable_swagger_spec_validation'] = True
-            settings['pyramid_swagger.skip_validation'] = ['/(static)\\b', '/(api-docs)\\b']
+            settings['pyramid_swagger.exclude_paths'] = [r'^/static/?', r'^/api-docs/?']
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')
