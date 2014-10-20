@@ -25,16 +25,25 @@ SKIP_VALIDATION_DEFAULT = [
 ]
 
 
-Settings = namedtuple(
+class Settings(namedtuple(
     'Settings',
     [
         'schema_dir',
         'validate_swagger_spec',
         'validate_response',
         'validate_path',
-        'skip_validation_regexes',
-    ],
-)
+        'exclude_paths',
+    ]
+)):
+
+    """A settings object for configuratble options.
+
+    :param schema_dir: location of schema (Swagger) files
+    :param validate_swagger_spec: check schema for correctness
+    :param validate_response: check response vs schema
+    :param validate_path: check if request path is in schema
+    :rtype: namedtuple
+    """
 
 
 def validation_tween_factory(handler, registry):
