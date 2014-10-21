@@ -139,7 +139,14 @@ def test_400_if_extra_query_args(test_app):
     ).status_code == 400
 
 
-def test_200_skip_request_validation_with_excluded_path():
+def test_200_skip_validation_with_excluded_path():
     assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
         .get('/sample/test_request/resource') \
+        .status_code == 200
+
+
+def test_200_skip_validation_when_disabled():
+    # calling endpoint with required args missing
+    assert test_app(**{'pyramid_swagger.enable_request_validation': False}) \
+        .get('/get_with_non_string_query_args', params={}) \
         .status_code == 200
