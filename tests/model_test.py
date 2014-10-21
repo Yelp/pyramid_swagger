@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Unit tests for the SwaggerSchema class.
 """
@@ -22,19 +23,21 @@ def test_swagger_schema_for_request_different_methods(schema):
     method."""
     # There exists a GET and POST for this endpoint. We should be able to call
     # either and have them pass validation.
-    mock_request = mock.Mock(
-        path="/sample",
-        method="GET"
+    value, _ = schema.schema_and_resolver_for_request(
+        request=mock.Mock(
+            path="/sample",
+            method="GET"
+        ),
     )
-    value, _ = schema.schema_and_resolver_for_request(mock_request)
     assert value.request_body_schema is None
 
-    mock_request = mock.Mock(
-        path="/sample",
-        method="POST",
-        body={'foo': 1, 'bar': 2},
+    value, _ = schema.schema_and_resolver_for_request(
+        request=mock.Mock(
+            path="/sample",
+            method="POST",
+            body={'foo': 1, 'bar': 2},
+        ),
     )
-    value, _ = schema.schema_and_resolver_for_request(mock_request)
     assert (
         value.request_body_schema == {
             'required': True,
@@ -49,12 +52,13 @@ def test_swagger_schema_for_request_not_found(schema):
     """
     # There exists a GET and POST for this endpoint. We should be able to call
     # either and have them pass validation.
-    mock_request = mock.Mock(
-        path="/does_not_exist",
-        method="GET"
-    )
     with pytest.raises(PathNotMatchedError) as excinfo:
-        schema.schema_and_resolver_for_request(mock_request)
+        schema.schema_and_resolver_for_request(
+            request=mock.Mock(
+                path="/does_not_exist",
+                method="GET"
+            ),
+        )
     assert '/does_not_exist' in str(excinfo)
     assert 'Could not find ' in str(excinfo)
 

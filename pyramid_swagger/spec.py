@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Methods to help validate a given JSON document against the Swagger Spec.
 """

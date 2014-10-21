@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import _load_resource_listing

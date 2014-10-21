@@ -3,7 +3,6 @@
     "swaggerVersion": "1.2",
     "basePath": "http://localhost:9999/no_models",
     "apis": [
-
         {
             "path": "/no_models",
             "operations": [

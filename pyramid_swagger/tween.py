@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from pyramid.interfaces import IRoutesMapper
 
+from collections import namedtuple
 import re
 
 import jsonschema.exceptions
@@ -17,34 +18,61 @@ EXTENDED_TYPES = {
     'int': (int,),
 }
 
-# We don't always care about validating every endpoint (e.g. static resources)
-SKIP_VALIDATION_DEFAULT = [
-    '/(static)\\b',
-    '/(api-docs).*'
+DEFAULT_EXCLUDED_PATHS = [
+    r'^/static/?',
+    r'^/api-docs/?'
 ]
 
 
-def validation_tween_factory(handler, registry):
-    """Pyramid tween for performing request validation.
+class Settings(namedtuple(
+    'Settings',
+    [
+        'schema_dir',
+        'validate_swagger_spec',
+        'validate_response',
+        'validate_path',
+        'exclude_paths',
+    ]
+)):
 
-    Note this is very simple -- it validates requests and responses while
-    delegating to the relevant matching view.
+    """A settings object for configuratble options.
+
+    :param schema_dir: location of Swagger schema files.
+    :param validate_swagger_spec: check Swagger files for correctness.
+    :param validate_response: check responses against Swagger spec.
+    :param validate_path: check if request path is in schema. If disabled
+        and path not found in schema, request / response validation is skipped.
+    :param exclude_paths: list of paths (in regex format) that should be
+        excluded from validation.
+    :rtype: namedtuple
     """
-    (
-        schema_dir,
-        enable_swagger_spec_validation,
-        enable_response_validation,
-        skip_validation
-    ) = load_settings(registry)
 
-    schema = compile_swagger_schema(schema_dir, enable_swagger_spec_validation)
+
+def validation_tween_factory(handler, registry):
+    """Pyramid tween for performing validation.
+
+    Note this is very simple -- it validates requests, responses, and paths
+    while delegating to the relevant matching view.
+    """
+    settings = load_settings(registry)
+    schema = compile_swagger_schema(
+        settings.schema_dir,
+        settings.validate_swagger_spec
+    )
     route_mapper = registry.queryUtility(IRoutesMapper)
 
     def validator_tween(request):
-        if should_skip_validation(skip_validation, request.path):
+        if should_exclude_path(settings.exclude_paths, request.path):
             return handler(request)
 
-        schema_data, resolver = find_schema_for_request(schema, request)
+        try:
+            schema_data, resolver = schema.schema_and_resolver_for_request(
+                request)
+        except PathNotMatchedError as exc:
+            if settings.validate_path is True:
+                raise HTTPClientError(str(exc))
+            else:
+                return handler(request)
 
         _validate_request(
             route_mapper,
@@ -52,8 +80,10 @@ def validation_tween_factory(handler, registry):
             schema_data,
             resolver
         )
+
         response = handler(request)
-        if enable_response_validation:
+
+        if settings.validate_response:
             _validate_response(
                 response,
                 schema_data,
@@ -66,51 +96,51 @@ def validation_tween_factory(handler, registry):
 
 
 def load_settings(registry):
-    # By default, assume cwd contains the swagger schemas.
-    schema_dir = registry.settings.get(
-        'pyramid_swagger.schema_directory',
-        'api_docs/'
+    return Settings(
+        # By default, assume cwd contains the swagger schemas.
+        schema_dir=registry.settings.get(
+            'pyramid_swagger.schema_directory',
+            'api_docs/'
+        ),
+        validate_swagger_spec=registry.settings.get(
+            'pyramid_swagger.enable_swagger_spec_validation',
+            True
+        ),
+        validate_response=registry.settings.get(
+            'pyramid_swagger.enable_response_validation',
+            True
+        ),
+        validate_path=registry.settings.get(
+            'pyramid_swagger.enable_path_validation',
+            True
+        ),
+        exclude_paths=get_exclude_paths(registry),
     )
 
-    enable_swagger_spec_validation = registry.settings.get(
-        'pyramid_swagger.enable_swagger_spec_validation',
-        True
-    )
 
-    enable_response_validation = registry.settings.get(
-        'pyramid_swagger.enable_response_validation',
-        True
-    )
-    # Static URLs and /api-docs skip validation by default
-    skip_validation = registry.settings.get(
+def get_exclude_paths(registry):
+    """Compiles a list of paths that should not be validated against.
+        :rtype: list of compiled validation regexes
+    """
+    # TODO(#63): remove deprecated `skip_validation` setting in v2.0.
+    regexes = registry.settings.get(
         'pyramid_swagger.skip_validation',
-        SKIP_VALIDATION_DEFAULT
-    )
-    if isinstance(skip_validation, list):
-        skip_validation_res = [
-            re.compile(endpoint) for endpoint in skip_validation
-        ]
-    else:
-        skip_validation_res = [re.compile(skip_validation)]
-
-    return (
-        schema_dir,
-        enable_swagger_spec_validation,
-        enable_response_validation,
-        skip_validation_res,
+        registry.settings.get(
+            'pyramid_swagger.exclude_paths',
+            DEFAULT_EXCLUDED_PATHS
+        )
     )
 
+    # being nice to users using strings :p
+    if not isinstance(regexes, list) and not isinstance(regexes, tuple):
+        regexes = [regexes]
 
-def should_skip_validation(skip_validation_res, path):
+    return [re.compile(r) for r in regexes]
+
+
+def should_exclude_path(exclude_path_regexes, path):
     # Skip validation for the specified endpoints
-    return any(r.match(path) for r in skip_validation_res)
-
-
-def find_schema_for_request(schema, request):
-    try:
-        return schema.schema_and_resolver_for_request(request)
-    except PathNotMatchedError as exc:
-        raise HTTPClientError(str(exc))
+    return any(r.match(path) for r in exclude_path_regexes)
 
 
 def _validate_request(route_mapper, request, schema_data, resolver):

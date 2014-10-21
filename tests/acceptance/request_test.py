@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 import simplejson
 
@@ -138,7 +139,7 @@ def test_400_if_extra_query_args(test_app):
     ).status_code == 400
 
 
-def test_200_skip_validation_with_wrong_path():
-    assert test_app(**{'pyramid_swagger.skip_validation': ['/(sample)\\b']}) \
+def test_200_skip_request_validation_with_excluded_path():
+    assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
         .get('/sample/test_request/resource') \
         .status_code == 200

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Module for automatically serving /api-docs* via Pyramid.
 """
@@ -8,16 +9,11 @@ from .tween import load_settings
 
 
 def register_swagger_endpoints(config):
-    """Create and register pyramid endpoints for /api-docs*.
-
-    """
-    (
-        schema_dir,
-        enable_swagger_spec_validation, _, _,
-    ) = load_settings(config.registry)
+    """Create and register pyramid endpoints for /api-docs*."""
+    settings = load_settings(config.registry)
     swagger_schema = compile_swagger_schema(
-        schema_dir,
-        enable_swagger_spec_validation,
+        settings.schema_dir,
+        settings.validate_swagger_spec,
     )
     with open(swagger_schema.resource_listing) as input_file:
         register_resource_listing(config, simplejson.load(input_file))
@@ -32,7 +28,7 @@ def register_swagger_endpoints(config):
 
 
 def register_resource_listing(config, resource_listing):
-    """Registers an endpoint at /api-docs.
+    """Registers the endpoint /api-docs.
 
     :param config: Configurator instance for our webapp
     :type config: pyramid Configurator
