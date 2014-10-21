@@ -12,20 +12,27 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Add the pyramid_swagger validation tween to your app (required)
         pyramid.includes = pyramid_swagger
 
-        # Point pyramid_swagger at the directory containing your api_docs.json ('api_docs/' by default)
+        # `api_docs.json` directory location.
+        # Default: 'api_docs/'
         pyramid_swagger.schema_directory = "schemas/live/here"
 
-        # Enable/disable response validation (true by default)
-        pyramid_swagger.enable_response_validation = true
-
-        # Enable/disable minimal check if Swagger spec is correct (true by default)
+        # Check the correctness of Swagger spec files.
+        # Default: True
         pyramid_swagger.enable_swagger_spec_validation = true
 
-        # Enable/disable check if path is declared in Swagger spec (true by default)
+        # Check responses against Swagger spec.
+        # Default: True
+        pyramid_swagger.enable_response_validation = true
+
+        # Check path is declared in Swagger spec.
+        # If disabled and an appropriate Swagger schema cannot be
+        # found, then request and response validation is skipped.
+        # Default: True
         pyramid_swagger.enable_path_validation = True
 
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
+        # Default: [r'^/static/?', r'^/api-docs/?']
         pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?']
 
 Note that, equivalently, you can add these during webapp configuration:

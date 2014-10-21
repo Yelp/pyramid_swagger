@@ -37,10 +37,11 @@ class Settings(namedtuple(
 
     """A settings object for configuratble options.
 
-    :param schema_dir: location of schema (Swagger) files
-    :param validate_swagger_spec: check schema for correctness
-    :param validate_response: check response vs schema
-    :param validate_path: check if request path is in schema
+    :param schema_dir: location of Swagger schema files.
+    :param validate_swagger_spec: check Swagger files for correctness.
+    :param validate_response: check responses against Swagger spec.
+    :param validate_path: check if request path is in schema. If disabled
+        and path not found in schema, request / response validation is skipped.
     :param exclude_paths: list of paths (in regex format) that should be
         excluded from validation.
     :rtype: namedtuple
@@ -52,9 +53,6 @@ def validation_tween_factory(handler, registry):
 
     Note this is very simple -- it validates requests, responses, and paths
     while delegating to the relevant matching view.
-
-    If validate_path is disabled and an appropriate Swagger schema cannot be
-    found, then request and response validation is skipped.
     """
     settings = load_settings(registry)
     schema = compile_swagger_schema(
