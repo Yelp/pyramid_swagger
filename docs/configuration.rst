@@ -46,8 +46,7 @@ Note that, equivalently, you can add these during webapp configuration:
         def main(global_config, **settings):
             # ...
             settings['pyramid_swagger.schema_directory'] = 'schemas/live/here/'
-            settings['pyramid_swagger.enable_response_validation'] = True
             settings['pyramid_swagger.enable_swagger_spec_validation'] = True
-            settings['pyramid_swagger.exclude_paths'] = [r'^/static/?', r'^/api-docs/?']
+            # ...and so on with the other settings...
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')
