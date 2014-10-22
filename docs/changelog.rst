@@ -1,6 +1,22 @@
 Changelog
 =========
 
+1.2.0 (2014-10-21)
+++++++++++++++++++
+
+* Added `enable_request_validation` setting which toggles whether request
+  content is validated.
+* Added `enable_path_validation` setting which toggles whether HTTP calls to
+  endpoints will 400 if the URL is not described in the Swagger schema. If this
+  flag is disabled and the path is not found, no validation of any kind is
+  performed by pyramid-swagger.
+* Added `exclude_paths` setting which duplicates the functionality of
+  `skip_validation`. `skip_validation` is deprecated and scheduled for removal
+  in the 2.0.0 release.
+* Adds LICENSE file
+* Fixes misuse of webtest which could cause `make test` to pass while
+  functionality was broken.
+
 1.1.1 (2014-08-26)
 ++++++++++++++++++
 
