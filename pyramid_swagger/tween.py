@@ -29,6 +29,7 @@ class Settings(namedtuple(
     [
         'schema_dir',
         'validate_swagger_spec',
+        'validate_request',
         'validate_response',
         'validate_path',
         'exclude_paths',
@@ -39,6 +40,7 @@ class Settings(namedtuple(
 
     :param schema_dir: location of Swagger schema files.
     :param validate_swagger_spec: check Swagger files for correctness.
+    :param validate_request: check requests against Swagger spec.
     :param validate_response: check responses against Swagger spec.
     :param validate_path: check if request path is in schema. If disabled
         and path not found in schema, request / response validation is skipped.
@@ -60,26 +62,33 @@ def validation_tween_factory(handler, registry):
         settings.validate_swagger_spec
     )
     route_mapper = registry.queryUtility(IRoutesMapper)
+    disable_all_validation = not any((
+        settings.validate_request,
+        settings.validate_response,
+        settings.validate_path
+    ))
 
     def validator_tween(request):
-        if should_exclude_path(settings.exclude_paths, request.path):
+        if disable_all_validation or \
+                should_exclude_path(settings.exclude_paths, request.path):
             return handler(request)
 
         try:
             schema_data, resolver = schema.schema_and_resolver_for_request(
                 request)
         except PathNotMatchedError as exc:
-            if settings.validate_path is True:
+            if settings.validate_path:
                 raise HTTPClientError(str(exc))
             else:
                 return handler(request)
 
-        _validate_request(
-            route_mapper,
-            request,
-            schema_data,
-            resolver
-        )
+        if settings.validate_request:
+            _validate_request(
+                route_mapper,
+                request,
+                schema_data,
+                resolver
+            )
 
         response = handler(request)
 
@@ -104,6 +113,10 @@ def load_settings(registry):
         ),
         validate_swagger_spec=registry.settings.get(
             'pyramid_swagger.enable_swagger_spec_validation',
+            True
+        ),
+        validate_request=registry.settings.get(
+            'pyramid_swagger.enable_request_validation',
             True
         ),
         validate_response=registry.settings.get(

@@ -20,7 +20,11 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: True
         pyramid_swagger.enable_swagger_spec_validation = true
 
-        # Check responses against Swagger spec.
+        # Check request content against Swagger spec.
+        # Default: True
+        pyramid_swagger.enable_request_validation = true
+
+        # Check response content against Swagger spec.
         # Default: True
         pyramid_swagger.enable_response_validation = true
 
