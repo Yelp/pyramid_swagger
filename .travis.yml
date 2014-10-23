@@ -1,15 +1,24 @@
 sudo: false
 language: python
 env:
-  - TOX_ENV=py26
-  - TOX_ENV=py27
-  - TOX_ENV=py33
-  - TOX_ENV=py34
-  - TOX_ENV=docs
-  - TOX_ENV=pep8
+- TOX_ENV=py26
+- TOX_ENV=py27
+- TOX_ENV=py33
+- TOX_ENV=py34
+- TOX_ENV=docs
+- TOX_ENV=pep8
 install:
-  - "pip install --use-mirrors tox coveralls"
+- pip install --use-mirrors tox coveralls
 script:
-  - tox -e $TOX_ENV
-after_success:
-  coveralls
+- tox -e $TOX_ENV
+after_success: coveralls
+deploy:
+  provider: pypi
+  user: striglia
+  password:
+    secure: cNExm/7XrxdF8c/m+EpXDVObR5h4FJnGCVhE0sMKR6VbjUQU/WAYPdy3r2mfF1xeJH9aOxzOa1eBb60B8965GRgJu1lzQB6NwjDDEw0mVHRRxEEpnpQdKi2DOCMmP2W/aFuPYtd2DlZA3ddd1EOvNbgJeUisgy1dLFcl4KbACn8=
+  on:
+    tags: true
+    repo: striglia/pyramid_swagger
+    branch: master
+    distributions: "sdist bdist_wheel"
