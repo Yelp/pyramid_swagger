@@ -6,9 +6,9 @@ import pytest
 import simplejson
 from .request_test import test_app
 from pyramid.config import Configurator
-from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.registry import Registry
 from pyramid.response import Response
+from pyramid_swagger.exceptions import PyramidSwaggerResponseValidationError
 from pyramid_swagger.tween import validation_tween_factory
 from webtest import AppError
 
@@ -58,7 +58,7 @@ def test_response_validation_enabled_by_default():
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(HTTPInternalServerError):
+    with pytest.raises(PyramidSwaggerResponseValidationError):
         _validate_against_tween(request, response=response)
 
 
@@ -74,7 +74,7 @@ def test_500_when_response_is_missing_required_field():
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(HTTPInternalServerError):
+    with pytest.raises(PyramidSwaggerResponseValidationError):
         _validate_against_tween(request, response=response)
 
 
@@ -106,7 +106,7 @@ def test_500_when_response_arg_is_wrong_type():
         }),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(HTTPInternalServerError):
+    with pytest.raises(PyramidSwaggerResponseValidationError):
         _validate_against_tween(request, response=response)
 
 
@@ -119,7 +119,7 @@ def test_500_for_bad_validated_array_response():
         body=simplejson.dumps([{"enum_value": "bad_enum_value"}]),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(HTTPInternalServerError):
+    with pytest.raises(PyramidSwaggerResponseValidationError):
         _validate_against_tween(request, response=response)
 
 

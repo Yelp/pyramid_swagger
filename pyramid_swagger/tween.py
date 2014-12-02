@@ -8,7 +8,8 @@ import re
 import jsonschema.exceptions
 import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
-from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
+from pyramid_swagger.exceptions import PyramidSwaggerRequestValidationError
+from pyramid_swagger.exceptions import PyramidSwaggerResponseValidationError
 from .ingest import compile_swagger_schema
 from .model import PathNotMatchedError
 
@@ -78,7 +79,7 @@ def validation_tween_factory(handler, registry):
                 request)
         except PathNotMatchedError as exc:
             if settings.validate_path:
-                raise HTTPClientError(str(exc))
+                raise PyramidSwaggerRequestValidationError(str(exc))
             else:
                 return handler(request)
 
@@ -157,7 +158,8 @@ def should_exclude_path(exclude_path_regexes, path):
 
 
 def _validate_request(route_mapper, request, schema_data, resolver):
-    """ Validates a request and raises an HTTPClientError on failure.
+    """ Validates a request and raises a PyramidSwaggerRequestValidationError
+    on failure.
 
     :param request: the request object to validate
     :type request: Pyramid request object passed into a view
@@ -177,11 +179,12 @@ def _validate_request(route_mapper, request, schema_data, resolver):
     except jsonschema.exceptions.ValidationError as exc:
         # This will alter our stack trace slightly, but Pyramid knows how
         # to render it. And the real value is in the message anyway.
-        raise HTTPClientError(str(exc))
+        raise PyramidSwaggerRequestValidationError(str(exc))
 
 
 def _validate_response(response, schema_data, schema_resolver):
-    """ Validates a response and raises an HTTPInternalServerError on failure.
+    """ Validates a response and raises a PyramidSwaggerResponseValidationError
+    on failure.
 
     :param response: the response object to validate
     :type response: Pyramid response object passed into a view
@@ -200,7 +203,7 @@ def _validate_response(response, schema_data, schema_resolver):
     except jsonschema.exceptions.ValidationError as exc:
         # This will alter our stack trace slightly, but Pyramid knows how
         # to render it and the real value is in the message anyway.
-        raise HTTPInternalServerError(str(exc))
+        raise PyramidSwaggerResponseValidationError(str(exc))
 
 
 def cast_request_param(request_schema, param_name, param_value):
@@ -308,7 +311,7 @@ def validate_outgoing_response(response, schema_map, resolver):
 def prepare_body(response):
     # content_type and charset must both be set to access response.text
     if response.content_type is None or response.charset is None:
-        raise HTTPInternalServerError(
+        raise PyramidSwaggerResponseValidationError(
             'Response validation error: Content-Type and charset must be set'
         )
 
