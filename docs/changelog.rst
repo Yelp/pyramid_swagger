@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.3.0 (2014-12-02)
+++++++++++++++++++
+* Now throws RequestValidationError and ResponseValidationError instead of
+  HTTPClientError and HTTPInternalServerError respectively. The new errors
+  subclass the old ones for backwards compatibility.
+
 1.2.0 (2014-10-21)
 ++++++++++++++++++
 
