@@ -2,9 +2,9 @@
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
 
-class PyramidSwaggerRequestValidationError(HTTPClientError):
+class RequestValidationError(HTTPClientError):
     pass
 
 
-class PyramidSwaggerResponseValidationError(HTTPInternalServerError):
+class ResponseValidationError(HTTPInternalServerError):
     pass

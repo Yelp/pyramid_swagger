@@ -8,7 +8,7 @@ from mock import Mock
 from pyramid.response import Response
 
 
-from pyramid_swagger.exceptions import PyramidSwaggerResponseValidationError
+from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
 from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import load_settings
@@ -45,7 +45,7 @@ def test_exclude_path_with_old_setting():
 
 
 def test_response_charset_missing_raises_5xx():
-    with pytest.raises(PyramidSwaggerResponseValidationError):
+    with pytest.raises(ResponseValidationError):
         prepare_body(
             Response(content_type='foo')
         )
