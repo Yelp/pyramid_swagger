@@ -4,6 +4,7 @@ docs/build
 build/
 dist/
 .coverage
+.ropeproject
 .tox
 pyramid_swagger.egg-info
 tests/__pycache__
