@@ -15,19 +15,41 @@ def register_swagger_endpoints(config):
         settings.schema_dir,
         settings.validate_swagger_spec,
     )
-    with open(swagger_schema.resource_listing) as input_file:
-        register_resource_listing(config, simplejson.load(input_file))
 
-    for name, filepath in swagger_schema.api_declarations.items():
-        with open(filepath) as input_file:
-            register_api_declaration(
+    def add_pyramid_swagger_resource_listing_directive(self, **view_kwargs):
+        with open(swagger_schema.resource_listing) as input_file:
+            register_resource_listing(
                 config,
-                name,
-                simplejson.load(input_file)
+                simplejson.load(input_file),
+                **view_kwargs
             )
 
+    config.add_directive(
+        'add_pyramid_swagger_resource_listing_view',
+        add_pyramid_swagger_resource_listing_directive,
+    )
 
-def register_resource_listing(config, resource_listing):
+    def add_pyramid_swagger_api_declaration_directive(self, **view_kwargs):
+        for name, filepath in swagger_schema.api_declarations.items():
+            with open(filepath) as input_file:
+                register_api_declaration(
+                    config,
+                    name,
+                    simplejson.load(input_file),
+                    **view_kwargs
+                )
+
+    config.add_directive(
+        'add_pyramid_swagger_api_declaration_views',
+        add_pyramid_swagger_api_declaration_directive,
+    )
+
+    if settings.use_default_view_configuration:
+        config.add_pyramid_swagger_resource_listing_view()
+        config.add_pyramid_swagger_api_declaration_views()
+
+
+def register_resource_listing(config, resource_listing, **view_kwargs):
     """Registers the endpoint /api-docs.
 
     :param config: Configurator instance for our webapp
@@ -42,14 +64,25 @@ def register_resource_listing(config, resource_listing):
 
     route_name = 'api_docs'
     config.add_route(route_name, '/api-docs')
-    config.add_view(
-        view_for_resource_listing,
-        route_name=route_name,
-        renderer='json'
-    )
+
+    default_view_config_args = {
+        'view': view_for_resource_listing,
+        'route_name': route_name,
+        'renderer': 'json',
+    }
+
+    # Update with any custom view_config args passed in
+    default_view_config_args.update(view_kwargs)
+
+    config.add_view(**default_view_config_args)
 
 
-def register_api_declaration(config, resource_name, api_declaration):
+def register_api_declaration(
+    config,
+    resource_name,
+    api_declaration,
+    **view_kwargs
+):
     """Registers an endpoint at /api-docs.
 
     :param config: Configurator instance for our webapp
@@ -64,11 +97,17 @@ def register_api_declaration(config, resource_name, api_declaration):
     # pyramid routes! (minus the leading /)
     route_name = 'apidocs-{0}'.format(resource_name)
     config.add_route(route_name, '/api-docs/{0}'.format(resource_name))
-    config.add_view(
-        build_api_declaration_view(api_declaration),
-        route_name=route_name,
-        renderer='json'
-    )
+
+    default_view_config_args = {
+        'view': build_api_declaration_view(api_declaration),
+        'route_name': route_name,
+        'renderer': 'json',
+    }
+
+    # Update with any custom view_config args passed in
+    default_view_config_args.update(view_kwargs)
+
+    config.add_view(**default_view_config_args)
 
 
 def build_api_declaration_view(api_declaration_json):

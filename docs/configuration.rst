@@ -39,6 +39,15 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: [r'^/static/?', r'^/api-docs/?']
         pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?']
 
+        # Turn off automatically adding any /api-docs views. Applications
+        # can supply their own renderers, predicates, or even view callables
+        # by then calling
+        # configurator.add_pyramid_swagger_resource_listing_view(**view_kwargs)
+        # and
+        # configurator.add_pyramid_swagger_api_declaration_views(**view_kwargs)
+        # Default: True
+        pyramid_swagger.use_default_view_configurations = False
+
 Note that, equivalently, you can add these during webapp configuration:
 
 .. code-block:: python

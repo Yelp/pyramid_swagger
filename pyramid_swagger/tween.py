@@ -34,6 +34,7 @@ class Settings(namedtuple(
         'validate_response',
         'validate_path',
         'exclude_paths',
+        'use_default_view_configuration',
     ]
 )):
 
@@ -126,6 +127,10 @@ def load_settings(registry):
         ),
         validate_path=registry.settings.get(
             'pyramid_swagger.enable_path_validation',
+            True
+        ),
+        use_default_view_configuration=registry.settings.get(
+            'pyramid_swagger.use_default_view_configuration',
             True
         ),
         exclude_paths=get_exclude_paths(registry),
