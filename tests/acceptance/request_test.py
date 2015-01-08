@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from contextlib import contextmanager
+from pyramid.httpexceptions import exception_response
 import pytest
 import simplejson
 
@@ -150,3 +152,16 @@ def test_200_skip_validation_when_disabled():
     assert test_app(**{'pyramid_swagger.enable_request_validation': False}) \
         .get('/get_with_non_string_query_args', params={}) \
         .status_code == 200
+
+
+def test_request_validation_context():
+    @contextmanager
+    def validation_context(request, response=None):
+        try:
+            yield
+        except Exception:
+            raise exception_response(206)
+
+    assert test_app(**{'pyramid_swagger.validation_context': validation_context}) \
+        .get('/get_with_non_string_query_args', params={}) \
+        .status_code == 206

@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import mock
 import pyramid.testing
 import pyramid_swagger
@@ -157,3 +158,33 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
     with pytest.raises(AppError):
         assert test_app(**{'pyramid_swagger.enable_path_validation': False}) \
             .get('/this/path/doesnt/exist')
+
+
+def test_response_validation_context():
+    class CustomResponseValidationException(Exception):
+        pass
+
+    @contextmanager
+    def validation_context(request, response=None):
+        try:
+            yield
+        except Exception:
+            raise CustomResponseValidationException
+
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'},
+    )
+    # Omit the logging_info key from the response.
+    response = Response(
+        body=simplejson.dumps({'raw_response': 'foo'}),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+    with pytest.raises(CustomResponseValidationException):
+        _validate_against_tween(
+            request,
+            response=response,
+            **{'pyramid_swagger.validation_context': validation_context}
+        )

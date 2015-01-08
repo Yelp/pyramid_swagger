@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from contextlib import contextmanager
 from pyramid.interfaces import IRoutesMapper
 
 from collections import namedtuple
@@ -51,6 +52,11 @@ class Settings(namedtuple(
     """
 
 
+@contextmanager
+def noop_context(request, response=None):
+    yield
+
+
 def validation_tween_factory(handler, registry):
     """Pyramid tween for performing validation.
 
@@ -83,22 +89,29 @@ def validation_tween_factory(handler, registry):
             else:
                 return handler(request)
 
+        validation_context = registry.settings.get(
+            'pyramid_swagger.validation_context',
+            noop_context,
+        )
+
         if settings.validate_request:
-            _validate_request(
-                route_mapper,
-                request,
-                schema_data,
-                resolver
-            )
+            with validation_context(request):
+                _validate_request(
+                    route_mapper,
+                    request,
+                    schema_data,
+                    resolver
+                )
 
         response = handler(request)
 
         if settings.validate_response:
-            _validate_response(
-                response,
-                schema_data,
-                resolver
-            )
+            with validation_context(request, response=response):
+                _validate_response(
+                    response,
+                    schema_data,
+                    resolver
+                )
 
         return response
 
