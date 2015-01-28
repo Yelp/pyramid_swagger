@@ -16,7 +16,7 @@ __uri__ = "https://github.com/striglia/pyramid_swagger"
 __version__ = "1.3.0"
 
 __author__ = "Scott Triglia"
-__email__ = "striglia@yelp.com"
+__email__ = "scott.triglia@gmail.com"
 
-__license__ = "Copyright 2013-2014 Yelp"
-__copyright__ = "Copyright 2013-2014 Yelp"
+__license__ = "BSD 3-clause"
+__copyright__ = "Copyright 2014 Scott Triglia"
