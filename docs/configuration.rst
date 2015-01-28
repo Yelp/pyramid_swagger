@@ -39,6 +39,12 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: [r'^/static/?', r'^/api-docs/?']
         pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?']
 
+        # Path to contextmanager to handle request/response validation
+        # exceptions. This should be a dotted python name as per
+        # http://docs.pylonsproject.org/projects/pyramid/en/latest/glossary.html#term-dotted-python-name
+        # Default: None
+        pyramid_swagger.validation_context_path = 'path.to.user.defined.contextmanager'
+
 Note that, equivalently, you can add these during webapp configuration:
 
 .. code-block:: python

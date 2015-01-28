@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.4.0 (2015-01-27)
+++++++++++++++++++
+* Added `validation_context_path` setting which allows the user to specify a
+  path to a contextmanager to custom handle request/response validation
+  exceptions.
+
 1.3.0 (2014-12-02)
 ++++++++++++++++++
 * Now throws RequestValidationError and ResponseValidationError instead of

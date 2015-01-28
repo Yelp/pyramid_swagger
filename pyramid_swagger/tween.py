@@ -57,6 +57,27 @@ def noop_context(request, response=None):
     yield
 
 
+def _get_validation_context(registry):
+    validation_context_path = registry.settings.get(
+        'pyramid_swagger.validation_context_path',
+    )
+
+    if validation_context_path:
+        m = re.match(
+            '(?P<module_path>.*)\.(?P<contextmanager_name>.*)',
+            validation_context_path,
+        )
+        module_path = m.group('module_path')
+        contextmanager_name = m.group('contextmanager_name')
+
+        return getattr(
+            __import__(module_path, fromlist=contextmanager_name),
+            contextmanager_name,
+        )
+    else:
+        return noop_context
+
+
 def validation_tween_factory(handler, registry):
     """Pyramid tween for performing validation.
 
@@ -80,10 +101,7 @@ def validation_tween_factory(handler, registry):
                 should_exclude_path(settings.exclude_paths, request.path):
             return handler(request)
 
-        validation_context = registry.settings.get(
-            'pyramid_swagger.validation_context',
-            noop_context,
-        )
+        validation_context = _get_validation_context(registry)
 
         try:
             schema_data, resolver = schema.schema_and_resolver_for_request(

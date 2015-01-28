@@ -14,6 +14,21 @@ from pyramid_swagger.tween import validation_tween_factory
 from webtest import AppError
 
 
+class CustomResponseValidationException(Exception):
+    pass
+
+
+@contextmanager
+def validation_context(request, response=None):
+    try:
+        yield
+    except Exception:
+        raise CustomResponseValidationException
+
+
+validation_ctx_path = 'tests.acceptance.response_test.validation_context'
+
+
 def get_registry(settings):
     registry = Registry('testing')
     config = Configurator(registry=registry)
@@ -161,16 +176,6 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
 
 
 def test_response_validation_context():
-    class CustomResponseValidationException(Exception):
-        pass
-
-    @contextmanager
-    def validation_context(request, response=None):
-        try:
-            yield
-        except Exception:
-            raise CustomResponseValidationException
-
     request = pyramid.testing.DummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
@@ -186,5 +191,5 @@ def test_response_validation_context():
         _validate_against_tween(
             request,
             response=response,
-            **{'pyramid_swagger.validation_context': validation_context}
+            **{'pyramid_swagger.validation_context_path': validation_ctx_path}
         )

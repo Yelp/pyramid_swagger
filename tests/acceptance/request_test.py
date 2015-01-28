@@ -27,6 +27,9 @@ def validation_context(request, response=None):
         raise exception_response(206)
 
 
+validation_ctx_path = 'tests.acceptance.request_test.validation_context'
+
+
 def test_400_if_required_query_args_absent(test_app):
     assert test_app.get(
         '/sample/path_arg1/resource',
@@ -163,12 +166,12 @@ def test_200_skip_validation_when_disabled():
 
 
 def test_path_validation_context():
-    assert test_app(**{'pyramid_swagger.validation_context': validation_context}) \
+    assert test_app(**{'pyramid_swagger.validation_context_path': validation_ctx_path}) \
         .get('/does_not_exist') \
         .status_code == 206
 
 
 def test_request_validation_context():
-    assert test_app(**{'pyramid_swagger.validation_context': validation_context}) \
+    assert test_app(**{'pyramid_swagger.validation_context_path': validation_ctx_path}) \
         .get('/get_with_non_string_query_args', params={}) \
         .status_code == 206
