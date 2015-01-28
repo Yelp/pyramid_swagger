@@ -19,6 +19,14 @@ def test_app(**overrides):
     return TestApp(main({}, **settings))
 
 
+@contextmanager
+def validation_context(request, response=None):
+    try:
+        yield
+    except Exception:
+        raise exception_response(206)
+
+
 def test_400_if_required_query_args_absent(test_app):
     assert test_app.get(
         '/sample/path_arg1/resource',
@@ -154,14 +162,13 @@ def test_200_skip_validation_when_disabled():
         .status_code == 200
 
 
-def test_request_validation_context():
-    @contextmanager
-    def validation_context(request, response=None):
-        try:
-            yield
-        except Exception:
-            raise exception_response(206)
+def test_path_validation_context():
+    assert test_app(**{'pyramid_swagger.validation_context': validation_context}) \
+        .get('/does_not_exist') \
+        .status_code == 206
 
+
+def test_request_validation_context():
     assert test_app(**{'pyramid_swagger.validation_context': validation_context}) \
         .get('/get_with_non_string_query_args', params={}) \
         .status_code == 206

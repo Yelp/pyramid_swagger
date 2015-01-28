@@ -80,19 +80,20 @@ def validation_tween_factory(handler, registry):
                 should_exclude_path(settings.exclude_paths, request.path):
             return handler(request)
 
+        validation_context = registry.settings.get(
+            'pyramid_swagger.validation_context',
+            noop_context,
+        )
+
         try:
             schema_data, resolver = schema.schema_and_resolver_for_request(
                 request)
         except PathNotMatchedError as exc:
             if settings.validate_path:
-                raise RequestValidationError(str(exc))
+                with validation_context(request):
+                    raise RequestValidationError(str(exc))
             else:
                 return handler(request)
-
-        validation_context = registry.settings.get(
-            'pyramid_swagger.validation_context',
-            noop_context,
-        )
 
         if settings.validate_request:
             with validation_context(request):
