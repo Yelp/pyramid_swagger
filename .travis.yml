@@ -12,17 +12,3 @@ install:
 script:
 - tox -e $TOX_ENV
 after_success: coveralls
-deploy:
-  provider: pypi
-  user: striglia
-  password:
-    secure: cNExm/7XrxdF8c/m+EpXDVObR5h4FJnGCVhE0sMKR6VbjUQU/WAYPdy3r2mfF1xeJH9aOxzOa1eBb60B8965GRgJu1lzQB6NwjDDEw0mVHRRxEEpnpQdKi2DOCMmP2W/aFuPYtd2DlZA3ddd1EOvNbgJeUisgy1dLFcl4KbACn8=
-  on:
-    # all_branches is a hack for https://github.com/travis-ci/travis-ci/issues/1675.
-    # NOTE: Only tag master, and only when you want to publish to pypi!
-    # After this issue gets fixed, we can go back to deploying on tagged master
-    # commits only.
-    all_branches: true
-    tags: true
-    repo: striglia/pyramid_swagger
-    distributions: "sdist bdist_wheel"
