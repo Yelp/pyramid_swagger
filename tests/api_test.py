@@ -4,7 +4,7 @@ import pytest
 from pyramid.testing import DummyRequest
 
 from pyramid_swagger.api import build_api_declaration_view
-from pyramid_swagger.api import register_swagger_endpoints
+from pyramid_swagger.api import register_api_doc_endpoints
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
 from pyramid_swagger.ingest import ResourceListingNotFoundError
@@ -28,7 +28,7 @@ def build_config(schema_dir):
 
 def test_proper_error_on_missing_resource_listing():
     with pytest.raises(ResourceListingNotFoundError) as exc:
-        register_swagger_endpoints(
+        register_api_doc_endpoints(
             build_config('tests/sample_schemas/missing_resource_listing/'),
         )
     assert(
@@ -40,7 +40,7 @@ def test_proper_error_on_missing_resource_listing():
 
 def test_proper_error_on_missing_api_declaration():
     with pytest.raises(ApiDeclarationNotFoundError) as exc:
-        register_swagger_endpoints(
+        register_api_doc_endpoints(
             build_config('tests/sample_schemas/missing_api_declaration/'),
         )
     assert (

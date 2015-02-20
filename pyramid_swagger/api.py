@@ -8,7 +8,7 @@ from .ingest import compile_swagger_schema
 from .tween import load_settings
 
 
-def register_swagger_endpoints(config):
+def register_api_doc_endpoints(config):
     """Create and register pyramid endpoints for /api-docs*."""
     settings = load_settings(config.registry)
     swagger_schema = compile_swagger_schema(
