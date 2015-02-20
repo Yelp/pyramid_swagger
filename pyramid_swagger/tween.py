@@ -28,8 +28,7 @@ DEFAULT_EXCLUDED_PATHS = [
 class Settings(namedtuple(
     'Settings',
     [
-        'schema_dir',
-        'validate_swagger_spec',
+        'schema',
         'validate_request',
         'validate_response',
         'validate_path',
@@ -39,7 +38,7 @@ class Settings(namedtuple(
 
     """A settings object for configuratble options.
 
-    :param schema_dir: location of Swagger schema files.
+    :param schema: a :class:`pyramid_swagger.model.SwaggerSchema`
     :param validate_swagger_spec: check Swagger files for correctness.
     :param validate_request: check requests against Swagger spec.
     :param validate_response: check responses against Swagger spec.
@@ -84,7 +83,6 @@ def validation_tween_factory(handler, registry):
     while delegating to the relevant matching view.
     """
     settings = load_settings(registry)
-    schema = registry.settings['swagger_schema']
     route_mapper = registry.queryUtility(IRoutesMapper)
     disable_all_validation = not any((
         settings.validate_request,
@@ -100,8 +98,10 @@ def validation_tween_factory(handler, registry):
         validation_context = _get_validation_context(registry)
 
         try:
-            schema_data, resolver = schema.schema_and_resolver_for_request(
-                request)
+            (
+                schema_data,
+                resolver
+            ) = settings.schema.schema_and_resolver_for_request(request)
         except PathNotMatchedError as exc:
             if settings.validate_path:
                 with validation_context(request):
@@ -134,10 +134,8 @@ def validation_tween_factory(handler, registry):
 
 
 def load_settings(registry):
-    # TODO: remove these unused settings
     return Settings(
-        None,
-        None,
+        schema=registry.settings['pyramid_swagger.schema'],
         validate_request=registry.settings.get(
             'pyramid_swagger.enable_request_validation',
             True

@@ -30,9 +30,9 @@ def test_exclude_path_with_string():
 
 def test_exclude_path_with_overrides():
     paths = [r'/foo/', r'/bar/']
-    assert get_exclude_paths(
-        Mock(settings={'pyramid_swagger.exclude_paths': paths})) \
-        == [re.compile(r) for r in paths]
+    compiled = get_exclude_paths(
+        Mock(settings={'pyramid_swagger.exclude_paths': paths}))
+    assert compiled == [re.compile(r) for r in paths]
 
 
 def test_exclude_path_with_old_setting():

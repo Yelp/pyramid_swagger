@@ -6,11 +6,12 @@ import pyramid_swagger
 
 
 @mock.patch('pyramid_swagger.register_api_doc_endpoints')
-def test_disable_api_doc_views(mock_register):
+@mock.patch('pyramid_swagger.ingest.compile_swagger_schema')
+def test_disable_api_doc_views(_, mock_register):
     settings = {
         'pyramid_swagger.enable_api_doc_views': False,
         'pyramid_swagger.enable_swagger_spec_validation': False,
-        'pyramid_swagger.enable_build_swagger_schema_model': False,
+        'pyramid_swagger.schema': None,
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
     pyramid_swagger.includeme(mock_config)

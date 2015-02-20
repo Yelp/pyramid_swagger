@@ -76,32 +76,13 @@ def compile_swagger_schema(schema_dir):
     return SwaggerSchema(listing_filename, mapping, schema_resolvers)
 
 
-# TODO: more test cases
-def add_swagger_schema(registry):
-    """Add the swagger_schema to the registry.settings
-    """
-    schema_dir = registry.settings.get(
-        'pyramid_swagger.schema_directory',
-        'api_docs/'
-    )
-    if registry.settings.get(
-        'pyramid_swagger.enable_swagger_spec_validation',
-        True
-    ):
-        listing_filename = os.path.join(schema_dir, API_DOCS_FILENAME)
-        # TODO: this will be replaced by ssv shortly
-        listing_json = _load_resource_listing(listing_filename)
-        mapping = build_schema_mapping(schema_dir, listing_json)
-        validate_swagger_schemas(listing_filename, mapping.values())
-
-    # TODO: docs for this
-    if registry.settings.get(
-        'pyramid_swagger.enable_build_swagger_schema_model',
-        True
-    ):
-        registry.settings['swagger_schema'] = (
-            compile_swagger_schema(schema_dir)
-        )
+def validate_swagger_schema(schema_dir):
+    """Add the swagger_schema to the registry.settings """
+    listing_filename = os.path.join(schema_dir, API_DOCS_FILENAME)
+    # TODO: this will be replaced by ssv shortly
+    listing_json = _load_resource_listing(listing_filename)
+    mapping = build_schema_mapping(schema_dir, listing_json)
+    validate_swagger_schemas(listing_filename, mapping.values())
 
 
 def ingest_resources(mapping, schema_dir):
