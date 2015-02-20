@@ -12,10 +12,7 @@ from pyramid_swagger.model import partial_path_match
 
 @pytest.fixture
 def schema():
-    schema_dir = 'tests/sample_schemas/good_app/'
-    enable_swagger_spec_validation = False
-
-    return compile_swagger_schema(schema_dir, enable_swagger_spec_validation)
+    return compile_swagger_schema('tests/sample_schemas/good_app/')
 
 
 def test_swagger_schema_for_request_different_methods(schema):

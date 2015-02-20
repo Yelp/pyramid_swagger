@@ -166,12 +166,14 @@ def test_200_skip_validation_when_disabled():
 
 
 def test_path_validation_context():
-    assert test_app(**{'pyramid_swagger.validation_context_path': validation_ctx_path}) \
-        .get('/does_not_exist') \
-        .status_code == 206
+    app = test_app(
+        **{'pyramid_swagger.validation_context_path': validation_ctx_path}
+    )
+    assert app.get('/does_not_exist').status_code == 206
 
 
 def test_request_validation_context():
-    assert test_app(**{'pyramid_swagger.validation_context_path': validation_ctx_path}) \
-        .get('/get_with_non_string_query_args', params={}) \
-        .status_code == 206
+    app = test_app(
+        **{'pyramid_swagger.validation_context_path': validation_ctx_path})
+    response = app.get('/get_with_non_string_query_args', params={})
+    assert response.status_code == 206

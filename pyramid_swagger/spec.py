@@ -37,9 +37,6 @@ def validate_resource_listing(resource_listing_json):
 
 def validate_api_declaration(api_declaration_json):
     """Validate a swagger schema.
-
-    :param schema_dir: the directory schema files live inside
-    :type schema_dir: string
     """
     api_spec_path = resource_filename(
         'pyramid_swagger',

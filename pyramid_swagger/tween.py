@@ -11,7 +11,6 @@ import simplejson
 from jsonschema.validators import Draft3Validator, Draft4Validator
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
-from .ingest import compile_swagger_schema
 from .model import PathNotMatchedError
 
 
@@ -85,10 +84,7 @@ def validation_tween_factory(handler, registry):
     while delegating to the relevant matching view.
     """
     settings = load_settings(registry)
-    schema = compile_swagger_schema(
-        settings.schema_dir,
-        settings.validate_swagger_spec
-    )
+    schema = registry.settings['swagger_schema']
     route_mapper = registry.queryUtility(IRoutesMapper)
     disable_all_validation = not any((
         settings.validate_request,
@@ -138,16 +134,10 @@ def validation_tween_factory(handler, registry):
 
 
 def load_settings(registry):
+    # TODO: remove these unused settings
     return Settings(
-        # By default, assume cwd contains the swagger schemas.
-        schema_dir=registry.settings.get(
-            'pyramid_swagger.schema_directory',
-            'api_docs/'
-        ),
-        validate_swagger_spec=registry.settings.get(
-            'pyramid_swagger.enable_swagger_spec_validation',
-            True
-        ),
+        None,
+        None,
         validate_request=registry.settings.get(
             'pyramid_swagger.enable_request_validation',
             True
