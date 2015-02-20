@@ -45,6 +45,10 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: None
         pyramid_swagger.validation_context_path = 'path.to.user.defined.contextmanager'
 
+        # Enable/disable automatic /api-doc endpoints to serve the swagger
+        # schemas (true by default)
+        pyramid_swagger.enable_api_doc_views = true
+
 Note that, equivalently, you can add these during webapp configuration:
 
 .. code-block:: python

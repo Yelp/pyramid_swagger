@@ -11,4 +11,8 @@ def includeme(config):
         "pyramid_swagger.tween.validation_tween_factory",
         under=pyramid.tweens.EXCVIEW
     )
-    register_api_doc_endpoints(config)
+    if config.registry.settings.get(
+        'pyramid_swagger.enable_api_doc_views',
+        True
+    ):
+        register_api_doc_endpoints(config)
