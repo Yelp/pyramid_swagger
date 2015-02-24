@@ -33,6 +33,7 @@ class Settings(namedtuple(
         'validate_response',
         'validate_path',
         'exclude_paths',
+        'exclude_routes',
     ]
 )):
 
@@ -47,6 +48,8 @@ class Settings(namedtuple(
     :param exclude_paths: list of paths (in regex format) that should be
         excluded from validation.
     :rtype: namedtuple
+    :param exclude_routes: list of route names that should be excluded from
+        validation.
     """
 
 
@@ -84,15 +87,14 @@ def validation_tween_factory(handler, registry):
     """
     settings = load_settings(registry)
     route_mapper = registry.queryUtility(IRoutesMapper)
-    disable_all_validation = not any((
-        settings.validate_request,
-        settings.validate_response,
-        settings.validate_path
-    ))
 
     def validator_tween(request):
-        if disable_all_validation or \
-                should_exclude_path(settings.exclude_paths, request.path):
+        # We don't have access to this yet but let's go ahead and build the
+        # matchdict so we can validate it and use it to exclude routes from
+        # validation.
+        route_info = route_mapper(request)
+
+        if should_exclude_request(settings, request, route_info):
             return handler(request)
 
         validation_context = _get_validation_context(registry)
@@ -112,7 +114,7 @@ def validation_tween_factory(handler, registry):
         if settings.validate_request:
             with validation_context(request):
                 _validate_request(
-                    route_mapper,
+                    (route_info.get('match') or {}).items(),
                     request,
                     schema_data,
                     resolver
@@ -149,6 +151,9 @@ def load_settings(registry):
             True
         ),
         exclude_paths=get_exclude_paths(registry),
+        exclude_routes=set(registry.settings.get(
+            'pyramid_swagger.exclude_routes',
+        ) or []),
     )
 
 
@@ -172,14 +177,37 @@ def get_exclude_paths(registry):
     return [re.compile(r) for r in regexes]
 
 
+def should_exclude_request(settings, request, route_info):
+    disable_all_validation = not any((
+        settings.validate_request,
+        settings.validate_response,
+        settings.validate_path
+    ))
+    return (
+        disable_all_validation or
+        should_exclude_path(settings.exclude_paths, request.path) or
+        should_exclude_route(settings.exclude_routes, route_info)
+    )
+
+
 def should_exclude_path(exclude_path_regexes, path):
     # Skip validation for the specified endpoints
     return any(r.match(path) for r in exclude_path_regexes)
 
 
-def _validate_request(route_mapper, request, schema_data, resolver):
+def should_exclude_route(excluded_routes, route_info):
+    return (
+        route_info.get('route') and
+        route_info['route'].name in excluded_routes
+    )
+
+
+def _validate_request(route_match, request, schema_data, resolver):
     """ Validates a request and raises a RequestValidationError on failure.
 
+    :param route_match: a dict with all the path params and their values from
+        the request
+    :param route_match: dict
     :param request: the request object to validate
     :type request: Pyramid request object passed into a view
     :param schema_data: our mapping from request data to schemas (see
@@ -190,7 +218,7 @@ def _validate_request(route_mapper, request, schema_data, resolver):
     """
     try:
         validate_incoming_request(
-            route_mapper,
+            route_match,
             request,
             schema_data,
             resolver
@@ -249,9 +277,12 @@ def cast_request_param(request_schema, param_name, param_value):
         return param_value
 
 
-def validate_incoming_request(route_mapper, request, schema_map, resolver):
+def validate_incoming_request(route_match, request, schema_map, resolver):
     """Validates an incoming request against our schemas.
 
+    :param route_match: a dict with all the path params and their values from
+        the request
+    :param route_match: dict
     :param request: the request object to validate
     :type request: Pyramid request object passed into a view
     :param schema_map: our mapping from request data to schemas (see
@@ -279,13 +310,10 @@ def validate_incoming_request(route_mapper, request, schema_map, resolver):
         ).validate(request_query_params)
 
     if schema_map.request_path_schema:
-        # We don't have access to this yet but let's go ahead and build the
-        # matchdict so we can validate it.
-        info = route_mapper(request)
         matchdict = dict(
             (k, cast_request_param(schema_map.request_path_schema, k, v))
             for k, v
-            in info.get('match', {}).items()
+            in route_match
         )
         Draft3Validator(
             schema_map.request_path_schema,
