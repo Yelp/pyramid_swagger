@@ -10,6 +10,7 @@ from pyramid.config import Configurator
 from pyramid.registry import Registry
 from pyramid.response import Response
 from pyramid_swagger.exceptions import ResponseValidationError
+from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.tween import validation_tween_factory
 from webtest import AppError
 
@@ -49,7 +50,8 @@ def _validate_against_tween(request, response=None, **overrides):
         return response or Response()
 
     settings = dict({
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.schema': compile_swagger_schema(
+            'tests/sample_schemas/good_app/'),
         'pyramid_swagger.enable_swagger_spec_validation': False},
         **overrides
     )

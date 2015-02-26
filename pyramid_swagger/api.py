@@ -4,17 +4,10 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import simplejson
 
-from .ingest import compile_swagger_schema
-from .tween import load_settings
 
-
-def register_swagger_endpoints(config):
+def register_api_doc_endpoints(config):
     """Create and register pyramid endpoints for /api-docs*."""
-    settings = load_settings(config.registry)
-    swagger_schema = compile_swagger_schema(
-        settings.schema_dir,
-        settings.validate_swagger_spec,
-    )
+    swagger_schema = config.registry.settings['pyramid_swagger.schema']
     with open(swagger_schema.resource_listing) as input_file:
         register_resource_listing(config, simplejson.load(input_file))
 
@@ -73,7 +66,8 @@ def register_api_declaration(config, resource_name, api_declaration):
 
 def build_api_declaration_view(api_declaration_json):
     """Thanks to the magic of closures, this means we gracefully return JSON
-    without file IO at request time."""
+    without file IO at request time.
+    """
     def view_for_api_declaration(request):
         # Note that we rewrite basePath to always point at this server's root.
         return dict(
