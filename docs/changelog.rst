@@ -1,14 +1,26 @@
 Changelog
 =========
 
+1.5.0-dev (2015-02-25)
+++++++++++++++++++
+**Under development**
+
+* Added ``enable_api_docs_views`` configuration option so /api-docs
+  auto-registration can be disabled in situations where users want to serve
+  the Swagger spec in a nonstandard way.
+* Added ``exclude_routes`` configuration option. Allows a blacklist of Pyramid
+  routes which will be ignored for validation purposes.
+
 1.4.0 (2015-01-27)
 ++++++++++++++++++
-* Added `validation_context_path` setting which allows the user to specify a
+
+* Added ``validation_context_path`` setting which allows the user to specify a
   path to a contextmanager to custom handle request/response validation
   exceptions.
 
 1.3.0 (2014-12-02)
 ++++++++++++++++++
+
 * Now throws RequestValidationError and ResponseValidationError instead of
   HTTPClientError and HTTPInternalServerError respectively. The new errors
   subclass the old ones for backwards compatibility.
@@ -16,17 +28,17 @@ Changelog
 1.2.0 (2014-10-21)
 ++++++++++++++++++
 
-* Added `enable_request_validation` setting which toggles whether request
+* Added ``enable_request_validation`` setting which toggles whether request
   content is validated.
-* Added `enable_path_validation` setting which toggles whether HTTP calls to
+* Added ``enable_path_validation`` setting which toggles whether HTTP calls to
   endpoints will 400 if the URL is not described in the Swagger schema. If this
   flag is disabled and the path is not found, no validation of any kind is
   performed by pyramid-swagger.
-* Added `exclude_paths` setting which duplicates the functionality of
+* Added ``exclude_paths`` setting which duplicates the functionality of
   `skip_validation`. `skip_validation` is deprecated and scheduled for removal
   in the 2.0.0 release.
 * Adds LICENSE file
-* Fixes misuse of webtest which could cause `make test` to pass while
+* Fixes misuse of webtest which could cause ``make test`` to pass while
   functionality was broken.
 
 1.1.1 (2014-08-26)
@@ -40,7 +52,7 @@ Changelog
 1.1.0 (2014-07-14)
 ++++++++++++++++++
 
-* Swagger schema directory defaults to "api_docs/" rather than being a required
+* Swagger schema directory defaults to ``api_docs/`` rather than being a required
   configuration line.
 * If the resource listing or API declarations are not at the filepaths
   expected, readable errors are raised.
@@ -56,10 +68,10 @@ Changelog
 * Initial fully functional release.
 * Your service now must supply both a resource listing and all accompanying api
   declarations.
-* Swagger schemas are automatically served out of /api-docs by including the
+* Swagger schemas are automatically served out of ``/api-docs`` by including the
   library.
-* The api declaration basepath returned by hitting /api-docs/foo is guaranteed
-  to be Pyramid.request.application_url.
+* The api declaration basepath returned by hitting ``/api-docs/foo`` is guaranteed
+  to be ``Pyramid.request.application_url``.
 * Void return types are now checked.
 
 
@@ -119,7 +131,7 @@ Changelog
 0.1.1 (2014-05-13)
 ++++++++++++++++++
 
-* Build docs now live at docs/build/html
+* Build docs now live at ``docs/build/html``
 
 0.1.0 (2014-05-12)
 ++++++++++++++++++
