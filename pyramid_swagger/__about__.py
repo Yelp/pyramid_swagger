@@ -13,7 +13,7 @@ __title__ = "pyramid_swagger"
 __summary__ = "Swagger tools for use in pyramid webapps"
 __uri__ = "https://github.com/striglia/pyramid_swagger"
 
-__version__ = "1.4.1"
+__version__ = "1.5.0-dev"
 
 __author__ = "Scott Triglia"
 __email__ = "scott.triglia@gmail.com"
