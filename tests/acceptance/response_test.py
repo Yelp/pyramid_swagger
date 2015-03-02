@@ -12,6 +12,7 @@ from pyramid.registry import Registry
 from pyramid.response import Response
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import compile_swagger_schema
+from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.tween import validation_tween_factory
 from pyramid.urldispatch import RoutesMapper
 from webtest import AppError
@@ -42,6 +43,13 @@ def get_registry(settings):
     return registry
 
 
+def get_swagger_schema(schema_dir='tests/sample_schemas/good_app/'):
+    return compile_swagger_schema(
+        schema_dir,
+        get_resource_listing(schema_dir, False)
+    )
+
+
 def _validate_against_tween(request, response=None, **overrides):
     """
     Acceptance testing helper for testing the validation tween.
@@ -53,8 +61,7 @@ def _validate_against_tween(request, response=None, **overrides):
         return response or Response()
 
     settings = dict({
-        'pyramid_swagger.schema': compile_swagger_schema(
-            'tests/sample_schemas/good_app/'),
+        'pyramid_swagger.schema': get_swagger_schema(),
         'pyramid_swagger.enable_swagger_spec_validation': False},
         **overrides
     )

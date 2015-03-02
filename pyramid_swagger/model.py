@@ -22,8 +22,8 @@ class SwaggerSchema(object):
     def __init__(self, resource_listing, api_declarations, schema_resolvers):
         """Store schema_resolvers for later use.
 
-        :param resource_listing: Filepath to a resource listing
-        :type resource_listing: string
+        :param resource_listing: A swagger resource listing
+        :type resource_listing: dict
         :param api_declarations: Map from resource name to filepath of its api
             declaration
         :type api_declarations: dict

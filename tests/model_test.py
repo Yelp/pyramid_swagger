@@ -6,13 +6,18 @@ import mock
 import pytest
 
 from pyramid_swagger.ingest import compile_swagger_schema
+from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.model import partial_path_match
 
 
 @pytest.fixture
 def schema():
-    return compile_swagger_schema('tests/sample_schemas/good_app/')
+    schema_dir = 'tests/sample_schemas/good_app/'
+    return compile_swagger_schema(
+        schema_dir,
+        get_resource_listing(schema_dir, False)
+    )
 
 
 def test_swagger_schema_for_request_different_methods(schema):

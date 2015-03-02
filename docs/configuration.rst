@@ -52,6 +52,10 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # schemas (true by default)
         pyramid_swagger.enable_api_doc_views = true
 
+        # Enable/disable generating the /api-doc endpoint from a resource
+        # listing template (false by default)
+        pyramid_swagger.generate_resource_listing = false
+
 Note that, equivalently, you can add these during webapp configuration:
 
 .. code-block:: python

@@ -2,7 +2,7 @@ Changelog
 =========
 
 1.5.0-dev (2015-02-25)
-++++++++++++++++++
+++++++++++++++++++++++
 **Under development**
 
 * Added ``enable_api_docs_views`` configuration option so /api-docs
