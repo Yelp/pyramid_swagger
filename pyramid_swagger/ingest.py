@@ -6,10 +6,10 @@ import simplejson
 
 from .load_schema import load_schema
 from .model import SwaggerSchema
-from .spec import validate_swagger_schemas
 
 
 API_DOCS_FILENAME = 'api_docs.json'
+SWAGGER_2DOT0_FILENAME = 'swagger.json'
 
 
 class ResourceListingNotFoundError(Exception):
@@ -74,15 +74,6 @@ def compile_swagger_schema(schema_dir):
     mapping = build_schema_mapping(schema_dir, listing_json)
     schema_resolvers = ingest_resources(mapping, schema_dir)
     return SwaggerSchema(listing_filename, mapping, schema_resolvers)
-
-
-def validate_swagger_schema(schema_dir):
-    """Add the swagger_schema to the registry.settings """
-    listing_filename = os.path.join(schema_dir, API_DOCS_FILENAME)
-    # TODO: this will be replaced by ssv shortly
-    listing_json = _load_resource_listing(listing_filename)
-    mapping = build_schema_mapping(schema_dir, listing_json)
-    validate_swagger_schemas(listing_filename, mapping.values())
 
 
 def ingest_resources(mapping, schema_dir):
