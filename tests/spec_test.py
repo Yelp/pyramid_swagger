@@ -2,6 +2,7 @@
 import mock
 import pytest
 
+from jsonschema.exceptions import ValidationError
 from swagger_spec_validator import SwaggerValidationError
 
 from pyramid_swagger.ingest import API_DOCS_FILENAME, SWAGGER_2DOT0_FILENAME
@@ -37,7 +38,7 @@ def test_fetch_swagger_filename_raises_if_spec_not_found(mock_isfile):
 
 
 def test_proper_error_on_missing_resource_listing():
-    with pytest.raises(SwaggerValidationError) as exc:
+    with pytest.raises(ValidationError) as exc:
         validate_swagger_schema(
             'tests/sample_schemas/missing_resource_listing/')
     assert(
@@ -47,7 +48,7 @@ def test_proper_error_on_missing_resource_listing():
 
 
 def test_proper_error_on_missing_api_declaration():
-    with pytest.raises(SwaggerValidationError) as exc:
+    with pytest.raises(ValidationError) as exc:
         validate_swagger_schema(
             'tests/sample_schemas/missing_api_declaration/')
     assert (

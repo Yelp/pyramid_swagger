@@ -1,8 +1,8 @@
 import mock
 import pytest
 
+from jsonschema.exceptions import ValidationError
 import pyramid_swagger
-from swagger_spec_validator import SwaggerValidationError
 
 
 @mock.patch('pyramid_swagger.register_api_doc_endpoints')
@@ -23,8 +23,9 @@ def test_bad_schema_validated_on_include():
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/bad_app/',
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
-    with pytest.raises(SwaggerValidationError):
+    with pytest.raises(ValidationError) as excinfo:
         pyramid_swagger.includeme(mock_config)
+    assert "'nickname' is a required property" in str(excinfo.value)
 
 
 @mock.patch('pyramid_swagger.register_api_doc_endpoints')
