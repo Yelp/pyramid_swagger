@@ -2,7 +2,7 @@ Changelog
 =========
 
 1.5.0-dev (2015-02-25)
-++++++++++++++++++
+++++++++++++++++++++++
 **Under development**
 
 * Added ``enable_api_docs_views`` configuration option so /api-docs
@@ -10,6 +10,8 @@ Changelog
   the Swagger spec in a nonstandard way.
 * Added ``exclude_routes`` configuration option. Allows a blacklist of Pyramid
   routes which will be ignored for validation purposes.
+* Added ``generate_resource_listing`` configuration option to allow
+  pyramid_swagger to generate the ``apis`` section of the resource listing.
 
 1.4.0 (2015-01-27)
 ++++++++++++++++++
