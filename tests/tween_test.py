@@ -14,7 +14,7 @@ from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
-from pyramid_swagger.tween import validate_outgoing_response
+from pyramid_swagger.tween import validate_response
 
 
 def assert_eq_regex_lists(left, right):
@@ -105,7 +105,7 @@ def test_validation_content_type_with_json():
         body=simplejson.dumps(body),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_outgoing_response(response, fake_validator)
+    validate_response(response, fake_validator)
     fake_validator.validate.assert_called_once_with(body)
 
 
@@ -116,6 +116,6 @@ def test_raw_string():
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_outgoing_response(response, fake_validator)
+    validate_response(response, fake_validator)
     fake_validator.validate.assert_called_once_with(
         response.body.decode('utf-8'))

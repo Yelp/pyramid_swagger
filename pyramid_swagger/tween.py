@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from pyramid.interfaces import IRoutesMapper
 
 from collections import namedtuple
+import functools
 import re
 
 import jsonschema.exceptions
@@ -102,20 +103,78 @@ def validation_tween_factory(handler, registry):
             else:
                 return handler(request)
 
-        if settings.validate_request:
-            with validation_context(request):
-                route_match = (route_info.get('match') or {}).items()
-                _validate_request(route_match, request, validator_map)
-
+        handle_request(
+            settings,
+            PyramidSwaggerRequest(request, route_info),
+            validation_context,
+            # TODO: replace with validation mapping
+            schema_data,
+            resolver)
         response = handler(request)
 
         if settings.validate_response:
             with validation_context(request, response=response):
-                _validate_response(response, validator_map.response)
+                validate_response(response, validator_map.response)
 
         return response
 
     return validator_tween
+
+
+class PyramidSwaggerRequest(object):
+    """Adopter for a :class:`pyramid.request.Request` which exposes request
+    data for casting and validation.
+    """
+
+    def __init__(self, request, route_info):
+        self.request = request
+        self.route_info = route_info
+
+    @property
+    def query(self):
+        return self.request.GET.items()
+
+    @property
+    def path(self):
+        return (self.route_info.get('match') or {}).items()
+
+    @property
+    def headers(self):
+        return self.request.headers.items()
+
+    @property
+    def body(self):
+        return getattr(self.request, 'json_body', {})
+
+
+def handle_request(settings, request, validation_context, schema_map, resolver):
+    if not settings.validate_request:
+        return
+
+    request_data = {}
+    validation_pairs = []
+
+    for schema, values in [
+        (schema_map.request_query_schema, request.query),
+        (schema_map.request_path_schema, request.path),
+        (schema_map.request_header_schema, request.headers),
+    ]:
+        values = cast_params(schema, values, DEFAULT_FORMAT_MAPPING)
+        validation_pairs.append((schema, values))
+        request_data.update(values)
+
+    if schema_map.request_body_schema:
+        param_name, _ = schema_map.request_body_schema
+        request_data[param_name] = request.body
+
+    with validation_context(request):
+        values = validate_request(validation_pairs, request, schema_map, resolver)
+
+    def swagger_data(_):
+        return request_values
+
+    # TODO: test cases
+    request.request.set_property(swagger_data, b'swagger_data')
 
 
 def load_settings(registry):
@@ -185,50 +244,54 @@ def should_exclude_route(excluded_routes, route_info):
     )
 
 
-def _validate_request(route_match, request, validator_map):
-    try:
-        validate_incoming_request(route_match, request, validator_map)
-    except jsonschema.exceptions.ValidationError as exc:
-        # This will alter our stack trace slightly, but Pyramid knows how
-        # to render it. And the real value is in the message anyway.
-        raise RequestValidationError(str(exc))
+def validation_error(exc_class):
+    def decorator(f):
+        @functools.wraps(f)
+        def _validate(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except jsonschema.exceptions.ValidationError as exc:
+                # This will alter our stack trace slightly, but Pyramid knows how
+                # to render it. And the real value is in the message anyway.
+                raise exc_class(str(exc))
+
+        return _validate
+
+    return decorator
 
 
-def _validate_response(response, validator):
-    try:
-        validate_outgoing_response(response, validator)
-    except jsonschema.exceptions.ValidationError as exc:
-        # This will alter our stack trace slightly, but Pyramid knows how
-        # to render it and the real value is in the message anyway.
-        raise ResponseValidationError(str(exc))
+# TODO: cast date types
+DEFAULT_FORMAT_MAPPING = {
+    'integer': int,
+    'float': float,
+    'boolean': bool,
+}
 
 
-def cast_request_param(request_schema, param_name, param_value):
+def cast_request_param(request_schema, param_name, param_value, format_mapping):
     """Try to cast a request param (e.g. query arg, POST data) from a string to
     its specified type in the schema. This allows validating non-string params.
 
     :param request_schema: request schema
     :type request_schema: dict
     :param param_name: param name
-    :type: string
-    :param param_name: param value
-    :type: string
+    :type  param_name: string
+    :param param_value: param value
+    :type  param_value: string
+    :param format_mapping: a mapping of format name to callable which casts
+        the value to the correct type.
     """
-    type_to_cast_fn = {
-        'integer': int,
-        'float': float,
-        'boolean': bool,
-    }
-
     param_type = request_schema['properties'].get(param_name, {}).get('type')
     try:
-        return type_to_cast_fn.get(param_type, lambda x: x)(param_value)
+        return format_mapping.get(param_type, lambda x: x)(param_value)
     except ValueError:
+        # TODO: log a warning here
         # Ignore type error, let jsonschema validation handle incorrect types
         return param_value
 
 
-def validate_incoming_request(route_match, request, validator_map):
+@validation_error(RequestValidationError)
+def validate_request(request_match, request, validator_map):
     """Validates an incoming request against our schemas.
 
     :param route_match: a dict with all the path params and their values from
@@ -251,13 +314,29 @@ def validate_incoming_request(route_match, request, validator_map):
     validator_map.body.validate(getattr(request, 'json_body', {}))
 
 
-def cast_params(schema, values):
+def cast_params(schema, values, format_mapping):
     if not schema:
-        return
-    return dict((k, cast_request_param(schema, k, v)) for k, v in values)
+        return {}
+    return dict(
+        (k, cast_request_param(schema, k, v, format_mapping))
+        for k, v in values)
 
 
-def validate_outgoing_response(response, validator):
+def validate_param_values(request_schema, values, resolver):
+    # You'll notice we use Draft3 some places and Draft4 in others.
+    # Unfortunately this is just Swagger's inconsistency showing. It
+    # may be nice in the future to do the necessary munging to make
+    # everything Draft4 compatible, although the Swagger UI will
+    # probably never truly support Draft5.
+    Draft3Validator(
+        request_schema,
+        resolver=resolver,
+        types=EXTENDED_TYPES,
+    ).validate(values)
+
+
+@validation_error(ResponseValidationError)
+def validate_response(response, schema_map, resolver):
     """Validates response against our schemas.
 
     :param response: the response object to validate

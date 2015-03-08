@@ -94,17 +94,19 @@ def extract_body_schema(schema, models_schema):
         for s in schema['parameters']
         if s['paramType'] == 'body'
     ]
-    if matching_body_schemas:
-        schema = matching_body_schemas[0]
-        type_ref = extract_validatable_type(schema['type'], models_schema)
-        # Unpleasant, but we are forced to replace 'type' defns with proper
-        # jsonschema refs.
-        if '$ref' in type_ref:
-            del schema['type']
-            schema.update(type_ref)
-        return strip_swagger_markup(schema)
-    else:
-        return None
+    if not matching_body_schemas:
+        return
+
+    # There can be only one body param
+    schema = matching_body_schemas[0]
+    type_ref = extract_validatable_type(schema['type'], models_schema)
+    # TODO: do this with a jsonschema.SwaggerValidator
+    # Unpleasant, but we are forced to replace 'type' defns with proper
+    # jsonschema refs.
+    if '$ref' in type_ref:
+        del schema['type']
+        schema.update(type_ref)
+    return schema['name'], strip_swagger_markup(schema)
 
 
 # TODO: do this with jsonschema directly
