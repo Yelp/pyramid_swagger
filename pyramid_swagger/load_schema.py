@@ -10,7 +10,7 @@ import simplejson
 from jsonschema import RefResolver
 
 
-def extract_query_param_schema(schema):
+def build_param_schema(schema, param_type):
     """Turn a swagger endpoint schema into an equivalent one to validate our
     request.
 
@@ -38,7 +38,7 @@ def extract_query_param_schema(schema):
     properties = dict(
         (s['name'], strip_swagger_markup(s))
         for s in schema['parameters']
-        if s['paramType'] == 'query'
+        if s['paramType'] == param_type
     )
     # Generate a jsonschema that describes the set of all query parameters. We
     # can then validate this against dict(request.params).
@@ -52,39 +52,7 @@ def extract_query_param_schema(schema):
         return None
 
 
-def extract_path_schema(schema):
-    """Extract a schema for path variables for an endpoint.
-
-    As an example, this would take this swagger schema:
-        {
-            "paramType": "path",
-            "type": "string",
-            "enum": ["foo", "bar"],
-            "required": true
-        }
-    To this jsonschema:
-        {
-            "type": "string",
-            "enum": ["foo", "bar"],
-        }
-    Which we can then validate against a JSON object we construct from the
-    pyramid request.
-    """
-    properties = dict(
-        (s['name'], strip_swagger_markup(s))
-        for s in schema['parameters']
-        if s['paramType'] == 'path'
-    )
-    if properties:
-        return {
-            'type': 'object',
-            'properties': properties,
-            'additionalProperties': False,
-        }
-    else:
-        return None
-
-
+# TODO: do this with jsonschema directly
 def extract_body_schema(schema, models_schema):
     """Turn a swagger endpoint schema into an equivalent one to validate our
     request.
@@ -128,6 +96,7 @@ def extract_body_schema(schema, models_schema):
         return None
 
 
+# TODO: do this with jsonschema directly
 def strip_swagger_markup(schema):
     """Turn a swagger URL parameter schema into a raw jsonschema.
 
@@ -146,7 +115,7 @@ def strip_swagger_markup(schema):
 
 def get_model_resolver(schema):
     """
-    Gets the schema and a RefResolver. RefResolver's will resolve "$ref:
+    Get a RefResolver. RefResolver's will resolve "$ref:
     ObjectType" entries in the schema, which are used to describe more complex
     objects.
 
@@ -161,12 +130,13 @@ def get_model_resolver(schema):
 
 
 class SchemaMap(namedtuple(
-        'SchemaMap', [
-            'request_query_schema',
-            'request_path_schema',
-            'request_body_schema',
-            'response_body_schema'
-        ])):
+    'SchemaMap', [
+        'request_query_schema',
+        'request_path_schema',
+        'request_header_schema',
+        'request_body_schema',
+        'response_body_schema'
+    ])):
     """
     A SchemaMap contains a mapping from incoming paths to schemas for request
     queries, request bodies, and responses. This requires some precomputation
@@ -175,11 +145,20 @@ class SchemaMap(namedtuple(
     """
     __slots__ = ()
 
+    @classmethod
+    def from_operation(cls, operation, models):
+        return cls(
+            build_param_schema(operation, 'query'),
+            build_param_schema(operation, 'path'),
+            build_param_schema(operation, 'header'),
+            extract_body_schema(operation, models),
+            extract_response_body_schema(operation, models),
+        )
+
 
 def build_request_to_schemas_map(schema):
     """Take the swagger schema and build a map from incoming path to a
     jsonschema for requests and responses."""
-    request_to_schema = {}
     schema_models = schema.get('models', {})
     for api in schema['apis']:
         path = api['path']
@@ -187,22 +166,10 @@ def build_request_to_schemas_map(schema):
             # Now that we have the necessary info for this particular
             # path/method combination, build our dict.
             key = (path, operation['method'])
-            request_to_schema[key] = SchemaMap(
-                request_query_schema=extract_query_param_schema(operation),
-                request_path_schema=extract_path_schema(operation),
-                request_body_schema=extract_body_schema(
-                    operation,
-                    schema_models
-                ),
-                response_body_schema=extract_response_body_schema(
-                    operation,
-                    schema_models
-                ),
-            )
-
-    return request_to_schema
+            yield key, SchemaMap.from_operation(operation, schema_models)
 
 
+# TODO: do this with jsonschema directly
 def extract_response_body_schema(operation, schema_models):
     if operation['type'] in schema_models:
         return extract_validatable_type(operation['type'], schema_models)
@@ -212,15 +179,14 @@ def extract_response_body_schema(operation, schema_models):
             'maximum', 'items', 'uniqueItems'
         )
 
-        schema = dict([
+        return dict([
             (field, operation[field])
             for field in acceptable_fields
             if field in operation
         ])
 
-        return schema
 
-
+# TODO: do this with jsonschema directly
 def extract_validatable_type(type_name, models):
     """Returns a jsonschema-compatible typename from the Swagger type.
 
@@ -265,6 +231,6 @@ def load_schema(schema_path):
     with open(schema_path, 'r') as schema_file:
         schema = simplejson.load(schema_file)
     return SchemaAndResolver(
-        request_to_schema_map=build_request_to_schemas_map(schema),
+        request_to_schema_map=dict(build_request_to_schemas_map(schema)),
         resolver=get_model_resolver(schema),
     )

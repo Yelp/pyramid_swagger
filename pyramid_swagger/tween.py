@@ -203,7 +203,8 @@ def should_exclude_route(excluded_routes, route_info):
 
 
 def _validate_request(route_match, request, schema_data, resolver):
-    """ Validates a request and raises a RequestValidationError on failure.
+    """Validates a request and raises a
+    :class:`pyramid_swagger.exceptions.RequestValidationError` on failure.
 
     :param route_match: a dict with all the path params and their values from
         the request
@@ -292,34 +293,13 @@ def validate_incoming_request(route_match, request, schema_map, resolver):
     :type resolver: Pyramid request object passed into a view
     :returns: None
     """
-    if schema_map.request_query_schema:
-        # You'll notice we use Draft3 some places and Draft4 in others.
-        # Unfortunately this is just Swagger's inconsistency showing. It
-        # may be nice in the future to do the necessary munging to make
-        # everything Draft4 compatible, although the Swagger UI will
-        # probably never truly support Draft4.
-        request_query_params = dict(
-            (k, cast_request_param(schema_map.request_query_schema, k, v))
-            for k, v
-            in request.GET.items()
-        )
-        Draft3Validator(
-            schema_map.request_query_schema,
-            resolver=resolver,
-            types=EXTENDED_TYPES,
-        ).validate(request_query_params)
-
-    if schema_map.request_path_schema:
-        matchdict = dict(
-            (k, cast_request_param(schema_map.request_path_schema, k, v))
-            for k, v
-            in route_match
-        )
-        Draft3Validator(
-            schema_map.request_path_schema,
-            resolver=resolver,
-            types=EXTENDED_TYPES,
-        ).validate(matchdict)
+    for schema, values in [
+        (schema_map.request_query_schema, request.GET.items()),
+        (schema_map.request_path_schema, route_match),
+        (schema_map.request_header_schema, request.headers.items()),
+    ]:
+        values = cast_params(schema, values)
+        validate_param_values(schema or {}, values, resolver)
 
     # Body validation
     if schema_map.request_body_schema:
@@ -329,6 +309,25 @@ def validate_incoming_request(route_match, request, schema_map, resolver):
             resolver=resolver,
             types=EXTENDED_TYPES,
         ).validate(body)
+
+
+def cast_params(schema, values):
+    if not schema:
+        return {}
+    return dict((k, cast_request_param(schema, k, v)) for k, v in values)
+
+
+def validate_param_values(request_schema, values, resolver):
+    # You'll notice we use Draft3 some places and Draft4 in others.
+    # Unfortunately this is just Swagger's inconsistency showing. It
+    # may be nice in the future to do the necessary munging to make
+    # everything Draft4 compatible, although the Swagger UI will
+    # probably never truly support Draft5.
+    Draft3Validator(
+        request_schema,
+        resolver=resolver,
+        types=EXTENDED_TYPES,
+    ).validate(values)
 
 
 def validate_outgoing_response(response, schema_map, resolver):
