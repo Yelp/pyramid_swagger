@@ -8,6 +8,15 @@ from collections import namedtuple
 
 import simplejson
 from jsonschema import RefResolver
+from jsonschema.validators import Draft3Validator, Draft4Validator
+
+from pyramid_swagger.model import partial_path_match
+
+
+EXTENDED_TYPES = {
+    'float': (float,),
+    'int': (int,),
+}
 
 
 def build_param_schema(schema, param_type):
@@ -129,44 +138,82 @@ def get_model_resolver(schema):
     return RefResolver('', '', models)
 
 
-class SchemaMap(namedtuple(
-    'SchemaMap', [
-        'request_query_schema',
-        'request_path_schema',
-        'request_header_schema',
-        'request_body_schema',
-        'response_body_schema'
-    ])):
+class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
     """
-    A SchemaMap contains a mapping from incoming paths to schemas for request
-    queries, request bodies, and responses. This requires some precomputation
-    but means we can do fast query-time validation without having to walk over
-    the schema.
+    A data object with validators for each part of the request and response
+    objects. Each field is a :class:`SchemaValidator`.
     """
     __slots__ = ()
 
     @classmethod
-    def from_operation(cls, operation, models):
+    def from_operation(cls, operation, models, resolver):
+        args = []
+        for schema, validator in [
+            (build_param_schema(operation, 'query'), Draft3Validator),
+            (build_param_schema(operation, 'path'), Draft3Validator),
+            (build_param_schema(operation, 'header'), Draft3Validator),
+            (extract_body_schema(operation, models), Draft4Validator),
+            (extract_response_body_schema(operation, models),
+                Draft4Validator),
+        ]:
+            args.append(SchemaValidator.from_schema(
+                schema,
+                resolver,
+                validator))
+
+        return cls(*args)
+
+
+class SchemaValidator(object):
+
+    def __init__(self, schema, validator):
+        self.schema = schema
+        self.validator = validator
+
+    @classmethod
+    def from_schema(cls, schema, resolver, validator_class):
         return cls(
-            build_param_schema(operation, 'query'),
-            build_param_schema(operation, 'path'),
-            build_param_schema(operation, 'header'),
-            extract_body_schema(operation, models),
-            extract_response_body_schema(operation, models),
-        )
+            schema,
+            validator_class(schema, resolver=resolver, types=EXTENDED_TYPES))
+
+    def validate(self, values):
+        if not self.schema:
+            return
+        self.validator.validate(values)
 
 
-def build_request_to_schemas_map(schema):
-    """Take the swagger schema and build a map from incoming path to a
-    jsonschema for requests and responses."""
+def build_request_to_validator_map(schema, resolver):
+    """Build a mapping from :class:`RequestMatcher` to :class:`ValidatorMap`
+    for each operation in the API spec. This mapping may be used to retrieve
+    the appropriate validators for a request.
+    """
     schema_models = schema.get('models', {})
-    for api in schema['apis']:
-        path = api['path']
-        for operation in api['operations']:
-            # Now that we have the necessary info for this particular
-            # path/method combination, build our dict.
-            key = (path, operation['method'])
-            yield key, SchemaMap.from_operation(operation, schema_models)
+    return dict(
+        (
+            RequestMatcher(api['path'], operation['method']),
+            ValidatorMap.from_operation(operation, schema_models, resolver)
+        )
+        for api in schema['apis']
+        for operation in api['operations']
+    )
+
+
+class RequestMatcher(object):
+    """Match a :class:`pyramid.request.Request` to a swagger Operation"""
+
+    def __init__(self, path, method):
+        self.path = path
+        self.method = method
+
+    def matches(self, request):
+        """
+        :param request: a :class:`pyramid.request.Request`
+        :returns: True if this matcher matches the request, False otherwise
+        """
+        return (
+            partial_path_match(request.path, self.path) and
+            request.method == self.method
+        )
 
 
 # TODO: do this with jsonschema directly
@@ -203,34 +250,13 @@ def extract_validatable_type(type_name, models):
         return {'type': type_name}
 
 
-class SchemaAndResolver(namedtuple(
-        'SAR',
-        ['request_to_schema_map', 'resolver'])):
-    __slots__ = ()
-
-
 def load_schema(schema_path):
-    """Prepare the schema so we can make fast validation comparisons.
+    """Prepare the api specification for request and response validation.
 
-    The prepared schema will be a map:
-        key: (swagger_path, method) e.g. ('/v1/reverse', 'GET')
-        value: a SchemaMap
-
-    For any request, you just need to:
-        1) Validate {k, v for k, v in query.params} against
-            request_query_schema
-        2) Validate request body against request_body_schema
-        3) Validate response body against response_body_schema
-
-        Response and request bodies will need to be transformed as indicated by
-        their content type (e.g. simplejson.loads if you have application/json
-        type).
-
-    :returns: SchemaAndResolver
+    :returns: a mapping from :class:`RequestMatcher` to :class:`ValidatorMap`
+        for every operation in the api specification.
+    :rtype: dict
     """
     with open(schema_path, 'r') as schema_file:
         schema = simplejson.load(schema_file)
-    return SchemaAndResolver(
-        request_to_schema_map=dict(build_request_to_schemas_map(schema)),
-        resolver=get_model_resolver(schema),
-    )
+    return build_request_to_validator_map(schema, get_model_resolver(schema))

@@ -99,17 +99,19 @@ def test_validation_skips_path_properly():
 # schemas easier there.
 def test_validation_content_type_with_json():
     fake_schema = mock.Mock(response_body_schema={'type': 'object'})
+    fake_validator = mock.Mock(schema=fake_schema)
     response = Response(
         body=simplejson.dumps({'status': 'good'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_outgoing_response(response, fake_schema, None)
+    validate_outgoing_response(response, fake_validator)
 
 
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
+    fake_validator = mock.Mock(schema=fake_schema)
     response = Response(
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_outgoing_response(response, fake_schema, None)
+    validate_outgoing_response(response, fake_validator)

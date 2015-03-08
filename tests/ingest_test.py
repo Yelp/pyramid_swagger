@@ -40,7 +40,7 @@ def test_get_swagger_schema_default():
 
     swagger_schema = get_swagger_schema(settings)
     assert swagger_schema.resource_listing
-    assert swagger_schema.schema_resolvers
+    assert swagger_schema.resource_validators
 
 
 def test_get_swagger_schema_no_validation():
