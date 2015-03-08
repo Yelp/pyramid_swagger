@@ -176,9 +176,11 @@ def test_200_skip_validation_with_excluded_path():
 
 def test_200_skip_validation_when_disabled():
     # calling endpoint with required args missing
-    assert test_app(**{'pyramid_swagger.enable_request_validation': False}) \
-        .get('/get_with_non_string_query_args', params={}) \
-        .status_code == 200
+    request = test_app(**{
+        'pyramid_swagger.enable_request_validation': False,
+        'skip_swagger_data_assert': True,
+    }).get('/get_with_non_string_query_args', params={})
+    assert request.status_code == 200
 
 
 def test_path_validation_context():

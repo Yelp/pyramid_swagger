@@ -10,7 +10,10 @@ from pyramid.response import Response
 
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
+from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import get_exclude_paths
+from pyramid_swagger.tween import handle_request
+from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
@@ -119,3 +122,43 @@ def test_raw_string():
     validate_response(response, fake_validator)
     fake_validator.validate.assert_called_once_with(
         response.body.decode('utf-8'))
+
+
+def build_mock_validator(properties):
+    return mock.Mock(
+        spec=['schema', 'validate'],
+        schema={
+            'properties': dict(
+                (name, {'type': type_})
+                for name, type_ in properties.items()
+            )
+        },
+    )
+
+
+def test_handle_request_returns_request_data():
+    mock_request = mock.Mock(
+        spec=PyramidSwaggerRequest,
+        query={'int': '123', 'float': '3.14'},
+        path={'path_int': '222', 'string': 'abc'},
+        headers={'X-Is-Bool': 'True'},
+        body={'more': 'foo'},
+    )
+    validator_map = mock.Mock(
+        query=build_mock_validator({'int': 'integer', 'float': 'float'}),
+        path=build_mock_validator({'path_int': 'integer', 'string': 'string'}),
+        headers=build_mock_validator({'X-Is-Bool': 'boolean'}),
+        body=mock.Mock(schema=('bar', None), spec=['schema', 'validate']),
+    )
+
+    expected = {
+        'int': 123,
+        'float': 3.14,
+        'path_int': 222,
+        'string': 'abc',
+        'X-Is-Bool': True,
+        'bar': {'more': 'foo'},
+    }
+
+    request_data = handle_request(mock_request, noop_context, validator_map)
+    assert request_data == expected

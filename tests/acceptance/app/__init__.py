@@ -17,6 +17,8 @@ def standard(request, path_arg):
 @view_config(route_name='sample_header', renderer='json')
 @view_config(route_name='sample_post', renderer='json')
 def sample(request):
+    if not request.registry.settings.get('skip_swagger_data_assert'):
+        assert request.swagger_data
     return {}
 
 

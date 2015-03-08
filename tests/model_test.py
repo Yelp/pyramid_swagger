@@ -40,11 +40,9 @@ def test_swagger_schema_for_request_different_methods(schema):
             body={'foo': 1, 'bar': 2},
         ),
     )
-    assert (
-        value.request_body_schema == 'content', {
-            'required': True,
-            u'$ref': 'body_model'
-        }
+    assert value.body.schema == (
+        'content',
+        {'required': True, u'$ref': 'body_model'}
     )
 
 

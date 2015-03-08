@@ -142,6 +142,14 @@ def get_model_resolver(schema):
     return RefResolver('', '', models)
 
 
+class BodyValidator(Draft4Validator):
+
+    def __init__(self, schema, *args, **kwargs):
+        # TODO: remove this hack once we don't strip name from schema
+        _, schema = schema or (None, None)
+        super(BodyValidator, self).__init__(schema, *args, **kwargs)
+
+
 class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
     """
     A data object with validators for each part of the request and response
@@ -156,7 +164,7 @@ class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
             (build_param_schema(operation, 'query'), Draft3Validator),
             (build_param_schema(operation, 'path'), Draft3Validator),
             (build_param_schema(operation, 'header'), Draft3Validator),
-            (extract_body_schema(operation, models), Draft4Validator),
+            (extract_body_schema(operation, models), BodyValidator),
             (extract_response_body_schema(operation, models),
                 Draft4Validator),
         ]:
