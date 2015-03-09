@@ -55,7 +55,8 @@ def build_param_schema(schema, param_type):
         return {
             'type': 'object',
             'properties': properties,
-            'additionalProperties': False,
+            # Allow extra headers
+            'additionalProperties': param_type == 'header',
         }
     else:
         return None

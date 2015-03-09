@@ -100,11 +100,13 @@ def test_validation_skips_path_properly():
 def test_validation_content_type_with_json():
     fake_schema = mock.Mock(response_body_schema={'type': 'object'})
     fake_validator = mock.Mock(schema=fake_schema)
+    body = {'status': 'good'}
     response = Response(
-        body=simplejson.dumps({'status': 'good'}),
+        body=simplejson.dumps(body),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     validate_outgoing_response(response, fake_validator)
+    fake_validator.validate.assert_called_once_with(body)
 
 
 def test_raw_string():
@@ -115,3 +117,5 @@ def test_raw_string():
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
     validate_outgoing_response(response, fake_validator)
+    fake_validator.validate.assert_called_once_with(
+        response.body.decode('utf-8'))

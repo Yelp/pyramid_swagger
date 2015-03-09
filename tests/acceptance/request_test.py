@@ -152,6 +152,22 @@ def test_400_if_extra_query_args(test_app):
     ).status_code == 400
 
 
+def test_400_if_missing_required_header(test_app):
+    assert test_app.get(
+        '/sample/header',
+        expect_errors=True,
+    ).status_code == 400
+
+
+def test_200_with_required_header(test_app):
+    response = test_app.get(
+        '/sample/header',
+        headers={'X-Force': 'True'},
+        expect_errors=True,
+    )
+    assert response.status_code == 200
+
+
 def test_200_skip_validation_with_excluded_path():
     assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
         .get('/sample/test_request/resource') \
