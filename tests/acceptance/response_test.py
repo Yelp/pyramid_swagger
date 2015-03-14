@@ -106,7 +106,7 @@ def test_500_when_response_is_missing_required_field():
         _validate_against_tween(request, response=response)
 
 
-def test_200_when_response_is_void():
+def test_200_when_response_is_void_with_none_response():
     request = pyramid.testing.DummyRequest(
         method='GET',
         path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
@@ -117,6 +117,17 @@ def test_200_when_response_is_void():
         body=simplejson.dumps(None),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
+    _validate_against_tween(request, response=response)
+
+
+def test_200_when_response_is_void_with_empty_response():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
+        params={'required_arg': 'test'},
+        matchdict={'int_arg': '1', 'float_arg': '2.0', 'boolean_arg': 'true'},
+    )
+    response = Response(body='{}')
     _validate_against_tween(request, response=response)
 
 
