@@ -144,7 +144,7 @@ class PyramidSwaggerRequest(object):
 
     @property
     def path(self):
-        return (self.route_info.get('match') or {})
+        return self.route_info.get('match') or {}
 
     @property
     def headers(self):
@@ -181,7 +181,7 @@ def handle_request(request, validation_context, validator_map):
         request_data.update(values)
 
     if validator_map.body.schema:
-        param_name, _ = validator_map.body.schema
+        param_name = validator_map.body.schema['name']
         validation_pairs.append((validator_map.body, request.body))
         request_data[param_name] = request.body
 

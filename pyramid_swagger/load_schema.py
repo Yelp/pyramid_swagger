@@ -8,6 +8,8 @@ from collections import namedtuple
 
 import simplejson
 from jsonschema import RefResolver
+from jsonschema import validators, _validators
+from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft3Validator, Draft4Validator
 
 from pyramid_swagger.model import partial_path_match
@@ -44,110 +46,74 @@ def build_param_schema(schema, param_type):
     Which we can then validate against a JSON object we construct from the
     pyramid request.
     """
-    properties = dict(
-        (s['name'], strip_swagger_markup(s))
-        for s in schema['parameters']
-        if s['paramType'] == param_type
-    )
-    # Generate a jsonschema that describes the set of all query parameters. We
-    # can then validate this against dict(request.params).
-    if properties:
-        return {
-            'type': 'object',
-            'properties': properties,
-            # Allow extra headers. Most HTTP requests will have headers which
-            # are outside the scope of the spec (like `Host`, or `User-Agent`)
-            'additionalProperties': param_type == 'header',
-        }
-    else:
-        return None
-
-
-# TODO: do this with jsonschema directly
-def extract_body_schema(schema, models_schema):
-    """Turn a swagger endpoint schema into an equivalent one to validate our
-    request.
-
-    As an example, this would take this swagger schema:
-        {
-            "paramType": "body",
-            "name": "body",
-            "description": "json list: [ll1,ll2]",
-            "type": "array",
-            "items": {
-                "$ref": "GeoPoint"
-            },
-            "required": true
-        }
-    To this jsonschema:
-        {
-            "type": "array",
-            "items": {
-                "$ref": "GeoPoint"
-            },
-        }
-    Which we can then validate against a JSON object we construct from the
-    pyramid request.
-    """
-    matching_body_schemas = [
-        s
-        for s in schema['parameters']
-        if s['paramType'] == 'body'
-    ]
-    if not matching_body_schemas:
+    properties = filter_params_by_type(schema, param_type)
+    if not properties:
         return
 
+    # Generate a jsonschema that describes the set of all query parameters. We
+    # can then validate this against dict(request.params).
+    return {
+        'type': 'object',
+        'properties': dict((p['name'], p) for p in properties),
+        # Allow extra headers. Most HTTP requests will have headers which
+        # are outside the scope of the spec (like `Host`, or `User-Agent`)
+        'additionalProperties': param_type == 'header',
+    }
+
+
+def filter_params_by_type(schema, param_type):
+    return [s for s in schema['parameters'] if s['paramType'] == param_type]
+
+
+def extract_body_schema(schema):
+    """Return the body parameter schema from an operation schema."""
+    matching_body_schemas = filter_params_by_type(schema, 'body')
     # There can be only one body param
-    schema = matching_body_schemas[0]
-    type_ref = extract_validatable_type(schema['type'], models_schema)
-    # TODO: do this with a jsonschema.SwaggerValidator
-    # Unpleasant, but we are forced to replace 'type' defns with proper
-    # jsonschema refs.
-    if '$ref' in type_ref:
-        del schema['type']
-        schema.update(type_ref)
-    return schema['name'], strip_swagger_markup(schema)
+    return matching_body_schemas[0] if matching_body_schemas else None
 
 
-# TODO: do this with jsonschema directly
-def strip_swagger_markup(schema):
-    """Turn a swagger URL parameter schema into a raw jsonschema.
+def noop_validator(_validator, *args):
+    return
 
-    Involves just removing various swagger-specific markup tags.
+
+def build_swagger_type_validator(models):
+    def swagger_type_validator(validator, ref, instance, schema):
+        func = _validators.ref if ref in models else _validators.type_draft4
+        return func(validator, ref, instance, schema)
+
+    return swagger_type_validator
+
+
+def required_validator(validator, req, instance, schema):
+    """Swagger 1.2 expects `required` to be a bool in the Parameter object, but
+    a list of properties in a Model object.
     """
-    swagger_specific_keys = (
-        'paramType',
-        'name',
+    if schema.get('paramType') and req is True:
+        if not instance:
+            return [ValidationError("%s is required" % schema['name'])]
+    else:
+        return _validators.required_draft4(validator, req, instance, schema)
+
+
+def get_body_validator(models):
+    return validators.extend(
+        Draft4Validator,
+        {
+            'paramType': noop_validator,
+            'name': noop_validator,
+            'type': build_swagger_type_validator(models),
+            'required': required_validator,
+        }
     )
-    return dict(
-        (k, v)
-        for k, v in schema.items()
-        if k not in swagger_specific_keys
-    )
 
 
-def get_model_resolver(schema):
-    """
-    Get a RefResolver. RefResolver's will resolve "$ref:
-    ObjectType" entries in the schema, which are used to describe more complex
-    objects.
-
-    :returns: The RefResolver for the schema's models.
-    :rtype: RefResolver
-    """
-    models = dict(
-        (k, strip_swagger_markup(v))
-        for k, v in schema.get('models', {}).items()
-    )
-    return RefResolver('', '', models)
-
-
-class BodyValidator(Draft4Validator):
-
-    def __init__(self, schema, *args, **kwargs):
-        # TODO: remove this hack once we don't strip name from schema
-        _, schema = schema or (None, None)
-        super(BodyValidator, self).__init__(schema, *args, **kwargs)
+Swagger12ParamValidator = validators.extend(
+    Draft3Validator,
+    {
+        'paramType': noop_validator,
+        'name': noop_validator,
+    }
+)
 
 
 class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
@@ -161,10 +127,10 @@ class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
     def from_operation(cls, operation, models, resolver):
         args = []
         for schema, validator in [
-            (build_param_schema(operation, 'query'), Draft3Validator),
-            (build_param_schema(operation, 'path'), Draft3Validator),
-            (build_param_schema(operation, 'header'), Draft3Validator),
-            (extract_body_schema(operation, models), BodyValidator),
+            (build_param_schema(operation, 'query'), Swagger12ParamValidator),
+            (build_param_schema(operation, 'path'), Swagger12ParamValidator),
+            (build_param_schema(operation, 'header'), Swagger12ParamValidator),
+            (extract_body_schema(operation), get_body_validator(models)),
             (extract_response_body_schema(operation, models),
                 Draft4Validator),
         ]:
@@ -240,24 +206,22 @@ class RequestMatcher(object):
         )
 
 
-# TODO: do this with jsonschema directly
 def extract_response_body_schema(operation, schema_models):
     if operation['type'] in schema_models:
         return extract_validatable_type(operation['type'], schema_models)
-    else:
-        acceptable_fields = (
-            'type', '$ref', 'format', 'defaultValue', 'enum', 'minimum',
-            'maximum', 'items', 'uniqueItems'
-        )
 
-        return dict([
-            (field, operation[field])
-            for field in acceptable_fields
-            if field in operation
-        ])
+    acceptable_fields = (
+        'type', '$ref', 'format', 'defaultValue', 'enum', 'minimum',
+        'maximum', 'items', 'uniqueItems'
+    )
+
+    return dict(
+        (field, operation[field])
+        for field in acceptable_fields
+        if field in operation
+    )
 
 
-# TODO: do this with jsonschema directly
 def extract_validatable_type(type_name, models):
     """Returns a jsonschema-compatible typename from the Swagger type.
 
@@ -283,4 +247,5 @@ def load_schema(schema_path):
     """
     with open(schema_path, 'r') as schema_file:
         schema = simplejson.load(schema_file)
-    return build_request_to_validator_map(schema, get_model_resolver(schema))
+    resolver = RefResolver('', '', schema.get('models', {}))
+    return build_request_to_validator_map(schema, resolver)

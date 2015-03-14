@@ -144,11 +144,15 @@ def test_handle_request_returns_request_data():
         headers={'X-Is-Bool': 'True'},
         body={'more': 'foo'},
     )
+
+    body_validator = build_mock_validator({'more': 'object'})
+    body_validator.schema['name'] = 'bar'
+
     validator_map = mock.Mock(
         query=build_mock_validator({'int': 'integer', 'float': 'float'}),
         path=build_mock_validator({'path_int': 'integer', 'string': 'string'}),
         headers=build_mock_validator({'X-Is-Bool': 'boolean'}),
-        body=mock.Mock(schema=('bar', None), spec=['schema', 'validate']),
+        body=body_validator,
     )
 
     expected = {
