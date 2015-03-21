@@ -55,7 +55,8 @@ def build_param_schema(schema, param_type):
         return {
             'type': 'object',
             'properties': properties,
-            # Allow extra headers
+            # Allow extra headers. Most HTTP requests will have headers which
+            # are outside the scope of the spec (like `Host`, or `User-Agent`)
             'additionalProperties': param_type == 'header',
         }
     else:
@@ -166,6 +167,15 @@ class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
 
 
 class SchemaValidator(object):
+    """A Validator used by :mod:`pyramid_swagger.tween` to validate a
+    field from the request or response.
+
+    :param schema: a :class:`dict` jsonschema that was used by the
+        validator
+    :param valdiator: a Validator which a func:`validate` method
+        for validating a field from a request or response. This
+        will often be a :class:`jsonschema.validator.Validator`.
+    """
 
     def __init__(self, schema, validator):
         self.schema = schema
@@ -178,6 +188,9 @@ class SchemaValidator(object):
             validator_class(schema, resolver=resolver, types=EXTENDED_TYPES))
 
     def validate(self, values):
+        """Validate a :class:`dict` of values. If `self.schema` is falsy this
+        is a noop.
+        """
         if not self.schema:
             return
         self.validator.validate(values)

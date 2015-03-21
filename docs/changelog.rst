@@ -13,9 +13,9 @@ Changelog
 * Added ``generate_resource_listing`` configuration option to allow
   pyramid_swagger to generate the ``apis`` section of the resource listing.
 * Bug fix for issues relating to ``void`` responses (See `Issue 79`_)
+* Added support for header validation.
 
 .. _Issue 79: https://github.com/striglia/pyramid_swagger/issues/79
-
 
 1.4.0 (2015-01-27)
 ++++++++++++++++++
