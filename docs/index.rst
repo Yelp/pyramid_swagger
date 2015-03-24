@@ -15,7 +15,7 @@ Features include:
 
 * Swagger spec validation
 
-* Automatically serving the swagger schema to interested clients (e.g. `Swagger UI <https://github.com/wordnik/swagger-ui>`_)
+* Automatically serving the swagger schema to interested clients (e.g. `Swagger UI <https://github.com/swagger-api/swagger-ui>`_)
 
 
 Contents:

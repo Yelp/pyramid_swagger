@@ -13,4 +13,4 @@ api declaration
   The description of each endpoint a particular Swagger service provides, with complete input and output declared.
 
 swagger spec
-  The formal specification of a valid swagger api. The current public version is 1.2 and hosted on `wordnik's Github <https://github.com/wordnik/swagger-spec/blob/master/versions/1.2.md>`_.
+  The formal specification of a valid swagger api. The current public version is 1.2 and hosted on `wordnik's Github <https://github.com/swagger-api/swagger-spec/blob/master/versions/1.2.md>`_.
