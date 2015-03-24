@@ -121,8 +121,8 @@ def compile_swagger_schema(schema_dir, resource_listing):
     :returns: a SwaggerSchema object
     """
     mapping = build_schema_mapping(schema_dir, resource_listing)
-    schema_resolvers = ingest_resources(mapping, schema_dir)
-    return SwaggerSchema(resource_listing, mapping, schema_resolvers)
+    resource_validators = ingest_resources(mapping, schema_dir)
+    return SwaggerSchema(resource_listing, mapping, resource_validators)
 
 
 def validate_swagger_schema(schema_dir, resource_listing):
@@ -161,8 +161,8 @@ def ingest_resources(mapping, schema_dir):
     :type mapping: dict
     :param schema_dir: the directory schema files live inside
     :type schema_dir: string
-    :returns: A list of :class:`pyramid_swagger.load_schema.SchemaAndResolver`
-        objects
+    :returns: A list of mapping from :class:`RequestMatcher` to
+        :class:`ValidatorMap`
     """
     ingested_resources = []
     for name, filepath in mapping.items():

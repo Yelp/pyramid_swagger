@@ -63,6 +63,24 @@
                     ]
                 }
             ]
+        },
+        {
+            "path": "/sample/header",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "sample_header",
+                    "type": "void",
+                    "parameters": [
+                        {
+                            "paramType": "header",
+                            "name": "X-Force",
+                            "type": "boolean",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
         }
     ],
     "models": {

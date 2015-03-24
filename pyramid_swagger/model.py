@@ -17,40 +17,39 @@ class SwaggerSchema(object):
     This object contains data structures representing your Swagger schema
     and exposes methods for efficiently finding the relevant schemas for a
     Pyramid request.
+
+    :param resource_listing: A swagger resource listing
+    :type resource_listing: dict
+    :param api_declarations: Map from resource name to filepath of its api
+        declaration
+    :type api_declarations: dict
+    :param resource_validators: a list of resolvers, one per Swagger resource
+    :type resource_validators: list of mappings from :class:`RequestMatcher`
+        to :class:`ValidatorMap`
+    for every operation in the api specification.
     """
 
-    def __init__(self, resource_listing, api_declarations, schema_resolvers):
-        """Store schema_resolvers for later use.
-
-        :param resource_listing: A swagger resource listing
-        :type resource_listing: dict
-        :param api_declarations: Map from resource name to filepath of its api
-            declaration
-        :type api_declarations: dict
-        :param schema_resolvers: a list of resolvers, one per Swagger resource
-        :type schema_resolvers: list of
-            pyramid_swagger.load_schema.SchemaAndResolver objects
-        """
+    def __init__(
+            self,
+            resource_listing,
+            api_declarations,
+            resource_validators):
         self.resource_listing = resource_listing
         self.api_declarations = api_declarations
-        self.schema_resolvers = schema_resolvers
+        self.resource_validators = resource_validators
 
-    def schema_and_resolver_for_request(self, request):
-        """Takes a request and returns the relevant schema, ready for
-        validation.
+    def validators_for_request(self, request):
+        """Takes a request and returns a validator mapping for the request.
 
         :param request: A Pyramid request to fetch schemas for
-        :type request: pyramid.request.Request
-        :returns: (schema_map, resolver) for this particular request
-        :rtype: A tuple of (load_schema.SchemaMap, jsonschema.Resolver)
+        :type request: :class:`pyramid.request.Request`
+        :returns: a :class:`pyramid_swagger.load_schema.ValidatorMap` which can
+            be used to validate `request`
         """
-        for schema_resolver in self.schema_resolvers:
-            request_to_schema_map = schema_resolver.request_to_schema_map
-            resolver = schema_resolver.resolver
-            for (path, method), schema_map in request_to_schema_map.items():
-                if partial_path_match(request.path, path) \
-                        and method == request.method:
-                    return (schema_map, resolver)
+        for resource_validator in self.resource_validators:
+            for matcher, validator_map in resource_validator.items():
+                if matcher.matches(request):
+                    return validator_map
 
         raise PathNotMatchedError(
             'Could not find the relevant path ({0}) in the Swagger schema. '

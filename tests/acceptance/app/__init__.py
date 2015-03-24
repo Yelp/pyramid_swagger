@@ -3,11 +3,6 @@ from pyramid.config import Configurator
 from pyramid.view import view_config
 
 
-@view_config(route_name='sample_nonstring', renderer='json')
-def sample_nonstring(request):
-    return {}
-
-
 @view_config(route_name='standard', renderer='json')
 def standard(request, path_arg):
     return {
@@ -16,18 +11,12 @@ def standard(request, path_arg):
     }
 
 
+@view_config(route_name='sample_nonstring', renderer='json')
 @view_config(route_name='get_with_non_string_query_args', renderer='json')
-def get_with_non_string_query_args(request):
-    return {}
-
-
 @view_config(route_name='post_with_primitive_body', renderer='json')
-def post_with_primitive_body(request):
-    return {}
-
-
+@view_config(route_name='sample_header', renderer='json')
 @view_config(route_name='sample_post', renderer='json')
-def sample_post(request):
+def sample(request):
     return {}
 
 
@@ -48,6 +37,7 @@ def main(global_config, **settings):
     )
     config.add_route('post_with_primitive_body', '/post_with_primitive_body')
     config.add_route('sample_post', '/sample')
+    config.add_route('sample_header', '/sample/header')
 
     config.scan()
     return config.make_wsgi_app()
