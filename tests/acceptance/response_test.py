@@ -69,7 +69,7 @@ def _validate_against_tween(request, response=None, **overrides):
     registry = get_registry(settings)
 
     # Let's make request validation a no-op so we can focus our tests.
-    with mock.patch.object(pyramid_swagger.tween, '_validate_request'):
+    with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
         validation_tween_factory(handler, registry)(request)
 
 
