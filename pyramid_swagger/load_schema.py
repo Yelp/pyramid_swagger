@@ -72,7 +72,10 @@ def extract_body_schema(schema):
     return matching_body_schemas[0] if matching_body_schemas else None
 
 
-def noop_validator(_validator, *args):
+def ignore(_validator, *args):
+    """A validator which performs no validation. Used to `ignore` some schema
+    fields during validation.
+    """
     return
 
 
@@ -96,11 +99,19 @@ def required_validator(validator, req, instance, schema):
 
 
 def get_body_validator(models):
+    """Returns a validator for the request body, based on a
+    :class:`jsonschema.validators.Draft4Validator`, with extra validations
+    added for swaggers extensions to jsonschema.
+
+    :param models: a mapping of reference to models
+    :returns: a :class:`jsonschema.validators.Validator` which can validate
+        the request body.
+    """
     return validators.extend(
         Draft4Validator,
         {
-            'paramType': noop_validator,
-            'name': noop_validator,
+            'paramType': ignore,
+            'name': ignore,
             'type': build_swagger_type_validator(models),
             'required': required_validator,
         }
@@ -110,8 +121,8 @@ def get_body_validator(models):
 Swagger12ParamValidator = validators.extend(
     Draft3Validator,
     {
-        'paramType': noop_validator,
-        'name': noop_validator,
+        'paramType': ignore,
+        'name': ignore,
     }
 )
 

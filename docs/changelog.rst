@@ -14,6 +14,8 @@ Changelog
   pyramid_swagger to generate the ``apis`` section of the resource listing.
 * Bug fix for issues relating to ``void`` responses (See `Issue 79`_)
 * Added support for header validation.
+* Make casted values from the request available through
+  ``request.swagger_data``
 
 .. _Issue 79: https://github.com/striglia/pyramid_swagger/issues/79
 

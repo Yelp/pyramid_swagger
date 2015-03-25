@@ -180,6 +180,8 @@ def handle_request(request, validation_context, validator_map):
         validation_pairs.append((validator, values))
         request_data.update(values)
 
+    # Body is a special case because the key for the request_data comes
+    # from the name in the schema, instead of keys in the values
     if validator_map.body.schema:
         param_name = validator_map.body.schema['name']
         validation_pairs.append((validator_map.body, request.body))

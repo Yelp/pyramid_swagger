@@ -68,3 +68,35 @@ With that, when your app starts you will get the benefit of:
 * 5xx errors for responses not matching your schema
 * Automatic validation for correctness of your API declaration at application startup
 * Automatic serving of your Swagger schema from the /api-docs endpoint
+
+
+Accessing request data
+----------------------
+
+Now that :mod:`pyramid_swagger` is enabled you can create a view. All the
+values that are specified in the swagger spec for an endpoint are available
+from a single :class:`dict` on the request  ``request.swagger_data``. These
+values are casted to the type specified by the swagger spec.
+
+Example:
+
+.. code-block:: python
+
+    from pyramid.view import view_config
+
+    @view_config(route_name='api.things.get')
+    def get_things(request):
+        # Returns thing_id as an int (assuming the swagger type is integer)
+        thing_id = request.swagger_data['thing_id']
+        ...
+        return {...}
+
+
+The raw values (not-casted to any type) are still available from their
+usual place on the request (`matchdict`, `GET`, `POST`, `json()`, etc)
+
+
+.. note::
+
+    Values in ``request.swagger_data`` are only available if 
+    ``pyramid_swawgger.enable_request_validation`` is enabled.
