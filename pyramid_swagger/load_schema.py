@@ -127,7 +127,9 @@ Swagger12ParamValidator = validators.extend(
 )
 
 
-class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
+class ValidatorMap(
+    namedtuple('_VMap', 'query path form headers body response')
+):
     """
     A data object with validators for each part of the request and response
     objects. Each field is a :class:`SchemaValidator`.
@@ -140,6 +142,7 @@ class ValidatorMap(namedtuple('_VMap', 'query path headers body response')):
         for schema, validator in [
             (build_param_schema(operation, 'query'), Swagger12ParamValidator),
             (build_param_schema(operation, 'path'), Swagger12ParamValidator),
+            (build_param_schema(operation, 'form'), Swagger12ParamValidator),
             (build_param_schema(operation, 'header'), Swagger12ParamValidator),
             (extract_body_schema(operation), get_body_validator(models)),
             (extract_response_body_schema(operation, models),

@@ -134,6 +134,11 @@ class PyramidSwaggerRequest(object):
     data for casting and validation.
     """
 
+    FORM_TYPES = [
+        'application/x-www-form-urlencoded',
+        'multipart/form-data',
+    ]
+
     def __init__(self, request, route_info):
         self.request = request
         self.route_info = route_info
@@ -149,6 +154,13 @@ class PyramidSwaggerRequest(object):
     @property
     def headers(self):
         return self.request.headers
+
+    @property
+    def form(self):
+        # Don't read the POST dict unless the body is form encoded
+        if self.request.headers.get('Content-Type') in self.FORM_TYPES:
+            return self.request.POST
+        return {}
 
     @property
     def body(self):
@@ -174,6 +186,7 @@ def handle_request(request, validation_context, validator_map):
     for validator, values in [
         (validator_map.query, request.query),
         (validator_map.path, request.path),
+        (validator_map.form, request.form),
         (validator_map.headers, request.headers),
     ]:
         values = cast_params(validator.schema, values)
