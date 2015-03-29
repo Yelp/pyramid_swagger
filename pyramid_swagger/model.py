@@ -3,7 +3,13 @@
 The core model we use to represent the entire ingested swagger schema for this
 service.
 """
+from collections import namedtuple
 import re
+
+
+PyramidEndpoint = namedtuple(
+    'PyramidEndpoint',
+    'path route_name view renderer')
 
 
 class PathNotMatchedError(Exception):
@@ -18,24 +24,16 @@ class SwaggerSchema(object):
     and exposes methods for efficiently finding the relevant schemas for a
     Pyramid request.
 
-    :param resource_listing: A swagger resource listing
-    :type resource_listing: dict
-    :param api_declarations: Map from resource name to filepath of its api
-        declaration
-    :type api_declarations: dict
+    :param pyramid_endpoints: a list of :class:`PyramidEndpoint` which define
+        the pyramid endpoints to create for serving the api docs
     :param resource_validators: a list of resolvers, one per Swagger resource
     :type resource_validators: list of mappings from :class:`RequestMatcher`
         to :class:`ValidatorMap`
     for every operation in the api specification.
     """
 
-    def __init__(
-            self,
-            resource_listing,
-            api_declarations,
-            resource_validators):
-        self.resource_listing = resource_listing
-        self.api_declarations = api_declarations
+    def __init__(self, pyramid_endpoints, resource_validators):
+        self.pyramid_endpoints = pyramid_endpoints
         self.resource_validators = resource_validators
 
     def validators_for_request(self, request):
@@ -55,6 +53,9 @@ class SwaggerSchema(object):
             'Could not find the relevant path ({0}) in the Swagger schema. '
             'Perhaps you forgot to add it?'.format(request.path)
         )
+
+    def get_api_doc_endpoints(self):
+        return self.pyramid_endpoints
 
 
 def partial_path_match(path1, path2, kwarg_re=r'\{.*\}'):

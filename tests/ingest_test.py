@@ -39,7 +39,7 @@ def test_get_swagger_schema_default():
     }
 
     swagger_schema = get_swagger_schema(settings)
-    assert swagger_schema.resource_listing
+    assert len(swagger_schema.pyramid_endpoints) == 4
     assert swagger_schema.resource_validators
 
 
