@@ -1,9 +1,14 @@
 Changelog
 =========
 
-1.5.0-dev (2015-02-25)
+1.5.0-rc2 (2015-03-31)
 ++++++++++++++++++++++
 **Under development**
+
+* Form-encoded bodies are now validated correctly.
+
+1.5.0-rc1 (2015-03-30)
+++++++++++++++++++++++
 
 * Added ``enable_api_docs_views`` configuration option so /api-docs
   auto-registration can be disabled in situations where users want to serve

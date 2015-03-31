@@ -177,6 +177,15 @@ latex_documents = [
   ('index', 'pyramid_swagger.tex', u'pyramid\\_swagger Documentation',
    u'Scott Triglia', 'manual'),
 ]
+latex_elements = {
+    # Additional stuff for the LaTeX preamble. See
+    # https://github.com/rtfd/readthedocs.org/issues/416
+    'preamble': "".join((
+        '\DeclareUnicodeCharacter{00A0}{ }',  # NO-BREAK SPACE
+        '\DeclareUnicodeCharacter{251C}{+}',  # BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+        '\DeclareUnicodeCharacter{2514}{+}',  # BOX DRAWINGS LIGHT UP AND RIGHT
+    )),
+}
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
