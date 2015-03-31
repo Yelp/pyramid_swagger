@@ -67,6 +67,24 @@
             ]
         },
         {
+            "path": "/post_with_form_params",
+            "operations": [
+                {
+                    "method": "POST",
+                    "nickname": "post_with_form_params",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "name": "form_param",
+                            "type": "integer",
+                            "paramType": "form",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "path": "/get_with_non_string_query_args",
             "operations": [
                 {

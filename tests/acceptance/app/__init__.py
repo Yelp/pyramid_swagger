@@ -16,6 +16,7 @@ def standard(request, path_arg):
 @view_config(route_name='post_with_primitive_body', renderer='json')
 @view_config(route_name='sample_header', renderer='json')
 @view_config(route_name='sample_post', renderer='json')
+@view_config(route_name='post_with_form_params', renderer='json')
 def sample(request):
     if not request.registry.settings.get('skip_swagger_data_assert'):
         assert request.swagger_data
@@ -38,6 +39,7 @@ def main(global_config, **settings):
         '/get_with_non_string_query_args',
     )
     config.add_route('post_with_primitive_body', '/post_with_primitive_body')
+    config.add_route('post_with_form_params', '/post_with_form_params')
     config.add_route('sample_post', '/sample')
     config.add_route('sample_header', '/sample/header')
 

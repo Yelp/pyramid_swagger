@@ -30,6 +30,29 @@ def validation_context(request, response=None):
 validation_ctx_path = 'tests.acceptance.request_test.validation_context'
 
 
+def test_200_with_form_params(test_app):
+    assert test_app.post(
+        '/post_with_form_params',
+        {'form_param': 42},
+    ).status_code == 200
+
+
+def test_400_with_form_params_wrong_type(test_app):
+    assert test_app.post(
+        '/post_with_form_params',
+        {'form_param': "not a number"},
+        expect_errors=True,
+    ).status_code == 400
+
+
+def test_400_if_json_body_for_form_parms(test_app):
+    assert test_app.post_json(
+        '/post_with_form_params',
+        {'form_param': 42},
+        expect_errors=True,
+    ).status_code == 400
+
+
 def test_400_if_required_query_args_absent(test_app):
     assert test_app.get(
         '/sample/path_arg1/resource',
@@ -105,6 +128,7 @@ def test_200_on_json_body_without_contenttype_header(test_app):
     assert test_app.post(
         '/sample?optional_string=bar',
         simplejson.dumps({'foo': 'test'}),
+        {'Content-Type': ''},
     ).status_code == 200
 
 
