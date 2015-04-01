@@ -91,11 +91,11 @@ def required_validator(validator, req, instance, schema):
     """Swagger 1.2 expects `required` to be a bool in the Parameter object, but
     a list of properties in a Model object.
     """
-    if schema.get('paramType') and req is True:
-        if not instance:
+    if schema.get('paramType'):
+        if req is True and not instance:
             return [ValidationError("%s is required" % schema['name'])]
-    else:
-        return _validators.required_draft4(validator, req, instance, schema)
+        return []
+    return _validators.required_draft4(validator, req, instance, schema)
 
 
 def get_body_validator(models):
