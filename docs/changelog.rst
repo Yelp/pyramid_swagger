@@ -1,11 +1,11 @@
 Changelog
 =========
 
-1.5.0-rc2 (2015-03-31)
+1.5.0-rc2 (2015-04-1)
 ++++++++++++++++++++++
-**Under development**
 
 * Form-encoded bodies are now validated correctly.
+* Fixed bug in `required` swagger attribute handling.
 
 1.5.0-rc1 (2015-03-30)
 ++++++++++++++++++++++
