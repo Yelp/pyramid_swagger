@@ -97,13 +97,28 @@ class PyramidSwaggerRequest(RequestLike):
         self.route_info = route_info
 
     @property
-    def params(self):
+    def query(self):
         """
         :rtype: dict
         """
         # The `mixed` dict will return a list if a parameter has multiple
         # values or a single primitive in the case of a single value.
-        return self.request.params.mixed()
+        return self.request.GET.mixed()
+
+    @property
+    def form(self):
+        """
+        :rtype: dict
+        """
+        return self.request.POST.mixed()
+
+    @property
+    def files(self):
+        result = {}
+        for k, v in self.request.params.mixed():
+            if hasattr(v, 'file'):
+                result[k] = v.file
+        return result
 
     @property
     def path(self):
