@@ -2,16 +2,16 @@
 from __future__ import unicode_literals
 
 from collections import namedtuple
-import functools
 import logging
 
-import jsonschema.exceptions
 from pyramid.interfaces import IRoutesMapper
 
 from bravado.mapping.request import RequestLike, unmarshal_request
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.tween import get_exclude_paths, should_exclude_request
+from pyramid_swagger.tween import validation_error
+
 
 log = logging.getLogger(__name__)
 
@@ -130,23 +130,6 @@ class PyramidSwaggerRequest(RequestLike):
 
     def json(self, **kwargs):
         return getattr(self.request, 'json_body', {})
-
-
-def validation_error(exc_class):
-    def decorator(f):
-        @functools.wraps(f)
-        def _validate(*args, **kwargs):
-            try:
-                return f(*args, **kwargs)
-            except jsonschema.exceptions.ValidationError as exc:
-                # This will alter our stack trace slightly, but Pyramid knows
-                # how to render it. And the real value is in the message
-                # anyway.
-                raise exc_class(str(exc))
-
-        return _validate
-
-    return decorator
 
 
 @validation_error(RequestValidationError)
