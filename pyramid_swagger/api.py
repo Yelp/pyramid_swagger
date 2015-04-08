@@ -74,3 +74,25 @@ def build_api_declaration_view(api_declaration_json):
             basePath=str(request.application_url),
         )
     return view_for_api_declaration
+
+
+def register_swagger_json_endpoint(config):
+    """Registers the endpoint /swagger.json.
+
+    :param config: Configurator instance for our webapp
+    :type config: :class:`pyramid.config.Configurator`
+    """
+    spec = config.registry.settings['pyramid_swagger.spec']
+
+    def view_for_swagger_json(request):
+        # Thanks to the magic of closures, this means we gracefully return JSON
+        # without file IO at request time.
+        return spec.spec_dict
+
+    route_name = 'swagger_json'
+    config.add_route(route_name, '/swagger.json')
+    config.add_view(
+        view_for_swagger_json,
+        route_name=route_name,
+        renderer='json'
+    )

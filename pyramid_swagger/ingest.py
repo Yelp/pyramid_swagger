@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 
 import glob
 import os.path
+
 import simplejson
+from bravado.mapping.spec import Spec
 
 from .load_schema import load_schema
 from .model import SwaggerSchema
@@ -152,6 +154,26 @@ def get_swagger_schema(settings):
         validate_swagger_schema(schema_dir, resource_listing)
 
     return compile_swagger_schema(schema_dir, resource_listing)
+
+
+def get_swagger_spec(settings):
+    """Return a :class:`bravado.mapping.spec.Spec` constructed from
+    the swagger specs in `pyramid_swagger.schema_directory`. If
+    `pyramid_swagger.enable_swagger_spec_validation` is enabled the schema
+    will be validated before returning it.
+
+    :param settings: a pyramid registry settings with configuration for
+        building a swagger schema
+    :type settings: dict
+    :rtype: :class:`bravado.mapping.spec.Spec`
+    """
+    schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
+    with open(os.path.join(schema_dir, 'swagger.json'), 'r') as f:
+        spec_dict = simplejson.loads(f.read())
+
+    # TODO: Add support for `enable_swagger_spec_validation` to bravado-core
+    spec = Spec.from_dict(spec_dict)
+    return spec
 
 
 def ingest_resources(mapping, schema_dir):
