@@ -6,7 +6,7 @@ import logging
 
 from pyramid.interfaces import IRoutesMapper
 
-from bravado.mapping.request import RequestLike, unmarshal_request
+from bravado_core.request import RequestLike, unmarshal_request
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.tween import get_exclude_paths, should_exclude_request
@@ -14,12 +14,6 @@ from pyramid_swagger.tween import validation_error
 
 
 log = logging.getLogger(__name__)
-
-
-DEFAULT_EXCLUDED_PATHS = [
-    r'^/static/?',
-    r'^/api-docs/?'
-]
 
 
 class Settings(namedtuple(
@@ -36,7 +30,7 @@ class Settings(namedtuple(
 
     """A settings object for configuratble options.
 
-    :param spec: a :class:`bravado.mapping.spec.Spec`
+    :param spec: a :class:`bravado_core.spec.Spec`
     :param validate_swagger_spec: check Swagger files for correctness.
     :param validate_request: check requests against Swagger spec.
     :param validate_response: check responses against Swagger spec.
@@ -171,8 +165,8 @@ def get_operation_for_request(request, route_info, spec):
 
     :type request: :class:`pyramid.request.Request`
     :type route_info: :class:`pyramid.urldispatch.Route`
-    :type spec: :class:`bravado.mapping.spec.Spec`
-    :rtype: :class:`bravado.mapping.operation.Operation`
+    :type spec: :class:`bravado_core.spec.Spec`
+    :rtype: :class:`bravado_core.operation.Operation`
     :raises: RequestValidationError when a matching Swagger operation is not
         found.
     """

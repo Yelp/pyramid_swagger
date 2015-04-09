@@ -1,0 +1,2 @@
+# TODO: Remove once bravado-core in pypi
+-e /nail/home/spatel/git/bravado-core

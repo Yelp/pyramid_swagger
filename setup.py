@@ -46,10 +46,6 @@ setup(
         'jsonschema',
         'pyramid',
         'simplejson',
-        'bravado==0.1',
+        'bravado-core',
     ],
-    # TODO: Remove once bravado-core is packaged
-    dependency_links=[
-        'git+ssh://git@github.com/analogue/swagger-py.git@swagger2.0#egg=bravado-0.1',
-    ]
 )

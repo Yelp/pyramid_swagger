@@ -20,7 +20,8 @@ log = logging.getLogger(__name__)
 
 DEFAULT_EXCLUDED_PATHS = [
     r'^/static/?',
-    r'^/api-docs/?'
+    r'^/api-docs/?',
+    r'^/swagger.json'
 ]
 
 

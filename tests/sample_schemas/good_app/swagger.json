@@ -1,0 +1,254 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Title was not specified",
+    "version": "0.1"
+  },
+  "paths": {
+    "/no_models": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "no_models_get"
+      }
+    },
+    "/sample/{path_arg}/resource": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "standard",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "path_arg",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "required_arg",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "optional_arg",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "sample_nonstring",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "int_arg",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "path",
+            "name": "float_arg",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "in": "path",
+            "name": "boolean_arg",
+            "required": true,
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    "/sample/header": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "sample_header",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Force",
+            "required": true,
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    "/sample": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "sample_get"
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "sample_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "optional_string",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "content",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/body_model"
+            }
+          }
+        ]
+      }
+    },
+    "/sample_array_response": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "sample_get_array_response"
+      }
+    },
+    "/post_with_primitive_body": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "post_with_primitive_body",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "content",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "/get_with_non_string_query_args": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "get_with_non_string_query_args",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "int_arg",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "float_arg",
+            "required": true,
+            "type": "number"
+          },
+          {
+            "in": "query",
+            "name": "boolean_arg",
+            "required": true,
+            "type": "boolean"
+          }
+        ]
+      }
+    }
+  },
+  "host": "localhost:9999",
+  "basePath": "/sample",
+  "schemes": [
+    "http"
+  ],
+  "definitions": {
+    "standard_response": {
+      "type": "object",
+      "required": [
+        "raw_response",
+        "logging_info"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "raw_response": {
+          "type": "string"
+        },
+        "logging_info": {
+          "type": "object"
+        }
+      }
+    },
+    "body_model": {
+      "type": "object",
+      "required": [
+        "foo"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "foo": {
+          "type": "string"
+        },
+        "bar": {
+          "type": "string"
+        }
+      }
+    },
+    "array_content_model": {
+      "required": [
+        "enum_value"
+      ],
+      "properties": {
+        "enum_value": {
+          "type": "string",
+          "enum": [
+            "good_enum_value"
+          ]
+        }
+      }
+    }
+  }
+}
