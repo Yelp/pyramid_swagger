@@ -171,8 +171,15 @@ def get_swagger_spec(settings):
     with open(os.path.join(schema_dir, 'swagger.json'), 'r') as f:
         spec_dict = simplejson.loads(f.read())
 
-    # TODO: Add support for `enable_swagger_spec_validation` to bravado-core
-    spec = Spec.from_dict(spec_dict)
+    spec_config = {
+        'validate_requests':
+            settings.get('pyramid_swagger.enable_request_validation'),
+        'validate_responses':
+            settings.get('pyramid_swagger.enable_response_validation'),
+        'validate_swagger_spec':
+            settings.get('pyramid_swagger.enable_swagger_spec_validation'),
+    }
+    spec = Spec.from_dict(spec_dict, config=spec_config)
     return spec
 
 

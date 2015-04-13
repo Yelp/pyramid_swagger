@@ -52,6 +52,7 @@ def test_get_swagger_schema_no_validation():
     get_swagger_schema(settings)
 
 
+@pytest.mark.xfail(reason='Remove 1.2 test')
 def test_generate_resource_listing():
     listing = {'swaggerVersion': 1.2}
 

@@ -9,7 +9,9 @@ from pyramid.interfaces import IRoutesMapper
 from bravado_core.request import RequestLike, unmarshal_request
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
-from pyramid_swagger.tween import get_exclude_paths, should_exclude_request
+from pyramid_swagger.model import PathNotMatchedError
+from pyramid_swagger.tween import get_exclude_paths, should_exclude_request, \
+    _get_validation_context
 from pyramid_swagger.tween import validation_error
 
 
@@ -63,16 +65,23 @@ def swagger_tween_factory(handler, registry):
         if should_exclude_request(settings, request, route_info):
             return handler(request)
 
-        # TODO: Remove try/except
+        validation_context = _get_validation_context(registry)
+
         try:
             swaggerize_request(request, settings, route_info)
-        except Exception as e:
-            import traceback, sys
-            traceback.print_exc(file=sys.stdout)
-            raise
+        except (PathNotMatchedError, RequestValidationError) as exc:
+            if settings.validate_path:
+                with validation_context(request):
+                    raise RequestValidationError(str(exc))
+            else:
+                return handler(request)
 
         response = handler(request)
-        swaggerize_response(response)
+
+        with validation_context(request, response=response):
+            # TODO: response handling
+            swaggerize_response(response)
+
         return response
 
     return swagger_tween
@@ -155,7 +164,7 @@ def swaggerize_response(response):
     :type response: :class:`pyramid.response.Response`
     """
     # TODO: validate, marshal, and transform the response object
-    pass
+    log.warn('TODO: Implement swaggerize_response()')
 
 
 def get_operation_for_request(request, route_info, spec):
@@ -178,11 +187,13 @@ def get_operation_for_request(request, route_info, spec):
         for op_name, op in op_map.iteritems():
             if op.http_method.lower() == request.method.lower():
                 route = route_info['route']
-                if route.path == op.path_name:
+                if hasattr(route, 'path') and route.path == op.path_name:
+                    log.debug('Returning op {0}'.format(op))
                     return op
-    raise RequestValidationError(
-        detail="Could not find a matching Swagger operation for {0} request "
-               "with path {1}.".format(request.method, route.path))
+
+    raise PathNotMatchedError(
+        "Could not find a matching Swagger operation for {0} request {1}"
+        .format(request.method, request.url))
 
 
 def load_settings(registry):
