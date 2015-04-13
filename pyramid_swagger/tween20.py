@@ -179,18 +179,12 @@ def get_operation_for_request(request, route_info, spec):
     :raises: RequestValidationError when a matching Swagger operation is not
         found.
     """
-    # TODO: cache in a map using a composite key so lookup is not done on every
-    #       request
-    resource_map = spec.resources
-    for resource_name, resource in resource_map.iteritems():
-        op_map = resource.operations
-        for op_name, op in op_map.iteritems():
-            if op.http_method.lower() == request.method.lower():
-                route = route_info['route']
-                if hasattr(route, 'path') and route.path == op.path_name:
-                    log.debug('Returning op {0}'.format(op))
-                    return op
-
+    # TODO: unit test
+    route = route_info['route']
+    if hasattr(route, 'path'):
+        op = spec.get_op_for_request(request.method, route.path)
+        if op is not None:
+            return op
     raise PathNotMatchedError(
         "Could not find a matching Swagger operation for {0} request {1}"
         .format(request.method, request.url))
