@@ -8,7 +8,9 @@ from jsonschema.exceptions import ValidationError
 import swagger_spec_validator
 
 from .exceptions import wrap_exception
-from .ingest import API_DOCS_FILENAME, SWAGGER_2DOT0_FILENAME
+
+API_DOCS_FILENAME = 'api_docs.json'
+SWAGGER_2DOT0_FILENAME = 'swagger.json'
 
 
 def fetch_swagger_spec_filename(schema_dir):

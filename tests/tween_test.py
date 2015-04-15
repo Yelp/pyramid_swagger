@@ -10,11 +10,14 @@ from pyramid.response import Response
 
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
+from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import get_exclude_paths
+from pyramid_swagger.tween import handle_request
+from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
-from pyramid_swagger.tween import validate_outgoing_response
+from pyramid_swagger.tween import validate_response
 
 
 def assert_eq_regex_lists(left, right):
@@ -99,17 +102,71 @@ def test_validation_skips_path_properly():
 # schemas easier there.
 def test_validation_content_type_with_json():
     fake_schema = mock.Mock(response_body_schema={'type': 'object'})
+    fake_validator = mock.Mock(schema=fake_schema)
+    body = {'status': 'good'}
     response = Response(
-        body=simplejson.dumps({'status': 'good'}),
+        body=simplejson.dumps(body),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_outgoing_response(response, fake_schema, None)
+    validate_response(response, fake_validator)
+    fake_validator.validate.assert_called_once_with(body)
 
 
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
+    fake_validator = mock.Mock(schema=fake_schema)
     response = Response(
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_outgoing_response(response, fake_schema, None)
+    validate_response(response, fake_validator)
+    fake_validator.validate.assert_called_once_with(
+        response.body.decode('utf-8'))
+
+
+def build_mock_validator(properties):
+    return mock.Mock(
+        spec=['schema', 'validate'],
+        schema={
+            'properties': dict(
+                (name, {'type': type_})
+                for name, type_ in properties.items()
+            )
+        },
+    )
+
+
+def test_handle_request_returns_request_data():
+    mock_request = mock.Mock(
+        spec=PyramidSwaggerRequest,
+        query={'int': '123', 'float': '3.14'},
+        form={'form_int': '333', 'string2': 'xyz'},
+        path={'path_int': '222', 'string': 'abc'},
+        headers={'X-Is-Bool': 'True'},
+        body={'more': 'foo'},
+    )
+
+    body_validator = build_mock_validator({'more': 'object'})
+    body_validator.schema['name'] = 'bar'
+
+    validator_map = mock.Mock(
+        query=build_mock_validator({'int': 'integer', 'float': 'float'}),
+        path=build_mock_validator({'path_int': 'integer', 'string': 'string'}),
+        form=build_mock_validator({'form_int': 'integer'}),
+        headers=build_mock_validator({'X-Is-Bool': 'boolean'}),
+        body=body_validator,
+    )
+
+    expected = {
+        'int': 123,
+        'float': 3.14,
+        'path_int': 222,
+        'form_int': 333,
+        'string': 'abc',
+        'string2': 'xyz',
+        'X-Is-Bool': True,
+        'bar': {'more': 'foo'},
+    }
+
+    request_data = handle_request(mock_request, noop_context, validator_map)
+    assert request_data == expected

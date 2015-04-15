@@ -12,6 +12,7 @@ from pyramid.registry import Registry
 from pyramid.response import Response
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import compile_swagger_schema
+from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.tween import validation_tween_factory
 from pyramid.urldispatch import RoutesMapper
 from webtest import AppError
@@ -42,6 +43,13 @@ def get_registry(settings):
     return registry
 
 
+def get_swagger_schema(schema_dir='tests/sample_schemas/good_app/'):
+    return compile_swagger_schema(
+        schema_dir,
+        get_resource_listing(schema_dir, False)
+    )
+
+
 def _validate_against_tween(request, response=None, **overrides):
     """
     Acceptance testing helper for testing the validation tween.
@@ -53,8 +61,7 @@ def _validate_against_tween(request, response=None, **overrides):
         return response or Response()
 
     settings = dict({
-        'pyramid_swagger.schema': compile_swagger_schema(
-            'tests/sample_schemas/good_app/'),
+        'pyramid_swagger.schema': get_swagger_schema(),
         'pyramid_swagger.enable_swagger_spec_validation': False},
         **overrides
     )
@@ -62,7 +69,7 @@ def _validate_against_tween(request, response=None, **overrides):
     registry = get_registry(settings)
 
     # Let's make request validation a no-op so we can focus our tests.
-    with mock.patch.object(pyramid_swagger.tween, '_validate_request'):
+    with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
         validation_tween_factory(handler, registry)(request)
 
 
@@ -99,7 +106,7 @@ def test_500_when_response_is_missing_required_field():
         _validate_against_tween(request, response=response)
 
 
-def test_200_when_response_is_void():
+def test_200_when_response_is_void_with_none_response():
     request = pyramid.testing.DummyRequest(
         method='GET',
         path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
@@ -110,6 +117,17 @@ def test_200_when_response_is_void():
         body=simplejson.dumps(None),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
+    _validate_against_tween(request, response=response)
+
+
+def test_200_when_response_is_void_with_empty_response():
+    request = pyramid.testing.DummyRequest(
+        method='GET',
+        path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
+        params={'required_arg': 'test'},
+        matchdict={'int_arg': '1', 'float_arg': '2.0', 'boolean_arg': 'true'},
+    )
+    response = Response(body='{}')
     _validate_against_tween(request, response=response)
 
 

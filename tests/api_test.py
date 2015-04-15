@@ -7,9 +7,9 @@ from pyramid_swagger.api import build_api_declaration_view
 from pyramid_swagger.api import register_api_doc_endpoints
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
-from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.ingest import ResourceListingNotFoundError
 from tests.acceptance.response_test import get_registry
+from tests.acceptance.response_test import get_swagger_schema
 
 
 def test_basepath_rewriting():
@@ -24,7 +24,7 @@ def test_basepath_rewriting():
 def build_config(schema_dir):
     return mock.Mock(
         registry=get_registry({
-            'swagger_schema': compile_swagger_schema(schema_dir),
+            'swagger_schema': get_swagger_schema(schema_dir),
         })
     )
 

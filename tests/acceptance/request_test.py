@@ -30,6 +30,29 @@ def validation_context(request, response=None):
 validation_ctx_path = 'tests.acceptance.request_test.validation_context'
 
 
+def test_200_with_form_params(test_app):
+    assert test_app.post(
+        '/post_with_form_params',
+        {'form_param': 42},
+    ).status_code == 200
+
+
+def test_400_with_form_params_wrong_type(test_app):
+    assert test_app.post(
+        '/post_with_form_params',
+        {'form_param': "not a number"},
+        expect_errors=True,
+    ).status_code == 400
+
+
+def test_400_if_json_body_for_form_parms(test_app):
+    assert test_app.post_json(
+        '/post_with_form_params',
+        {'form_param': 42},
+        expect_errors=True,
+    ).status_code == 400
+
+
 def test_400_if_required_query_args_absent(test_app):
     assert test_app.get(
         '/sample/path_arg1/resource',
@@ -105,6 +128,7 @@ def test_200_on_json_body_without_contenttype_header(test_app):
     assert test_app.post(
         '/sample?optional_string=bar',
         simplejson.dumps({'foo': 'test'}),
+        {'Content-Type': ''},
     ).status_code == 200
 
 
@@ -152,6 +176,22 @@ def test_400_if_extra_query_args(test_app):
     ).status_code == 400
 
 
+def test_400_if_missing_required_header(test_app):
+    assert test_app.get(
+        '/sample/header',
+        expect_errors=True,
+    ).status_code == 400
+
+
+def test_200_with_required_header(test_app):
+    response = test_app.get(
+        '/sample/header',
+        headers={'X-Force': 'True'},
+        expect_errors=True,
+    )
+    assert response.status_code == 200
+
+
 def test_200_skip_validation_with_excluded_path():
     assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
         .get('/sample/test_request/resource') \
@@ -160,9 +200,11 @@ def test_200_skip_validation_with_excluded_path():
 
 def test_200_skip_validation_when_disabled():
     # calling endpoint with required args missing
-    assert test_app(**{'pyramid_swagger.enable_request_validation': False}) \
-        .get('/get_with_non_string_query_args', params={}) \
-        .status_code == 200
+    request = test_app(**{
+        'pyramid_swagger.enable_request_validation': False,
+        'skip_swagger_data_assert': True,
+    }).get('/get_with_non_string_query_args', params={})
+    assert request.status_code == 200
 
 
 def test_path_validation_context():

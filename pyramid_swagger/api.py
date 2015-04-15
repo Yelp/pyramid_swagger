@@ -8,8 +8,7 @@ import simplejson
 def register_api_doc_endpoints(config):
     """Create and register pyramid endpoints for /api-docs*."""
     swagger_schema = config.registry.settings['pyramid_swagger.schema']
-    with open(swagger_schema.resource_listing) as input_file:
-        register_resource_listing(config, simplejson.load(input_file))
+    register_resource_listing(config, swagger_schema.resource_listing)
 
     for name, filepath in swagger_schema.api_declarations.items():
         with open(filepath) as input_file:

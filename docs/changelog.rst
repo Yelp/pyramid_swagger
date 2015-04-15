@@ -1,15 +1,28 @@
 Changelog
 =========
 
-1.5.0-dev (2015-02-25)
-++++++++++++++++++
-**Under development**
+1.5.0-rc2 (2015-04-1)
+++++++++++++++++++++++
+
+* Form-encoded bodies are now validated correctly.
+* Fixed bug in `required` swagger attribute handling.
+
+1.5.0-rc1 (2015-03-30)
+++++++++++++++++++++++
 
 * Added ``enable_api_docs_views`` configuration option so /api-docs
   auto-registration can be disabled in situations where users want to serve
   the Swagger spec in a nonstandard way.
 * Added ``exclude_routes`` configuration option. Allows a blacklist of Pyramid
   routes which will be ignored for validation purposes.
+* Added ``generate_resource_listing`` configuration option to allow
+  pyramid_swagger to generate the ``apis`` section of the resource listing.
+* Bug fix for issues relating to ``void`` responses (See `Issue 79`_)
+* Added support for header validation.
+* Make casted values from the request available through
+  ``request.swagger_data``
+
+.. _Issue 79: https://github.com/striglia/pyramid_swagger/issues/79
 
 1.4.0 (2015-01-27)
 ++++++++++++++++++
