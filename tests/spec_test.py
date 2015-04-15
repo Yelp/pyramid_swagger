@@ -5,8 +5,9 @@ import pytest
 from jsonschema.exceptions import ValidationError
 from swagger_spec_validator import SwaggerValidationError
 
-from pyramid_swagger.ingest import API_DOCS_FILENAME, SWAGGER_2DOT0_FILENAME
-from pyramid_swagger.spec import (fetch_swagger_spec_filename,
+from pyramid_swagger.spec import (API_DOCS_FILENAME,
+                                  SWAGGER_2DOT0_FILENAME,
+                                  fetch_swagger_spec_filename,
                                   validate_swagger_schema)
 
 
