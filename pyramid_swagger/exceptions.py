@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import sys
 
+import six
+
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
 
@@ -18,6 +20,9 @@ def wrap_exception(exception_class):
             try:
                 method(*args, **kwargs)
             except Exception as e:
-                raise exception_class(str(e)), None, sys.exc_info()[2]
+                six.reraise(
+                    exception_class,
+                    exception_class(str(e)),
+                    sys.exc_info()[2])
         return wrapper
     return generic_exception

@@ -46,6 +46,6 @@ setup(
         'jsonschema',
         'pyramid',
         'simplejson',
-        'swagger_spec_validator',
+        'swagger_spec_validator >= 1.0.10',
     ],
 )
