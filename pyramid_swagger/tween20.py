@@ -70,11 +70,19 @@ def swagger_tween_factory(handler, registry):
         try:
             swaggerize_request(request, settings, route_info)
         except (PathNotMatchedError, RequestValidationError) as exc:
+
+            # raise existing RVE or allow validation_context to override
+            if isinstance(exc, RequestValidationError):
+                with validation_context(request):
+                    raise
+
+            # PathNotMatched error converts to RVE unless validation context
+            # overrides
             if settings.validate_path:
                 with validation_context(request):
                     raise RequestValidationError(str(exc))
-            else:
-                return handler(request)
+
+            return handler(request)
 
         response = handler(request)
 
