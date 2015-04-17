@@ -3,16 +3,17 @@ from __future__ import unicode_literals
 
 from collections import namedtuple
 import logging
+import sys
 
-from pyramid.interfaces import IRoutesMapper
-
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.request import RequestLike, unmarshal_request
+from bravado_core.response import validate_response
+from pyramid.interfaces import IRoutesMapper
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.model import PathNotMatchedError
-from pyramid_swagger.tween import get_exclude_paths, should_exclude_request, \
-    _get_validation_context
-from pyramid_swagger.tween import validation_error
+from pyramid_swagger.tween import get_exclude_paths, should_exclude_request
+from pyramid_swagger.tween import validation_error, _get_validation_context
 
 
 log = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class Settings(namedtuple(
     ]
 )):
 
-    """A settings object for configuratble options.
+    """A settings object for configurable options.
 
     :param spec: a :class:`bravado_core.spec.Spec`
     :param validate_swagger_spec: check Swagger files for correctness.
@@ -68,19 +69,19 @@ def swagger_tween_factory(handler, registry):
         validation_context = _get_validation_context(registry)
 
         try:
-            swaggerize_request(request, settings, route_info)
+            op = swaggerize_request(request, settings, route_info)
         except (PathNotMatchedError, RequestValidationError) as exc:
             if settings.validate_path:
                 with validation_context(request):
-                    raise RequestValidationError(str(exc))
+                    raise RequestValidationError(str(exc)), \
+                        None, sys.exc_info()[2]
             else:
                 return handler(request)
 
         response = handler(request)
 
         with validation_context(request, response=response):
-            # TODO: response handling
-            swaggerize_response(response)
+            swaggerize_response(response, settings, op)
 
         return response
 
@@ -145,6 +146,7 @@ def swaggerize_request(request, settings, route_info):
     :type request: :class:`pyramid.request.Request`
     :type settings: :class:`Settings`
     :type route_info: :class:`pyramid.urldispatch.Route`
+    :rtype: :class:`bravado_core.operation.Operation`
     """
     op = get_operation_for_request(request, route_info, settings.spec)
     bravado_request = PyramidSwaggerRequest(request, route_info)
@@ -154,17 +156,34 @@ def swaggerize_request(request, settings, route_info):
         return request_data
 
     request.set_property(swagger_data)
+    return op
 
 
 @validation_error(ResponseValidationError)
-def swaggerize_response(response):
+def swaggerize_response(response, settings, op):
     """
     Delegate handling the Swagger concerns of the response to bravado-core.
 
     :type response: :class:`pyramid.response.Response`
+    :type settings: :class:`Settings`
+    :type op: :class:`bravado_core.operation.Operation`
     """
-    # TODO: validate, marshal, and transform the response object
-    log.warn('TODO: Implement swaggerize_response()')
+    from bravado_core.response import get_response_spec
+    try:
+        response_spec = get_response_spec(response.status_int, op)
+    except SwaggerMappingError:
+        error = ResponseValidationError(
+            "Could not find a matching Swagger response for {0} request {1}"
+            "with http_status {2}."
+            .format(op.http_method.upper(), op.path_name, response.status_code))
+        raise error, None, sys.excinfo()[2]
+
+    # marshaling looks like it will have to be done in the view renderer
+    bravado_response = object
+    #response_dict = {
+    #    # TODO: Fill in stuff the validator needs
+    #}
+    #validate_response(response_spec, op, response_dict)
 
 
 def get_operation_for_request(request, route_info, spec):
@@ -176,7 +195,7 @@ def get_operation_for_request(request, route_info, spec):
     :type route_info: :class:`pyramid.urldispatch.Route`
     :type spec: :class:`bravado_core.spec.Spec`
     :rtype: :class:`bravado_core.operation.Operation`
-    :raises: RequestValidationError when a matching Swagger operation is not
+    :raises: PathNotMatchedError when a matching Swagger operation is not
         found.
     """
     # TODO: unit test
@@ -185,6 +204,7 @@ def get_operation_for_request(request, route_info, spec):
         op = spec.get_op_for_request(request.method, route.path)
         if op is not None:
             return op
+
     raise PathNotMatchedError(
         "Could not find a matching Swagger operation for {0} request {1}"
         .format(request.method, request.url))
