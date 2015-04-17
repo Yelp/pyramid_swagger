@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 from collections import namedtuple
 import logging
 
+from bravado_core.request import RequestLike, unmarshal_request
 from pyramid.interfaces import IRoutesMapper
 
-from bravado_core.request import RequestLike, unmarshal_request
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.model import PathNotMatchedError
@@ -146,7 +146,7 @@ def swaggerize_request(request, settings, route_info):
     :type settings: :class:`Settings`
     :type route_info: :class:`pyramid.urldispatch.Route`
     """
-    op = get_operation_for_request(request, route_info, settings.spec)
+    op = get_op_for_request(request, route_info, settings.spec)
     bravado_request = PyramidSwaggerRequest(request, route_info)
     request_data = unmarshal_request(bravado_request, op)
 
@@ -167,19 +167,19 @@ def swaggerize_response(response):
     log.warn('TODO: Implement swaggerize_response()')
 
 
-def get_operation_for_request(request, route_info, spec):
+def get_op_for_request(request, route_info, spec):
     """
     Find out which operation in the Swagger schema corresponds to the given
     pyramid request.
 
     :type request: :class:`pyramid.request.Request`
-    :type route_info: :class:`pyramid.urldispatch.Route`
+    :type route_info: dict (usually has 'match' and 'route' keys)
     :type spec: :class:`bravado_core.spec.Spec`
     :rtype: :class:`bravado_core.operation.Operation`
     :raises: RequestValidationError when a matching Swagger operation is not
         found.
     """
-    # TODO: unit test
+    # pyramid.urldispath.Route
     route = route_info['route']
     if hasattr(route, 'path'):
         op = spec.get_op_for_request(request.method, route.path)

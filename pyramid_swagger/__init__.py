@@ -21,7 +21,7 @@ def includeme(config):
     settings['pyramid_swagger.spec'] = get_swagger_spec(settings)
 
     config.add_tween(
-        #"pyramid_swagger.tween.validation_tween_factory",   # 1.2
+        # "pyramid_swagger.tween.validation_tween_factory",   # 1.2
         "pyramid_swagger.tween20.swagger_tween_factory",  # 2.0
         under=pyramid.tweens.EXCVIEW
     )
