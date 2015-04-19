@@ -85,8 +85,6 @@ def register_swagger_json_endpoint(config):
     spec = config.registry.settings['pyramid_swagger.spec']
 
     def view_for_swagger_json(request):
-        # Thanks to the magic of closures, this means we gracefully return JSON
-        # without file IO at request time.
         return spec.spec_dict
 
     route_name = 'swagger_json'
@@ -94,5 +92,6 @@ def register_swagger_json_endpoint(config):
     config.add_view(
         view_for_swagger_json,
         route_name=route_name,
-        renderer='json'
+        # Renderer needs to be able to handle embedded jsonrefs
+        renderer='jsonref',
     )

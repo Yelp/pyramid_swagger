@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+import jsonref
 import pytest
 from webtest import TestApp
 
