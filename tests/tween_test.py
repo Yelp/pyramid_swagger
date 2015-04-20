@@ -140,6 +140,7 @@ def test_handle_request_returns_request_data():
     mock_request = mock.Mock(
         spec=PyramidSwaggerRequest,
         query={'int': '123', 'float': '3.14'},
+        form={'form_int': '333', 'string2': 'xyz'},
         path={'path_int': '222', 'string': 'abc'},
         headers={'X-Is-Bool': 'True'},
         body={'more': 'foo'},
@@ -151,6 +152,7 @@ def test_handle_request_returns_request_data():
     validator_map = mock.Mock(
         query=build_mock_validator({'int': 'integer', 'float': 'float'}),
         path=build_mock_validator({'path_int': 'integer', 'string': 'string'}),
+        form=build_mock_validator({'form_int': 'integer'}),
         headers=build_mock_validator({'X-Is-Bool': 'boolean'}),
         body=body_validator,
     )
@@ -159,7 +161,9 @@ def test_handle_request_returns_request_data():
         'int': 123,
         'float': 3.14,
         'path_int': 222,
+        'form_int': 333,
         'string': 'abc',
+        'string2': 'xyz',
         'X-Is-Bool': True,
         'bar': {'more': 'foo'},
     }

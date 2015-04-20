@@ -71,6 +71,14 @@ def swagger_tween_factory(handler, registry):
         try:
             op = swaggerize_request(request, settings, route_info)
         except (PathNotMatchedError, RequestValidationError) as exc:
+
+            # raise existing RVE or allow validation_context to override
+            if isinstance(exc, RequestValidationError):
+                with validation_context(request):
+                    raise
+
+            # PathNotMatched error converts to RVE unless validation context
+            # overrides
             if settings.validate_path:
                 with validation_context(request):
                     raise RequestValidationError(str(exc)), \
@@ -148,7 +156,7 @@ def swaggerize_request(request, settings, route_info):
     :type route_info: :class:`pyramid.urldispatch.Route`
     :rtype: :class:`bravado_core.operation.Operation`
     """
-    op = get_operation_for_request(request, route_info, settings.spec)
+    op = get_op_for_request(request, route_info, settings.spec)
     bravado_request = PyramidSwaggerRequest(request, route_info)
     request_data = unmarshal_request(bravado_request, op)
 
@@ -186,19 +194,19 @@ def swaggerize_response(response, settings, op):
     #validate_response(response_spec, op, response_dict)
 
 
-def get_operation_for_request(request, route_info, spec):
+def get_op_for_request(request, route_info, spec):
     """
     Find out which operation in the Swagger schema corresponds to the given
     pyramid request.
 
     :type request: :class:`pyramid.request.Request`
-    :type route_info: :class:`pyramid.urldispatch.Route`
+    :type route_info: dict (usually has 'match' and 'route' keys)
     :type spec: :class:`bravado_core.spec.Spec`
     :rtype: :class:`bravado_core.operation.Operation`
     :raises: PathNotMatchedError when a matching Swagger operation is not
         found.
     """
-    # TODO: unit test
+    # pyramid.urldispath.Route
     route = route_info['route']
     if hasattr(route, 'path'):
         op = spec.get_op_for_request(request.method, route.path)

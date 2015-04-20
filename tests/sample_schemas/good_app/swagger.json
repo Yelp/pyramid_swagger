@@ -169,6 +169,23 @@
         ]
       }
     },
+    "/post_with_form_params": {
+      "post": {
+        "200": {
+          "description": "No response was specified"
+        },
+        "description": "",
+        "operationId": "post_with_form_params",
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "form_param",
+            "required": true,
+            "type": "integer"
+          }
+        ]
+      }
+    },
     "/get_with_non_string_query_args": {
       "get": {
         "responses": {
