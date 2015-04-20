@@ -4,6 +4,7 @@
     "title": "Title was not specified",
     "version": "0.1"
   },
+  "produces": ["application/json"],
   "paths": {
     "/no_models": {
       "get": {
@@ -171,8 +172,10 @@
     },
     "/post_with_form_params": {
       "post": {
-        "200": {
-          "description": "No response was specified"
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
         },
         "description": "",
         "operationId": "post_with_form_params",

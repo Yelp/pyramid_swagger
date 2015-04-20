@@ -7,7 +7,7 @@ import sys
 
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.request import RequestLike, unmarshal_request
-from bravado_core.response import validate_response
+from bravado_core.response import validate_response, OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
@@ -144,6 +144,28 @@ class PyramidSwaggerRequest(RequestLike):
         return getattr(self.request, 'json_body', {})
 
 
+class PyramidSwaggerResponse(OutgoingResponse):
+    """Adapter for a :class:`pyramid.response.Response` which exposes response
+    data for validation.
+    """
+    def __init__(self, response):
+        """
+        :type response: :class:`pyramid.response.Response`
+        """
+        self.response = response
+
+    @property
+    def content_type(self):
+        return self.response.content_type
+
+    @property
+    def text(self):
+        return self.response.text
+
+    def json(self, **kwargs):
+        return getattr(self.response, 'json_body', {})
+
+
 @validation_error(RequestValidationError)
 def swaggerize_request(request, settings, route_info):
     """
@@ -186,12 +208,8 @@ def swaggerize_response(response, settings, op):
             .format(op.http_method.upper(), op.path_name, response.status_code))
         raise error, None, sys.excinfo()[2]
 
-    # marshaling looks like it will have to be done in the view renderer
-    bravado_response = object
-    #response_dict = {
-    #    # TODO: Fill in stuff the validator needs
-    #}
-    #validate_response(response_spec, op, response_dict)
+    outgoing_response = PyramidSwaggerResponse(response)
+    validate_response(response_spec, op, outgoing_response)
 
 
 def get_op_for_request(request, route_info, spec):
