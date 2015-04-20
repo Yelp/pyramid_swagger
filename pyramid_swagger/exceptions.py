@@ -2,7 +2,6 @@
 import sys
 
 import six
-
 from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
 
 

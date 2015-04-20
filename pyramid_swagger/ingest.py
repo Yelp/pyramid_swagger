@@ -7,8 +7,7 @@ import simplejson
 
 from .load_schema import load_schema
 from .model import SwaggerSchema
-from .spec import (API_DOCS_FILENAME,
-                   validate_swagger_schema)
+from .spec import API_DOCS_FILENAME, validate_swagger_schema
 
 
 class ResourceListingNotFoundError(Exception):
