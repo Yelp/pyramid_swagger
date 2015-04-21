@@ -21,7 +21,10 @@
       "get": {
         "responses": {
           "200": {
-            "description": "No response was specified"
+            "description": "Return a standard_response",
+            "schema": {
+              "$ref": "#/definitions/standard_response"
+            }
           }
         },
         "description": "",
@@ -139,7 +142,10 @@
       "get": {
         "responses": {
           "200": {
-            "description": "No response was specified"
+            "description": "List of array_content_model",
+            "schema": {
+              "$ref": "#/definitions/array_content_model"
+            }
           }
         },
         "description": "",

@@ -50,28 +50,6 @@ def get_swagger_schema(schema_dir='tests/sample_schemas/good_app/'):
         get_resource_listing(schema_dir, False)
     )
 
-# def _validate_against_tween(request, response=None, **overrides):
-#     """
-#     Acceptance testing helper for testing the validation tween.
-#
-#     :param request: pytest fixture
-#     :param response: standard fixture by default
-#     """
-#     def handler(request):
-#         return response or Response()
-#
-#     settings = dict({
-#         'pyramid_swagger.schema': get_swagger_schema(),
-#         'pyramid_swagger.enable_swagger_spec_validation': False},
-#         **overrides
-#     )
-#
-#     registry = get_registry(settings)
-#
-#     # Let's make request validation a no-op so we can focus our tests.
-#     with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
-#         validation_tween_factory(handler, registry)(request)
-
 
 def _validate_against_tween(request, response=None, **overrides):
     """
@@ -84,20 +62,16 @@ def _validate_against_tween(request, response=None, **overrides):
         return response or Response()
 
     settings = dict({
-        #'pyramid_swagger.spec': get_swagger_spec(),
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.schema': get_swagger_schema(),
         'pyramid_swagger.enable_swagger_spec_validation': False},
         **overrides
     )
 
-    spec = get_swagger_spec(settings)
-    settings['pyramid_swagger.spec'] = spec
-
     registry = get_registry(settings)
 
     # Let's make request validation a no-op so we can focus our tests.
-    # with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
-    swagger_tween_factory(handler, registry)(request)
+    with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
+        validation_tween_factory(handler, registry)(request)
 
 
 def test_response_validation_enabled_by_default():
