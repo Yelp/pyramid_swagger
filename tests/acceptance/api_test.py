@@ -34,3 +34,10 @@ def test_other_sample_resource(test_app):
         '/api-docs/other_sample',
         status=200,
     )
+
+
+def test_swagger_20_schema(test_app):
+    test_app.get(
+        '/swagger.json',
+        status=200,
+    )

@@ -5,6 +5,7 @@ from contextlib import contextmanager
 import functools
 import logging
 import re
+import sys
 
 from pyramid.interfaces import IRoutesMapper
 import jsonschema.exceptions
@@ -20,7 +21,8 @@ log = logging.getLogger(__name__)
 
 DEFAULT_EXCLUDED_PATHS = [
     r'^/static/?',
-    r'^/api-docs/?'
+    r'^/api-docs/?',
+    r'^/swagger.json'
 ]
 
 
@@ -283,7 +285,7 @@ def validation_error(exc_class):
                 # This will alter our stack trace slightly, but Pyramid knows
                 # how to render it. And the real value is in the message
                 # anyway.
-                raise exc_class(str(exc))
+                raise exc_class(str(exc)), None, sys.exc_info()[2]
 
         return _validate
 
