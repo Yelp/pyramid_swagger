@@ -92,7 +92,5 @@ def register_swagger_json_endpoint(config):
     config.add_view(
         view_for_swagger_json,
         route_name=route_name,
-        # Renderer needs to be able to handle embedded jsonrefs
-        #renderer='jsonref',
         renderer='json',
     )
