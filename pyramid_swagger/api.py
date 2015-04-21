@@ -93,5 +93,6 @@ def register_swagger_json_endpoint(config):
         view_for_swagger_json,
         route_name=route_name,
         # Renderer needs to be able to handle embedded jsonrefs
-        renderer='jsonref',
+        #renderer='jsonref',
+        renderer='json',
     )
