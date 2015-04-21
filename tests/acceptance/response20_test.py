@@ -1,41 +1,28 @@
-
-from contextlib import contextmanager
-import mock
+#
+# Swagger 2.0 response acceptance tests
+#
+# Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
+# a single codebase to exercise both Swagger 1.2 and 2.0 tweens.
+#
 from mock import patch, Mock
 import pyramid.testing
-from webob.multidict import MultiDict
-import pyramid_swagger
-import pyramid_swagger.tween
-import pytest
-import simplejson
-from pyramid_swagger.tween20 import swagger_tween_factory
-from .request_test import test_app
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
-from pyramid.response import Response
-from pyramid_swagger.exceptions import ResponseValidationError
-from pyramid_swagger.ingest import compile_swagger_schema, get_swagger_spec
-from pyramid_swagger.ingest import get_resource_listing
-from pyramid_swagger.tween import validation_tween_factory
-from pyramid.urldispatch import RoutesMapper
-from webtest import AppError
 import pyramid.request
+from pyramid.response import Response
+from pyramid.urldispatch import RoutesMapper
+import pytest
+import simplejson
+from webob.multidict import MultiDict
+from webtest.app import AppError
 
-
-class CustomResponseValidationException(Exception):
-    pass
-
-
-@contextmanager
-def validation_context(request, response=None):
-    try:
-        yield
-    except Exception:
-        raise CustomResponseValidationException
-
-
-validation_ctx_path = 'tests.acceptance.response_test.validation_context'
+from .request_test import test_app
+from pyramid_swagger.exceptions import ResponseValidationError
+from pyramid_swagger.ingest import get_swagger_spec
+from pyramid_swagger.tween20 import swagger_tween_factory
+from tests.acceptance.response_test import validation_ctx_path
+from tests.acceptance.response_test import CustomResponseValidationException
 
 
 def get_registry(settings):
@@ -48,48 +35,20 @@ def get_registry(settings):
     return registry
 
 
-def get_swagger_schema(schema_dir='tests/sample_schemas/good_app/'):
-    return compile_swagger_schema(
-        schema_dir,
-        get_resource_listing(schema_dir, False)
-    )
-
-
-# def _validate_against_tween(request, response=None, **overrides):
-#     """
-#     Acceptance testing helper for testing the validation tween.
-#
-#     :param request: pytest fixture
-#     :param response: standard fixture by default
-#     """
-#     def handler(request):
-#         return response or Response()
-#
-#     settings = dict({
-#         'pyramid_swagger.schema': get_swagger_schema(),
-#         'pyramid_swagger.enable_swagger_spec_validation': False},
-#         **overrides
-#     )
-#
-#     registry = get_registry(settings)
-#
-#     # Let's make request validation a no-op so we can focus our tests.
-#     with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
-#         validation_tween_factory(handler, registry)(request)
-
-
-def _validate_against_tween20(request, response=None, path_pattern='/', **overrides):
+def _validate_against_tween20(request, response=None, path_pattern='/',
+                              **overrides):
     """
-    Acceptance testing helper for testing the validation tween.
+    Acceptance testing helper for testing the swagger tween.
 
-    :param request: pytest fixture
+    :param request: pyramid request
     :param response: standard fixture by default
+    :param path_pattern: Path pattern eg. /foo/{bar}
+    :param overrides: dict of overrides for `pyramid_swagger` config
     """
     def handler(request):
         return response or Response()
 
     settings = dict({
-        #'pyramid_swagger.spec': get_swagger_spec(),
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
         'pyramid_swagger.enable_response_validation': True},
@@ -101,17 +60,16 @@ def _validate_against_tween20(request, response=None, path_pattern='/', **overri
 
     registry = get_registry(settings)
 
-    # Let's make request validation a no-op so we can focus our tests.
-    # with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
-
+    # This is a little messy because the current flow of execution doesn't
+    # set up the route_info in pyramid. Have to mock out the `route_info`
+    # so that usages in the tween meet expectations. Holler if you know a better
+    # way to do this!
     op = spec.get_op_for_request(request.method, path_pattern)
-    #route_info = {'match': {'path_arg': 'path_arg1'}}
-    route_info = {'match': request.matchdict, 'route': None}
-    route_mapper = route_info #Mock(return_value=route_info)
-    query_utility = Mock(return_value=route_mapper)
+    mock_route_info = {'match': request.matchdict, 'route': None}
+    mock_route_mapper = Mock(spec=IRoutesMapper, return_value=mock_route_info)
     with patch('pyramid_swagger.tween20.get_op_for_request', return_value=op):
-        #registry.queryUtility = query_utility
-        with patch('pyramid.registry.Registry.queryUtility', return_value=query_utility):
+        with patch('pyramid.registry.Registry.queryUtility',
+                   return_value=mock_route_mapper):
             swagger_tween_factory(handler, registry)(request)
 
 
@@ -149,10 +107,6 @@ def test_500_when_response_is_missing_required_field():
         params={'required_arg': 'test'},
         matchdict={'path_arg': 'path_arg1'},
     )
-
-    #print request.GET
-    #print request.GET.mixed()
-    #print request.GET.mixed().get('required_arg')
 
     # Omit the logging_info key from the response to induce failure
     response = Response(
@@ -232,64 +186,65 @@ def test_500_for_bad_validated_array_response():
         body=simplejson.dumps([{"enum_value": "bad_enum_value"}]),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(ResponseValidationError):
+    with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween20(
             request,
             response=response,
             path_pattern='/sample_array_response')
 
+    assert "'bad_enum_value' is not one of ['good_enum_value']" in \
+           str(excinfo.value)
 
-# def test_200_for_good_validated_array_response():
-#     request = pyramid.testing.DummyRequest(
-#         method='GET',
-#         path='/sample_array_response',
-#     )
-#     response = Response(
-#         body=simplejson.dumps([{"enum_value": "good_enum_value"}]),
-#         headers={'Content-Type': 'application/json; charset=UTF-8'},
-#     )
-#
-#     _validate_against_tween(request, response=response)
-#
-#
-# def test_200_for_normal_response_validation():
-#     assert test_app(**{'pyramid_swagger.enable_response_validation': True}) \
-#         .post_json('/sample', {'foo': 'test', 'bar': 'test'}) \
-#         .status_code == 200
-#
-#
-# def test_200_skip_validation_for_excluded_path():
-#     # FIXME(#64): This test is broken and doesn't check anything.
-#     assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
-#         .get('/sample/path_arg1/resource', params={'required_arg': 'test'}) \
-#         .status_code == 200
-#
-#
-# def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
-#     """If path missing and validation is disabled we want to let something else
-#     handle the error. TestApp throws an AppError, but Pyramid would throw a
-#     HTTPNotFound exception.
-#     """
-#     with pytest.raises(AppError):
-#         assert test_app(**{'pyramid_swagger.enable_path_validation': False}) \
-#             .get('/this/path/doesnt/exist')
-#
-#
-# def test_response_validation_context():
-#     request = pyramid.testing.DummyRequest(
-#         method='GET',
-#         path='/sample/path_arg1/resource',
-#         params={'required_arg': 'test'},
-#         matchdict={'path_arg': 'path_arg1'},
-#     )
-#     # Omit the logging_info key from the response.
-#     response = Response(
-#         body=simplejson.dumps({'raw_response': 'foo'}),
-#         headers={'Content-Type': 'application/json; charset=UTF-8'},
-#     )
-#     with pytest.raises(CustomResponseValidationException):
-#         _validate_against_tween(
-#             request,
-#             response=response,
-#             **{'pyramid_swagger.validation_context_path': validation_ctx_path}
-#         )
+
+def test_200_for_good_validated_array_response():
+    request = EnhancedDummyRequest(
+        method='GET',
+        path='/sample_array_response',
+    )
+    response = Response(
+        body=simplejson.dumps([{"enum_value": "good_enum_value"}]),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+
+    _validate_against_tween20(
+        request,
+        response=response,
+        path_pattern='/sample_array_response')
+
+
+def test_200_for_normal_response_validation():
+    assert test_app(**{'pyramid_swagger.enable_response_validation': True}) \
+        .post_json('/sample', {'foo': 'test', 'bar': 'test'}) \
+        .status_code == 200
+
+
+def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
+    """If path missing and validation is disabled we want to let something else
+    handle the error. TestApp throws an AppError, but Pyramid would throw a
+    HTTPNotFound exception.
+    """
+    with pytest.raises(AppError):
+        assert test_app(**{'pyramid_swagger.enable_path_validation': False}) \
+            .get('/this/path/doesnt/exist')
+
+
+def test_response_validation_context():
+    request = EnhancedDummyRequest(
+        method='GET',
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'},
+    )
+    # Omit the logging_info key from the response.
+    response = Response(
+        body=simplejson.dumps({'raw_response': 'foo'}),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+
+    with pytest.raises(CustomResponseValidationException) as excinfo:
+        _validate_against_tween20(
+            request,
+            response=response,
+            path_pattern='/sample/{path_arg}/resource',
+            **{'pyramid_swagger.validation_context_path': validation_ctx_path}
+        )

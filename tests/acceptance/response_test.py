@@ -5,14 +5,13 @@ import pyramid_swagger
 import pyramid_swagger.tween
 import pytest
 import simplejson
-from pyramid_swagger.tween20 import swagger_tween_factory
 from .request_test import test_app
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
 from pyramid.response import Response
 from pyramid_swagger.exceptions import ResponseValidationError
-from pyramid_swagger.ingest import compile_swagger_schema, get_swagger_spec
+from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.tween import validation_tween_factory
 from pyramid.urldispatch import RoutesMapper

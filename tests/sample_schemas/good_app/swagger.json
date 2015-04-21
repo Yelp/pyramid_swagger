@@ -144,7 +144,10 @@
           "200": {
             "description": "List of array_content_model",
             "schema": {
-              "$ref": "#/definitions/array_content_model"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/array_content_model"
+              }
             }
           }
         },
