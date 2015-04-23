@@ -140,7 +140,7 @@ def get_swagger_schema(settings):
     )
 
     if settings.get('pyramid_swagger.enable_swagger_spec_validation', True):
-        validate_swagger_schema(schema_dir)
+        validate_swagger_schema(schema_dir, resource_listing)
 
     return compile_swagger_schema(schema_dir, resource_listing)
 

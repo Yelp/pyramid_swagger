@@ -10,33 +10,25 @@ import swagger_spec_validator
 from .exceptions import wrap_exception
 
 API_DOCS_FILENAME = 'api_docs.json'
-SWAGGER_2DOT0_FILENAME = 'swagger.json'
-
-
-def fetch_swagger_spec_filename(schema_dir):
-    """Try to find 2.0 spec(swagger.json), if unsuccessful,
-    find 1.2 api doc(api_docs.json). Throw up if both fail
-    """
-    swagger20_filepath = os.path.join(schema_dir, SWAGGER_2DOT0_FILENAME)
-    swagger12_filepath = os.path.join(schema_dir, API_DOCS_FILENAME)
-    if os.path.isfile(swagger20_filepath):
-        return swagger20_filepath
-    if os.path.isfile(swagger12_filepath):
-        return swagger12_filepath
-    raise swagger_spec_validator.SwaggerValidationError(
-        'No swagger spec found in directory:{0}. Note that your json file '
-        'must be named {1} or {2}'.format(
-            schema_dir, SWAGGER_2DOT0_FILENAME, API_DOCS_FILENAME))
 
 
 @wrap_exception(ValidationError)
-def validate_swagger_schema(schema_dir):
+def validate_swagger_schema(schema_dir, resource_listing):
     """Validate the structure of Swagger schemas against the spec.
 
+    **Valid only for Swagger v1.2 spec**
+
+    Note: It is possible that resource_listing is not present in
+    the schema_dir. The path is passed in the call so that ssv
+    can fetch the api-declaration files from the path.
+
+    :param resource_listing: Swagger Spec v1.2 resource listing
+    :type resource_listing: dict
     :param schema_dir: A path to Swagger spec directory
     :type schema_dir: string
     :raises: :py:class:`swagger_spec_validator.SwaggerValidationError`
     """
-    resource_listing = fetch_swagger_spec_filename(schema_dir)
-    swagger_spec_validator.validate_spec_url(
-        "file://{0}".format(os.path.abspath(resource_listing)))
+    schema_filepath = os.path.join(schema_dir, API_DOCS_FILENAME)
+    swagger_spec_validator.validator12.validate_spec(
+        resource_listing,
+        "file://{0}".format(os.path.abspath(schema_filepath)))
