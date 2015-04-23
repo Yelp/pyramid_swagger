@@ -46,5 +46,6 @@ setup(
         'jsonschema',
         'pyramid',
         'simplejson',
+        'bravado-core',
     ],
 )

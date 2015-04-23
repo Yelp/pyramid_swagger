@@ -15,6 +15,7 @@ def test_app():
     return TestApp(main({}, **settings))
 
 
+@pytest.mark.xfail(reason='Swagger 1.2 only test')
 def test_api_docs(test_app):
     test_app.get(
         '/api-docs',
@@ -22,6 +23,7 @@ def test_api_docs(test_app):
     )
 
 
+@pytest.mark.xfail(reason='Swagger 1.2 only test')
 def test_sample_resource(test_app):
     test_app.get(
         '/api-docs/sample',
@@ -29,8 +31,16 @@ def test_sample_resource(test_app):
     )
 
 
+@pytest.mark.xfail(reason='Swagger 1.2 only test')
 def test_other_sample_resource(test_app):
     test_app.get(
         '/api-docs/other_sample',
+        status=200,
+    )
+
+
+def test_swagger_20_schema(test_app):
+    test_app.get(
+        '/swagger.json',
         status=200,
     )
