@@ -31,10 +31,10 @@ def test_bad_schema_validated_on_include():
         'pyramid_swagger.enable_swagger_spec_validation': True,
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
-    with pytest.raises(SwaggerValidationError) as excinfo:
+    with pytest.raises(SwaggerValidationError):
         pyramid_swagger.includeme(mock_config)
     # TODO: Figure out why this assertion fails on travis
-    #assert "'info' is a required property" in str(excinfo.value)
+    # assert "'info' is a required property" in str(excinfo.value)
 
 
 @mock.patch('pyramid_swagger.get_swagger_spec')
