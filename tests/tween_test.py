@@ -173,7 +173,7 @@ def test_handle_request_returns_request_data():
         'bar': {'more': 'foo'},
     }
 
-    request_data = handle_request(mock_request, noop_context, validator_map)
+    request_data = handle_request(mock_request, validator_map, noop_context,)
     assert request_data == expected
 
 

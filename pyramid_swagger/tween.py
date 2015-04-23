@@ -117,9 +117,8 @@ def validation_tween_factory(handler, registry):
         if settings.validate_request:
             request_data = swagger_handler.handle_request(
                 PyramidSwaggerRequest(request, route_info),
-                validation_context=validation_context,
-                validator_map=op_or_validators_map,
-                op=op_or_validators_map)
+                op_or_validators_map,
+                validation_context=validation_context)
 
             def swagger_data(_):
                 return request_data
@@ -200,16 +199,16 @@ class PyramidSwaggerRequest(RequestLike):
         return getattr(self.request, 'json_body', {})
 
 
-def handle_request(request, validation_context, validator_map, **kwargs):
+def handle_request(request, validator_map, validation_context, **kwargs):
     """Validate the request against the swagger spec and return a dict with
     all parameter values available in the request, casted to the expected
     python type.
 
     :param request: a :class:`PyramidSwaggerRequest` to validate
-    :param validation_context: a context manager for wrapping validation
-        errors
     :param validator_map: a :class:`pyramid_swagger.load_schema.ValidatorMap`
         used to validate the request
+    :param validation_context: a context manager for wrapping validation
+        errors
     :returns: a :class:`dict` of request data for each parameter in the swagger
         spec
     """
@@ -435,7 +434,7 @@ def prepare_body(response):
 
 
 @validation_error(RequestValidationError)
-def swaggerize_request(request, **kwargs):
+def swaggerize_request(request, op, **kwargs):
     """
     Delegate handling the Swagger concerns of the request to bravado-core.
     Post-invocation, the Swagger request parameters are available as a dict
@@ -445,7 +444,6 @@ def swaggerize_request(request, **kwargs):
     :type op: :class:`bravado_core.operation.Operation`
     :type validatation_context: context manager
     """
-    op = kwargs['op']
     validation_context = kwargs['validation_context']
     with validation_context(request):
         request_data = unmarshal_request(request, op)
