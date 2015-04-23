@@ -18,15 +18,24 @@ def includeme(config):
 
     # Add the SwaggerSchema to settings to make it avialable to the validation
     # tween and `register_api_doc_endpoints`
-    settings['pyramid_swagger.schema'] = get_swagger_schema(settings)
-    settings['pyramid_swagger.spec'] = get_swagger_spec(settings)
+    swagger_version = settings.get('pyramid_swagger.swagger_version', '2.0')
+
+    if swagger_version == '1.2':
+        settings['pyramid_swagger.schema'] = get_swagger_schema(settings)
+    elif swagger_version == '2.0':
+        settings['pyramid_swagger.schema'] = get_swagger_spec(settings)
+    else:
+        raise TypeError('Unsupported pyramid_swagger.swagger_version: {0}'
+                        .format(swagger_version))
 
     config.add_tween(
-        # "pyramid_swagger.tween.validation_tween_factory",   # 1.2
-        "pyramid_swagger.tween20.swagger_tween_factory",  # 2.0
+        "pyramid_swagger.tween.validation_tween_factory",
         under=pyramid.tweens.EXCVIEW
     )
 
     if settings.get('pyramid_swagger.enable_api_doc_views', True):
-        register_api_doc_endpoints(config)
-        register_swagger_json_endpoint(config)
+        if swagger_version == '1.2':
+            register_api_doc_endpoints(config)
+
+        if swagger_version == '2.0':
+            register_swagger_json_endpoint(config)
