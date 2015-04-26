@@ -1,8 +1,8 @@
-import jsonschema
 import mock
 from pyramid.config import Configurator
 from pyramid.registry import Registry
 import pytest
+from swagger_spec_validator.common import SwaggerValidationError
 
 import pyramid_swagger
 
@@ -28,10 +28,13 @@ def test_disable_api_doc_views(_1, _2, mock_register):
 def test_bad_schema_validated_on_include():
     settings = {
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/bad_app/',
+        'pyramid_swagger.enable_swagger_spec_validation': True,
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
-    with pytest.raises(jsonschema.exceptions.ValidationError):
+    with pytest.raises(SwaggerValidationError):
         pyramid_swagger.includeme(mock_config)
+    # TODO: Figure out why this assertion fails on travis
+    # assert "'info' is a required property" in str(excinfo.value)
 
 
 @mock.patch('pyramid_swagger.get_swagger_spec')

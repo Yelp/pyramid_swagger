@@ -82,7 +82,7 @@ def register_swagger_json_endpoint(config):
     :param config: Configurator instance for our webapp
     :type config: :class:`pyramid.config.Configurator`
     """
-    spec = config.registry.settings['pyramid_swagger.spec']
+    spec = config.registry.settings['pyramid_swagger.schema']
 
     def view_for_swagger_json(request):
         return spec.spec_dict

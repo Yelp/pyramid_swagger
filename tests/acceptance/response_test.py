@@ -1,25 +1,38 @@
 from contextlib import contextmanager
+
 import mock
 import pyramid.testing
+from webob.multidict import MultiDict
 import pyramid_swagger
 import pyramid_swagger.tween
 import pytest
 import simplejson
-from .request_test import test_app
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
 from pyramid.response import Response
+from pyramid.urldispatch import RoutesMapper
+from webtest import AppError
+
+from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.tween import validation_tween_factory
-from pyramid.urldispatch import RoutesMapper
-from webtest import AppError
 
 
 class CustomResponseValidationException(Exception):
     pass
+
+
+class EnhancedDummyRequest(pyramid.testing.DummyRequest):
+    """
+    pyramid.testing.DummyRequest doesn't support MultiDicts like the real
+    pyramid.request.Request so this is the next best thing.
+    """
+    def __init__(self, **kw):
+        super(EnhancedDummyRequest, self).__init__(**kw)
+        self.GET = MultiDict(self.GET)
 
 
 @contextmanager
@@ -52,7 +65,8 @@ def get_swagger_schema(schema_dir='tests/sample_schemas/good_app/'):
 
 def _validate_against_tween(request, response=None, **overrides):
     """
-    Acceptance testing helper for testing the validation tween.
+    Acceptance testing helper for testing the validation tween with Swagger 1.2
+    responses.
 
     :param request: pytest fixture
     :param response: standard fixture by default
@@ -61,11 +75,12 @@ def _validate_against_tween(request, response=None, **overrides):
         return response or Response()
 
     settings = dict({
-        'pyramid_swagger.schema': get_swagger_schema(),
-        'pyramid_swagger.enable_swagger_spec_validation': False},
+        'pyramid_swagger.swagger_version': '1.2',
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/'},
         **overrides
     )
-
+    settings['pyramid_swagger.schema'] = get_swagger_schema()
     registry = get_registry(settings)
 
     # Let's make request validation a no-op so we can focus our tests.
@@ -74,7 +89,7 @@ def _validate_against_tween(request, response=None, **overrides):
 
 
 def test_response_validation_enabled_by_default():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
@@ -86,12 +101,13 @@ def test_response_validation_enabled_by_default():
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(ResponseValidationError):
+    with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween(request, response=response)
+    assert "'logging_info' is a required property" in str(excinfo.value)
 
 
 def test_500_when_response_is_missing_required_field():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
@@ -102,12 +118,13 @@ def test_500_when_response_is_missing_required_field():
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(ResponseValidationError):
+    with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween(request, response=response)
+    assert "'logging_info' is a required property" in str(excinfo.value)
 
 
 def test_200_when_response_is_void_with_none_response():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
         params={'required_arg': 'test'},
@@ -121,7 +138,7 @@ def test_200_when_response_is_void_with_none_response():
 
 
 def test_200_when_response_is_void_with_empty_response():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
         params={'required_arg': 'test'},
@@ -132,7 +149,7 @@ def test_200_when_response_is_void_with_empty_response():
 
 
 def test_500_when_response_arg_is_wrong_type():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
@@ -145,12 +162,13 @@ def test_500_when_response_arg_is_wrong_type():
         }),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(ResponseValidationError):
+    with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween(request, response=response)
+    assert "1.0 is not of type 'string'" in str(excinfo.value)
 
 
 def test_500_for_bad_validated_array_response():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample_array_response',
     )
@@ -158,12 +176,13 @@ def test_500_for_bad_validated_array_response():
         body=simplejson.dumps([{"enum_value": "bad_enum_value"}]),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(ResponseValidationError):
+    with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween(request, response=response)
+    assert "is not one of ['good_enum_value']" in str(excinfo.value)
 
 
 def test_200_for_good_validated_array_response():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample_array_response',
     )
@@ -199,7 +218,7 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
 
 
 def test_response_validation_context():
-    request = pyramid.testing.DummyRequest(
+    request = EnhancedDummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},

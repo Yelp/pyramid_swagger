@@ -38,7 +38,7 @@ class SwaggerSchema(object):
         self.api_declarations = api_declarations
         self.resource_validators = resource_validators
 
-    def validators_for_request(self, request):
+    def validators_for_request(self, request, **kwargs):
         """Takes a request and returns a validator mapping for the request.
 
         :param request: A Pyramid request to fetch schemas for

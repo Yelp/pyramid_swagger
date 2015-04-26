@@ -2,26 +2,24 @@
 # Swagger 2.0 response acceptance tests
 #
 # Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
-# a single codebase to exercise both Swagger 1.2 and 2.0 tweens.
+# a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
 from mock import patch, Mock
-import pyramid.testing
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
-import pyramid.request
 from pyramid.response import Response
 from pyramid.urldispatch import RoutesMapper
 import pytest
 import simplejson
-from webob.multidict import MultiDict
 from webtest.app import AppError
 
 from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import get_swagger_spec
-from pyramid_swagger.tween20 import swagger_tween_factory
-from tests.acceptance.response_test import validation_ctx_path
+from pyramid_swagger.tween import validation_tween_factory
+from tests.acceptance.response_test import validation_ctx_path, \
+    EnhancedDummyRequest
 from tests.acceptance.response_test import CustomResponseValidationException
 
 
@@ -35,10 +33,11 @@ def get_registry(settings):
     return registry
 
 
-def _validate_against_tween20(request, response=None, path_pattern='/',
-                              **overrides):
+def _validate_against_tween(request, response=None, path_pattern='/',
+                            **overrides):
     """
-    Acceptance testing helper for testing the swagger tween.
+    Acceptance testing helper for testing the swagger tween with Swagger 2.0
+    responses.
 
     :param request: pyramid request
     :param response: standard fixture by default
@@ -56,47 +55,41 @@ def _validate_against_tween20(request, response=None, path_pattern='/',
     )
 
     spec = get_swagger_spec(settings)
-    settings['pyramid_swagger.spec'] = spec
+    settings['pyramid_swagger.schema'] = spec
 
     registry = get_registry(settings)
 
     # This is a little messy because the current flow of execution doesn't
     # set up the route_info in pyramid. Have to mock out the `route_info`
-    # so that usages in the tween meet expectations. Holler if you know a better
-    # way to do this!
+    # so that usages in the tween meet expectations. Holler if you know a
+    # better way to do this!
     op = spec.get_op_for_request(request.method, path_pattern)
     mock_route_info = {'match': request.matchdict, 'route': None}
     mock_route_mapper = Mock(spec=IRoutesMapper, return_value=mock_route_info)
-    with patch('pyramid_swagger.tween20.get_op_for_request', return_value=op):
+    with patch('pyramid_swagger.tween.get_op_for_request', return_value=op):
         with patch('pyramid.registry.Registry.queryUtility',
                    return_value=mock_route_mapper):
-            swagger_tween_factory(handler, registry)(request)
+            validation_tween_factory(handler, registry)(request)
 
 
-# def test_response_validation_enabled_by_default():
-#     request = pyramid.testing.DummyRequest(
-#         method='GET',
-#         path='/sample/path_arg1/resource',
-#         params={'required_arg': 'test'},
-#         matchdict={'path_arg': 'path_arg1'},
-#     )
-#     # Omit the logging_info key from the response. If response validation
-#     # occurs, we'll fail it.
-#     response = Response(
-#         body=simplejson.dumps({'raw_response': 'foo'}),
-#         headers={'Content-Type': 'application/json; charset=UTF-8'},
-#     )
-#     with pytest.raises(ResponseValidationError):
-#         _validate_against_tween(request, response=response)
-
-class EnhancedDummyRequest(pyramid.testing.DummyRequest):
-    """
-    pyramid.testing.DummyRequest doesn't support MultiDicts like the real
-    pyramid.request.Request so this is the next best thing.
-    """
-    def __init__(self, **kw):
-        super(EnhancedDummyRequest, self).__init__(**kw)
-        self.GET = MultiDict(self.GET)
+def test_response_validation_enabled_by_default():
+    request = EnhancedDummyRequest(
+        method='GET',
+        path='/sample/path_arg1/resource',
+        params={'required_arg': 'test'},
+        matchdict={'path_arg': 'path_arg1'},
+    )
+    # Omit the logging_info key from the response. If response validation
+    # occurs, we'll fail it.
+    response = Response(
+        body=simplejson.dumps({'raw_response': 'foo'}),
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+    with pytest.raises(ResponseValidationError):
+        _validate_against_tween(
+            request,
+            response=response,
+            path_pattern='/sample/{path_arg}/resource')
 
 
 def test_500_when_response_is_missing_required_field():
@@ -115,7 +108,7 @@ def test_500_when_response_is_missing_required_field():
     )
 
     with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween20(
+        _validate_against_tween(
             request,
             response=response,
             path_pattern='/sample/{path_arg}/resource')
@@ -134,7 +127,7 @@ def test_200_when_response_is_void_with_none_response():
         body=simplejson.dumps(None),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    _validate_against_tween20(
+    _validate_against_tween(
         request,
         response=response,
         path_pattern='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}')
@@ -148,7 +141,7 @@ def test_200_when_response_is_void_with_empty_response():
         matchdict={'int_arg': '1', 'float_arg': '2.0', 'boolean_arg': 'true'},
     )
     response = Response(body='{}')
-    _validate_against_tween20(
+    _validate_against_tween(
         request,
         response=response,
         path_pattern='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}')
@@ -169,7 +162,7 @@ def test_500_when_response_arg_is_wrong_type():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween20(
+        _validate_against_tween(
             request,
             response=response,
             path_pattern='/sample/{path_arg}/resource')
@@ -187,7 +180,7 @@ def test_500_for_bad_validated_array_response():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween20(
+        _validate_against_tween(
             request,
             response=response,
             path_pattern='/sample_array_response')
@@ -206,7 +199,7 @@ def test_200_for_good_validated_array_response():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
 
-    _validate_against_tween20(
+    _validate_against_tween(
         request,
         response=response,
         path_pattern='/sample_array_response')
@@ -241,8 +234,8 @@ def test_response_validation_context():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
 
-    with pytest.raises(CustomResponseValidationException) as excinfo:
-        _validate_against_tween20(
+    with pytest.raises(CustomResponseValidationException):
+        _validate_against_tween(
             request,
             response=response,
             path_pattern='/sample/{path_arg}/resource',
