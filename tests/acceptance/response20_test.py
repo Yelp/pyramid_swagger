@@ -5,11 +5,8 @@
 # a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
 from mock import patch, Mock
-from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
-from pyramid.registry import Registry
 from pyramid.response import Response
-from pyramid.urldispatch import RoutesMapper
 import pytest
 import simplejson
 from webtest.app import AppError
@@ -19,18 +16,8 @@ from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import get_swagger_spec
 from pyramid_swagger.tween import validation_tween_factory
 from tests.acceptance.response_test import validation_ctx_path, \
-    EnhancedDummyRequest
+    EnhancedDummyRequest, get_registry
 from tests.acceptance.response_test import CustomResponseValidationException
-
-
-def get_registry(settings):
-    registry = Registry('testing')
-    config = Configurator(registry=registry)
-    if getattr(registry, 'settings', None) is None:
-        config._set_settings(settings)
-    registry.registerUtility(RoutesMapper(), IRoutesMapper)
-    config.commit()
-    return registry
 
 
 def _validate_against_tween(request, response=None, path_pattern='/',

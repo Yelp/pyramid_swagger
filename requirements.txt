@@ -1,3 +1,3 @@
 # TODO: Remove once bravado-core in pypi
-#-e git://github.com/analogue/bravado-core.git@0acc1415ed90a0ab52264b6267512891e193e3c5#egg=bravado-core
--e /nail/home/spatel/nfs/git/bravado-core-analogue
+-e git://github.com/analogue/bravado-core.git@0acc1415ed90a0ab52264b6267512891e193e3c5#egg=bravado-core
+#-e /nail/home/spatel/nfs/git/bravado-core-analogue

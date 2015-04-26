@@ -482,7 +482,6 @@ def swaggerize_response(response, **kwargs):
     Delegate handling the Swagger concerns of the response to bravado-core.
 
     :type response: :class:`pyramid.response.Response`
-    :type settings: :class:`Settings`
     :type op: :class:`bravado_core.operation.Operation`
     """
     op = kwargs['op']
