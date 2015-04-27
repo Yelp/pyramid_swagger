@@ -132,10 +132,7 @@ def validation_tween_factory(handler, registry):
 
         if settings.validate_response:
             with validation_context(request, response=response):
-                swagger_handler.handle_response(
-                    response,
-                    validator=getattr(op_or_validators_map, 'response', None),
-                    op=op_or_validators_map)
+                swagger_handler.handle_response(response, op_or_validators_map)
 
         return response
 
@@ -429,20 +426,21 @@ def cast_params(schema, values):
 
 
 @validation_error(ResponseValidationError)
-def validate_response(response, validator, **kwargs):
+def validate_response(response, validator_map):
     """Validates response against our schemas.
 
     :param response: the response object to validate
     :type response: :class:`pyramid.response.Response`
-    :param validator: validator for the response
-    :type  validator: :class`:pyramid_swagger.load_schema.SchemaValidator`
+    :type validator_map: :class:`pyramid_swagger.load_schema.ValidatorMap`
     """
+    validator = validator_map.response
+
     # Short circuit if we are supposed to not validate anything.
-    if (
-        validator.schema.get('type') == 'void' and
-        response.body in (None, b'', b'{}', b'null')
-    ):
+    returns_nothing = validator.schema.get('type') == 'void'
+    body_empty = response.body in (None, b'', b'{}', b'null')
+    if returns_nothing and body_empty:
         return
+
     validator.validate(prepare_body(response))
 
 
@@ -477,14 +475,13 @@ def swaggerize_request(request, op, **kwargs):
 
 
 @validation_error(ResponseValidationError)
-def swaggerize_response(response, **kwargs):
+def swaggerize_response(response, op):
     """
     Delegate handling the Swagger concerns of the response to bravado-core.
 
     :type response: :class:`pyramid.response.Response`
     :type op: :class:`bravado_core.operation.Operation`
     """
-    op = kwargs['op']
     try:
         response_spec = get_response_spec(response.status_int, op)
     except SwaggerMappingError:
@@ -493,10 +490,8 @@ def swaggerize_response(response, **kwargs):
             "with http_status {2}.".format(
                 op.http_method.upper(), op.path_name, response.status_code))
 
-        # Workaround for "W602 deprecated form of raising exception"
         # See https://github.com/jcrocholl/pep8/issues/34
-        _1, _2, tb = sys.exc_info()
-        raise error, None, tb
+        raise error, None, sys.exc_info()[2]  # flake8: noqa
 
     bravado_core.response.validate_response(
         response_spec, op, PyramidSwaggerResponse(response))
