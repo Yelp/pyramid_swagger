@@ -32,11 +32,11 @@ def build_config(schema_dir):
 def test_proper_error_on_missing_resource_listing():
     with pytest.raises(ResourceListingNotFoundError) as exc:
         register_api_doc_endpoints(
-            build_config('tests/sample_schemas/missing_resource_listing/'),
+            build_config(
+                'tests/sample_schemas/missing_resource_listing/api_docs.json'),
         )
     assert(
-        'tests/sample_schemas/missing_resource_listing/api_docs.json'
-        in str(exc)
+        'tests/sample_schemas/missing_resource_listing/' in str(exc)
     )
     assert 'must be named {0}'.format(API_DOCS_FILENAME) in str(exc)
 

@@ -9,7 +9,7 @@
                 {
                     "method": "GET",
                     "nickname": "no_models_get",
-                    "type": "object",
+                    "type": "string",
                     "parameters": []
                 }
             ]

@@ -14,7 +14,8 @@
                         {
                             "paramType": "query",
                             "name": "content",
-                            "required": true
+                            "required": true,
+                            "type": "string"
                         }
                     ],
                     "summary": "Tests required body parameters"

@@ -293,6 +293,7 @@ def validation_error(exc_class):
 CAST_TYPE_TO_FUNC = {
     'integer': int,
     'float': float,
+    'number': float,
     'boolean': bool,
 }
 

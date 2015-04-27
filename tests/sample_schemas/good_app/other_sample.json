@@ -51,7 +51,8 @@
                         {
                             "paramType": "path",
                             "name": "float_arg",
-                            "type": "float",
+                            "type": "number",
+                            "format": "float",
                             "required": true
                         },
                         {
@@ -84,6 +85,10 @@
         }
     ],
     "models": {
+        "object": {
+            "id": "object",
+            "properties": { }
+        },
         "standard_response": {
             "id": "standard_response",
             "type": "object",
@@ -94,7 +99,7 @@
                     "type": "string"
                 },
                 "logging_info": {
-                    "type": "object"
+                    "$ref": "object"
                 }
             }
         }

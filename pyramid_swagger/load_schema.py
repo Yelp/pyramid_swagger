@@ -16,6 +16,7 @@ from pyramid_swagger.model import partial_path_match
 
 
 EXTENDED_TYPES = {
+    'number': (float,),
     'float': (float,),
     'int': (int,),
 }

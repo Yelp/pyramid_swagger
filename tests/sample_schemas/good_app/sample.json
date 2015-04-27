@@ -101,7 +101,8 @@
                         {
                             "paramType": "query",
                             "name": "float_arg",
-                            "type": "float",
+                            "type": "number",
+                            "format": "float",
                             "required": true
                         },
                         {
@@ -116,6 +117,10 @@
         }
     ],
     "models": {
+        "object": {
+            "id": "object",
+            "properties": { }
+        },
         "body_model": {
             "id": "body_model",
             "type": "object",
@@ -136,7 +141,7 @@
                     "type": "string"
                 },
                 "logging_info": {
-                    "type": "object"
+                    "$ref": "object"
                 }
             }
         },
