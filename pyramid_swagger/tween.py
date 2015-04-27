@@ -6,8 +6,11 @@ import functools
 import logging
 import re
 import sys
-from bravado_core.request import RequestLike, unmarshal_request
 
+import bravado_core
+from bravado_core.exception import SwaggerMappingError
+from bravado_core.request import RequestLike, unmarshal_request
+from bravado_core.response import get_response_spec, OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
 import jsonschema.exceptions
 import simplejson
@@ -129,9 +132,7 @@ def validation_tween_factory(handler, registry):
 
         if settings.validate_response:
             with validation_context(request, response=response):
-                swagger_handler.handle_response(
-                    response,
-                    validator=getattr(op_or_validators_map, 'response', None))
+                swagger_handler.handle_response(response, op_or_validators_map)
 
         return response
 
@@ -197,6 +198,28 @@ class PyramidSwaggerRequest(RequestLike):
 
     def json(self, **kwargs):
         return getattr(self.request, 'json_body', {})
+
+
+class PyramidSwaggerResponse(OutgoingResponse):
+    """Adapter for a :class:`pyramid.response.Response` which exposes response
+    data for validation.
+    """
+    def __init__(self, response):
+        """
+        :type response: :class:`pyramid.response.Response`
+        """
+        self.response = response
+
+    @property
+    def content_type(self):
+        return self.response.content_type
+
+    @property
+    def text(self):
+        return self.response.text
+
+    def json(self, **kwargs):
+        return getattr(self.response, 'json_body', {})
 
 
 def handle_request(request, validator_map, validation_context, **kwargs):
@@ -403,20 +426,21 @@ def cast_params(schema, values):
 
 
 @validation_error(ResponseValidationError)
-def validate_response(response, validator):
+def validate_response(response, validator_map):
     """Validates response against our schemas.
 
     :param response: the response object to validate
     :type response: :class:`pyramid.response.Response`
-    :param validator: validator for the response
-    :type  validator: :class`:pyramid_swagger.load_schema.SchemaValidator`
+    :type validator_map: :class:`pyramid_swagger.load_schema.ValidatorMap`
     """
+    validator = validator_map.response
+
     # Short circuit if we are supposed to not validate anything.
-    if (
-        validator.schema.get('type') == 'void' and
-        response.body in (None, b'', b'{}', b'null')
-    ):
+    returns_nothing = validator.schema.get('type') == 'void'
+    body_empty = response.body in (None, b'', b'{}', b'null')
+    if returns_nothing and body_empty:
         return
+
     validator.validate(prepare_body(response))
 
 
@@ -451,14 +475,26 @@ def swaggerize_request(request, op, **kwargs):
 
 
 @validation_error(ResponseValidationError)
-def swaggerize_response(response, **kwargs):
+def swaggerize_response(response, op):
     """
     Delegate handling the Swagger concerns of the response to bravado-core.
 
     :type response: :class:`pyramid.response.Response`
+    :type op: :class:`bravado_core.operation.Operation`
     """
-    # TODO: validate, marshal, and transform the response object
-    log.warn('TODO: Implement swaggerize_response()')
+    try:
+        response_spec = get_response_spec(response.status_int, op)
+    except SwaggerMappingError:
+        error = ResponseValidationError(
+            "Could not find a matching Swagger response for {0} request {1}"
+            "with http_status {2}.".format(
+                op.http_method.upper(), op.path_name, response.status_code))
+
+        # See https://github.com/jcrocholl/pep8/issues/34
+        raise error, None, sys.exc_info()[2]  # flake8: noqa
+
+    bravado_core.response.validate_response(
+        response_spec, op, PyramidSwaggerResponse(response))
 
 
 def get_op_for_request(request, route_info, spec):

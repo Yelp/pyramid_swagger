@@ -4,6 +4,7 @@
     "title": "Title was not specified",
     "version": "0.1"
   },
+  "produces": ["application/json"],
   "paths": {
     "/no_models": {
       "get": {
@@ -20,7 +21,10 @@
       "get": {
         "responses": {
           "200": {
-            "description": "No response was specified"
+            "description": "Return a standard_response",
+            "schema": {
+              "$ref": "#/definitions/standard_response"
+            }
           }
         },
         "description": "",
@@ -138,7 +142,13 @@
       "get": {
         "responses": {
           "200": {
-            "description": "No response was specified"
+            "description": "List of array_content_model",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/array_content_model"
+              }
+            }
           }
         },
         "description": "",
@@ -171,8 +181,10 @@
     },
     "/post_with_form_params": {
       "post": {
-        "200": {
-          "description": "No response was specified"
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
         },
         "description": "",
         "operationId": "post_with_form_params",

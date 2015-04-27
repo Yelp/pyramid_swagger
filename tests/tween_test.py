@@ -13,6 +13,7 @@ from pyramid.response import Response
 
 
 from pyramid_swagger.exceptions import ResponseValidationError
+from pyramid_swagger.load_schema import ValidatorMap, SchemaValidator
 from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request
 from pyramid_swagger.tween import PyramidSwaggerRequest
@@ -113,18 +114,20 @@ def test_validation_content_type_with_json():
         body=simplejson.dumps(body),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_response(response, fake_validator)
+    validator_map = mock.Mock(spec=ValidatorMap, response=fake_validator)
+    validate_response(response, validator_map)
     fake_validator.validate.assert_called_once_with(body)
 
 
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
-    fake_validator = mock.Mock(schema=fake_schema)
+    fake_validator = mock.Mock(spec=SchemaValidator, schema=fake_schema)
     response = Response(
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_response(response, fake_validator)
+    validator_map = mock.Mock(spec=ValidatorMap, response=fake_validator)
+    validate_response(response, validator_map)
     fake_validator.validate.assert_called_once_with(
         response.body.decode('utf-8'))
 
