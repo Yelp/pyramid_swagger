@@ -37,14 +37,15 @@ def build_swagger_12_endpoints(resource_listing, api_declarations):
     :type api_declarations: dict
     :rtype: iterable of :class:`pyramid_swagger.model.PyramidEndpoint`
     """
-    yield build_resource_listing(resource_listing)
+    yield build_swagger_12_resource_listing(resource_listing)
 
     for name, filepath in api_declarations.items():
         with open(filepath) as input_file:
-            yield build_api_declaration(name, simplejson.load(input_file))
+            yield build_swagger_12_api_declaration(
+                name, simplejson.load(input_file))
 
 
-def build_resource_listing(resource_listing):
+def build_swagger_12_resource_listing(resource_listing):
     """
     :param resource_listing: JSON representing a Swagger 1.2 resource listing
     :type resource_listing: dict
@@ -56,13 +57,13 @@ def build_resource_listing(resource_listing):
         return resource_listing
 
     return PyramidEndpoint(
-        path='',
+        path='/api-docs',
         route_name='pyramid_swagger.swagger12.api_docs',
         view=view_for_resource_listing,
         renderer='json')
 
 
-def build_api_declaration(resource_name, api_declaration):
+def build_swagger_12_api_declaration(resource_name, api_declaration):
     """
     :param resource_name: The `path` parameter from the resource listing for
         this resource.
@@ -75,13 +76,13 @@ def build_api_declaration(resource_name, api_declaration):
     # pyramid routes! (minus the leading /)
     route_name = 'pyramid_swagger.swagger12.apidocs-{0}'.format(resource_name)
     return PyramidEndpoint(
-        path='/{0}'.format(resource_name),
+        path='/api-docs/{0}'.format(resource_name),
         route_name=route_name,
-        view=build_api_declaration_view(api_declaration),
+        view=build_swagger_12_api_declaration_view(api_declaration),
         renderer='json')
 
 
-def build_api_declaration_view(api_declaration_json):
+def build_swagger_12_api_declaration_view(api_declaration_json):
     """Thanks to the magic of closures, this means we gracefully return JSON
     without file IO at request time.
     """
@@ -94,21 +95,14 @@ def build_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def register_swagger_json_endpoint(config):
-    """Registers the endpoint /swagger.json.
-
-    :param config: Configurator instance for our webapp
-    :type config: :class:`pyramid.config.Configurator`
-    """
-    spec = config.registry.settings['pyramid_swagger.schema']
+def build_swagger_20_swagger_dot_json(config):
 
     def view_for_swagger_json(request):
+        spec = config.registry.settings['pyramid_swagger.schema']
         return spec.spec_dict
 
-    route_name = 'swagger_json'
-    config.add_route(route_name, '/swagger.json')
-    config.add_view(
-        view_for_swagger_json,
-        route_name=route_name,
-        renderer='json',
-    )
+    return PyramidEndpoint(
+        path='/swagger.json',
+        route_name='pyramid_swagger.swagger20.api_docs',
+        view=view_for_swagger_json,
+        renderer='json')
