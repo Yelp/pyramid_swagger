@@ -1,6 +1,8 @@
 from contextlib import contextmanager
+from _pytest.python import FixtureRequest
 
 import mock
+from mock import Mock
 import pyramid.testing
 from webob.multidict import MultiDict
 import pyramid_swagger
@@ -195,16 +197,25 @@ def test_200_for_good_validated_array_response():
 
 
 def test_200_for_normal_response_validation():
-    assert test_app(**{'pyramid_swagger.enable_response_validation': True}) \
-        .post_json('/sample', {'foo': 'test', 'bar': 'test'}) \
-        .status_code == 200
+    app = test_app(
+        request=Mock(spec=FixtureRequest, param=['1.2']),
+        **{'pyramid_swagger.enable_response_validation': True}
+    )
+    response = app.post_json('/sample', {'foo': 'test', 'bar': 'test'})
+    assert response.status_code == 200
 
 
 def test_200_skip_validation_for_excluded_path():
     # FIXME(#64): This test is broken and doesn't check anything.
-    assert test_app(**{'pyramid_swagger.exclude_paths': [r'^/sample/?']}) \
-        .get('/sample/path_arg1/resource', params={'required_arg': 'test'}) \
-        .status_code == 200
+    app = test_app(
+        request=Mock(spec=FixtureRequest, param=['1.2']),
+        **{'pyramid_swagger.exclude_paths': [r'^/sample/?']}
+    )
+    response = app.get(
+        '/sample/path_arg1/resource',
+        params={'required_arg': 'test'}
+    )
+    assert response.status_code == 200
 
 
 def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
@@ -213,8 +224,11 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
     HTTPNotFound exception.
     """
     with pytest.raises(AppError):
-        assert test_app(**{'pyramid_swagger.enable_path_validation': False}) \
-            .get('/this/path/doesnt/exist')
+        app = test_app(
+            request=Mock(spec=FixtureRequest, param=['1.2']),
+            **{'pyramid_swagger.enable_path_validation': False}
+        )
+        assert app.get('/this/path/doesnt/exist')
 
 
 def test_response_validation_context():
