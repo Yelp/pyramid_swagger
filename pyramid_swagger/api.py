@@ -57,7 +57,7 @@ def build_swagger_12_resource_listing(resource_listing):
         return resource_listing
 
     return PyramidEndpoint(
-        path='/api-docs',
+        path='',
         route_name='pyramid_swagger.swagger12.api_docs',
         view=view_for_resource_listing,
         renderer='json')
@@ -76,7 +76,7 @@ def build_swagger_12_api_declaration(resource_name, api_declaration):
     # pyramid routes! (minus the leading /)
     route_name = 'pyramid_swagger.swagger12.apidocs-{0}'.format(resource_name)
     return PyramidEndpoint(
-        path='/api-docs/{0}'.format(resource_name),
+        path='/{0}'.format(resource_name),
         route_name=route_name,
         view=build_swagger_12_api_declaration_view(api_declaration),
         renderer='json')

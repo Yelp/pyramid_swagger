@@ -23,6 +23,12 @@ from pyramid_swagger.model import PathNotMatchedError
 log = logging.getLogger(__name__)
 
 
+SWAGGER_12 = '1.2'
+SWAGGER_20 = '2.0'
+DEFAULT_SWAGGER_VERSIONS = [SWAGGER_20]
+SUPPORTED_SWAGGER_VERSIONS = [SWAGGER_12, SWAGGER_20]
+
+
 DEFAULT_EXCLUDED_PATHS = [
     r'^/static/?',
     r'^/api-docs/?',
@@ -298,23 +304,21 @@ def build_swagger_handler(settings, schema):
     :type schema: :class:'
     :rtype: :class:`SwaggerHandler`
     """
-    swagger_version = settings.get('pyramid_swagger.swagger_version', '2.0')
+    swagger_versions = get_swagger_versions(settings)
 
-    if swagger_version == '2.0':
+    if SWAGGER_20 in swagger_versions:
         return SwaggerHandler(
             op_for_request=get_op_for_request,
             handle_request=swaggerize_request,
             handle_response=swaggerize_response,
         )
-    elif swagger_version == '1.2':
+
+    if SWAGGER_12 in swagger_versions:
         return SwaggerHandler(
             op_for_request=schema.validators_for_request,
             handle_request=handle_request,
             handle_response=validate_response,
         )
-    raise TypeError(
-        "Invalid pyramid_swagger.swagger_version: {0}. "
-        "Should be either '1.2' or '2.0'".format(swagger_version))
 
 
 def get_exclude_paths(registry):
@@ -518,3 +522,25 @@ def get_op_for_request(request, route_info, spec):
     raise PathNotMatchedError(
         "Could not find a matching Swagger operation for {0} request {1}"
         .format(request.method, request.url))
+
+
+def get_swagger_versions(settings):
+    """
+    Validates and returns the versions of the Swagger Spec that this pyramid
+    application supports.
+
+    :type settings: dict
+    :return: list of strings. eg ['1.2', '2.0']
+    :raises: ValueError when an unsupported Swagger version is encountered.
+    """
+    swagger_versions = settings.get(
+        'pyramid_swagger.swagger_versions', DEFAULT_SWAGGER_VERSIONS)
+
+    if len(swagger_versions) == 0:
+        raise ValueError('pyramid_swagger.swagger_versions is empty')
+
+    for swagger_version in swagger_versions:
+        if swagger_version not in SUPPORTED_SWAGGER_VERSIONS:
+            raise ValueError('Swagger version {0} is not supported.'
+                             .format(swagger_version))
+    return swagger_versions

@@ -75,7 +75,7 @@ def _validate_against_tween(request, response=None, **overrides):
         return response or Response()
 
     settings = dict({
-        'pyramid_swagger.swagger_version': '1.2',
+        'pyramid_swagger.swagger_versions': ['1.2'],
         'pyramid_swagger.enable_swagger_spec_validation': False,
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/'},
         **overrides

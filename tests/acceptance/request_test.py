@@ -200,7 +200,6 @@ def test_200_skip_validation_with_excluded_path():
         .status_code == 200
 
 
-@pytest.mark.xfail(reason='Why?')
 def test_200_skip_validation_when_disabled():
     # calling endpoint with required args missing
     request = test_app(**{
