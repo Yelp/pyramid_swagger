@@ -8,6 +8,7 @@ from .api import register_api_doc_endpoints
 from .api import register_swagger_json_endpoint
 from .ingest import get_swagger_schema
 from .ingest import get_swagger_spec
+from .model import PyramidEndpoint
 
 
 def includeme(config):
@@ -35,7 +36,27 @@ def includeme(config):
 
     if settings.get('pyramid_swagger.enable_api_doc_views', True):
         if swagger_version == '1.2':
-            register_api_doc_endpoints(config)
+            # TODO: add a new setting to pyramid_swagger that allows setting a
+            #       different base_path for api_docs, and pass it in here
+            register_api_doc_endpoints(
+                config,
+                settings['pyramid_swagger.schema'].get_api_doc_endpoints())
 
         if swagger_version == '2.0':
-            register_swagger_json_endpoint(config)
+
+            def view_for_swagger_json(request):
+                spec = config.registry.settings['pyramid_swagger.schema']
+                return spec.spec_dict
+
+            swagger_json_endpoint = PyramidEndpoint(
+                path='/swagger.json',
+                route_name='pyramid_swagger.swagger20.api_docs',
+                view=view_for_swagger_json,
+                renderer='json')
+
+            # TODO: add a new setting to pyramid_swagger that allows setting a
+            #       different base_path for api_docs, and pass it in here
+            register_api_doc_endpoints(
+                config,
+                [swagger_json_endpoint],
+                base_path='')

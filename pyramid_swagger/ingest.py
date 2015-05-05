@@ -7,6 +7,7 @@ import os.path
 import simplejson
 from bravado_core.spec import Spec
 
+from .api import build_swagger_12_endpoints
 from .load_schema import load_schema
 from .model import SwaggerSchema
 from .spec import validate_swagger_schemas
@@ -124,7 +125,8 @@ def compile_swagger_schema(schema_dir, resource_listing):
     """
     mapping = build_schema_mapping(schema_dir, resource_listing)
     resource_validators = ingest_resources(mapping, schema_dir)
-    return SwaggerSchema(resource_listing, mapping, resource_validators)
+    endpoints = list(build_swagger_12_endpoints(resource_listing, mapping))
+    return SwaggerSchema(endpoints, resource_validators)
 
 
 def validate_swagger_schema(schema_dir, resource_listing):
