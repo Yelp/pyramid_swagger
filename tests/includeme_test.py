@@ -1,3 +1,4 @@
+from bravado_core.spec import Spec
 import mock
 from pyramid.config import Configurator
 from pyramid.registry import Registry
@@ -5,6 +6,7 @@ import pytest
 from swagger_spec_validator.common import SwaggerValidationError
 
 import pyramid_swagger
+from pyramid_swagger.model import SwaggerSchema
 
 
 @mock.patch('pyramid_swagger.register_api_doc_endpoints')
@@ -45,3 +47,43 @@ def test_bad_schema_not_validated_if_spec_validation_is_disabled(_):
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
     pyramid_swagger.includeme(mock_config)
+
+
+@mock.patch('pyramid_swagger.register_api_doc_endpoints')
+def test_swagger_12_only(mock_register):
+    settings = {
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.swagger_versions': ['1.2']
+    }
+    mock_config = mock.Mock(registry=mock.Mock(settings=settings))
+    pyramid_swagger.includeme(mock_config)
+    assert isinstance(settings['pyramid_swagger.schema'], SwaggerSchema)
+    assert settings['pyramid_swagger.schema'] == \
+        settings['pyramid_swagger.schema12']
+    assert mock_register.call_count == 1
+
+
+@mock.patch('pyramid_swagger.register_api_doc_endpoints')
+def test_swagger_20_only(mock_register):
+    settings = {
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.swagger_versions': ['2.0']
+    }
+    mock_config = mock.Mock(registry=mock.Mock(settings=settings))
+    pyramid_swagger.includeme(mock_config)
+    assert isinstance(settings['pyramid_swagger.schema'], Spec)
+    assert 'pyramid_swagger.schema12' not in settings
+    assert mock_register.call_count == 1
+
+
+@mock.patch('pyramid_swagger.register_api_doc_endpoints')
+def test_swagger_12_and_20(mock_register):
+    settings = {
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.swagger_versions': ['1.2', '2.0']
+    }
+    mock_config = mock.Mock(registry=mock.Mock(settings=settings))
+    pyramid_swagger.includeme(mock_config)
+    assert isinstance(settings['pyramid_swagger.schema'], Spec)
+    assert isinstance(settings['pyramid_swagger.schema12'], SwaggerSchema)
+    assert mock_register.call_count == 2
