@@ -21,7 +21,7 @@ def register_api_doc_endpoints(config, endpoints, base_path='/api-docs'):
     :type  base_path: string
     """
     for endpoint in endpoints:
-        path = base_path + endpoint.path
+        path = base_path.rstrip('/') + endpoint.path
         config.add_route(endpoint.route_name, path)
         config.add_view(
             endpoint.view,
@@ -97,12 +97,12 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
 
 def build_swagger_20_swagger_dot_json(config):
 
-    def view_for_swagger_json(request):
+    def view_for_swagger_dot_json(request):
         spec = config.registry.settings['pyramid_swagger.schema']
         return spec.spec_dict
 
     return PyramidEndpoint(
         path='/swagger.json',
         route_name='pyramid_swagger.swagger20.api_docs',
-        view=view_for_swagger_json,
+        view=view_for_swagger_dot_json,
         renderer='json')
