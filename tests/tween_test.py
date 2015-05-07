@@ -3,12 +3,12 @@
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
 import mock
+from mock import Mock
 import re
 from pyramid.request import Request
 from pyramid.urldispatch import Route
 import pytest
 import simplejson
-from mock import Mock
 from pyramid.response import Response
 
 
@@ -18,6 +18,7 @@ from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request
 from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import get_exclude_paths
+from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import handle_request
 from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
@@ -208,3 +209,23 @@ def test_get_op_for_request_not_found_when_no_match_in_swagger_spec():
         get_op_for_request(request, route_info, swagger_spec)
     assert 'Could not find a matching Swagger operation' in str(excinfo.value)
     assert mock_bravado_core_get_op_for_request.call_count == 1
+
+
+def test_get_swagger_versions_success():
+    for versions in (['1.2'], ['2.0'], ['1.2', '2.0']):
+        settings = {'pyramid_swagger.swagger_versions': versions}
+        assert versions == get_swagger_versions(settings)
+
+
+def test_get_swagger_versions_empty():
+    settings = {'pyramid_swagger.swagger_versions': []}
+    with pytest.raises(ValueError) as excinfo:
+        get_swagger_versions(settings)
+    assert 'pyramid_swagger.swagger_versions is empty' in str(excinfo.value)
+
+
+def test_get_swagger_versions_unsupported():
+    settings = {'pyramid_swagger.swagger_versions': ['10.0', '2.0']}
+    with pytest.raises(ValueError) as excinfo:
+        get_swagger_versions(settings)
+    assert 'Swagger version 10.0 is not supported' in str(excinfo.value)

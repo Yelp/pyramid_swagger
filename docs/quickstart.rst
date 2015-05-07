@@ -5,15 +5,15 @@ So let's get your pyramid app up and running!
 
 The core steps to use pyramid_swagger are quite simple:
 
-1. Create a Swagger API declaration for your service's endpoints
+1. Create a Swagger Schema for your service's endpoints
 2. Add pyramid_swagger to your Pyramid application
 
-Creating your first API declaration
+Creating your first Swagger Schema
 -----------------------------------
 
-Creating your initial API declaration can be intimidating but don't fear, it's not nearly as much work as it might initially appear.
+Creating your initial Swagger Schema can be intimidating but don't fear, it's not nearly as much work as it might initially appear.
 
-To create your first API declaration, I encourage you to take a look at Swagger's official `PetStore example <http://petstore.swagger.io>`_. You can even see the raw JSON for the associated API declarations, like the `Pet resource. <http://petstore.swagger.io/api/api-docs/pet>`_ You'll notice that Swagger has a lot of details, but the core part of building a schema is documenting each endpoint's inputs and outputs.
+To create your first Swagger Schema, I encourage you to take a look at Swagger's official `PetStore example <http://petstore.swagger.io>`_. You can even see the raw JSON for the `Swagger Schema. <http://petstore.swagger.io/v2/swagger.json>`_ You'll notice that Swagger has a lot of details, but the core part of building a schema is documenting each endpoint's inputs and outputs.
 
 For your intial attempt, documenting an endpoint can be simplified to some basic components:
 
@@ -23,32 +23,16 @@ For your intial attempt, documenting an endpoint can be simplified to some basic
 
 There are many other pieces of your REST interface that Swagger can describe, but these are the core components. The PetStore example has some good examples of all of these various types, so it can be a useful reference as you get used to the syntax.
 
-For any questions about various details of documenting your interface with Swagger, you can consult the official `Swagger Spec <https://github.com/swagger-api/swagger-spec/blob/master/versions/1.2.md>`_, although you may find it somewhat difficult to parse for use as anything but a reference.
+For any questions about various details of documenting your interface with Swagger, you can consult the official `Swagger Spec <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md>`_, although you may find it somewhat difficult to parse for use as anything but a reference.
 
 You may find that the process of writing your API down in the Swagger format is surprisingly hard...this is good! It probably suggests that your API is not terribly well understood or maybe even underspecified right now. Anecdotally, users commonly report that writing their first Swagger api-docs has the unintended side effect of forcing them to reconsider exactly how their service should be interacting with the outside world -- a useful exercise!
 
-Where to put your API declaration
+Where to put your Swagger Schema
 ---------------------------------
 
 Great, so we have one large JSON file containing our API declaration for all endpoints our service supports. What now?
 
-Well you need one other ingredient -- a resource listing. These break up your service into logical resources. To get started, let's just create an extremely simple one. Write the following into :samp:`api_docs/api_docs.json`.
-
-.. code-block:: json
-
-        {
-          "swaggerVersion": "1.2",
-          "apis": [
-            {
-              "path": "/sample",
-              "description": "Sample valid api declaration."
-            }
-          ]
-        }
-
-Now place the API declaration you wrote previously in :samp:`api_docs/sample.json`. You'll notice that our path is named the same as our API declaration file -- this is not by accident! The path has no relation to the paths described in your API declaration, it is only used internally to help Swagger discover your schemas.
-
-Going forward, you'll want to use these resources to separate out the logical pieces of your service's interface. You are encouraged to split your single API declaration into a few cohesive resources that make sense for your particular API!
+Now place the Swagger Schema in :samp:`api_docs/swagger.json`. The path has no relation to the paths described in your API declaration, it is only used internally to help Swagger discover your schemas.
 
 Add pyramid_swagger to your webapp
 ----------------------------------
@@ -66,17 +50,17 @@ With that, when your app starts you will get the benefit of:
 
 * 4xx errors for requests not matching your schema
 * 5xx errors for responses not matching your schema
-* Automatic validation for correctness of your API declaration at application startup
-* Automatic serving of your Swagger schema from the /api-docs endpoint
+* Automatic validation for correctness of your Swagger Schema at application startup
+* Automatic serving of your Swagger Schema from the /swagger.json endpoint
 
 
 Accessing request data
 ----------------------
 
 Now that :mod:`pyramid_swagger` is enabled you can create a view. All the
-values that are specified in the swagger spec for an endpoint are available
+values that are specified in the Swagger Schema for an endpoint are available
 from a single :class:`dict` on the request  ``request.swagger_data``. These
-values are casted to the type specified by the swagger spec.
+values are casted to the type specified by the Swagger Schema.
 
 Example:
 

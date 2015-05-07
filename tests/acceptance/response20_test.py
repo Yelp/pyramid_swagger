@@ -4,6 +4,7 @@
 # Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
 # a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
+from _pytest.python import FixtureRequest
 from mock import patch, Mock
 from pyramid.interfaces import IRoutesMapper
 from pyramid.response import Response
@@ -37,7 +38,8 @@ def _validate_against_tween(request, response=None, path_pattern='/',
     settings = dict({
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
-        'pyramid_swagger.enable_response_validation': True},
+        'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.swagger_versions': ['2.0']},
         **overrides
     )
 
@@ -193,7 +195,9 @@ def test_200_for_good_validated_array_response():
 
 
 def test_200_for_normal_response_validation():
-    assert test_app(**{'pyramid_swagger.enable_response_validation': True}) \
+    assert test_app(
+        request=Mock(spec=FixtureRequest, param=['2.0']),
+        **{'pyramid_swagger.enable_response_validation': True}) \
         .post_json('/sample', {'foo': 'test', 'bar': 'test'}) \
         .status_code == 200
 
@@ -204,7 +208,9 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
     HTTPNotFound exception.
     """
     with pytest.raises(AppError):
-        assert test_app(**{'pyramid_swagger.enable_path_validation': False}) \
+        assert test_app(
+            request=Mock(spec=FixtureRequest, param=['2.0']),
+            **{'pyramid_swagger.enable_path_validation': False}) \
             .get('/this/path/doesnt/exist')
 
 

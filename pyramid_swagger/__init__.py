@@ -4,10 +4,10 @@ Import this module to add the validation tween to your pyramid app.
 """
 import pyramid
 
-from .api import register_api_doc_endpoints
-from .api import register_swagger_json_endpoint
+from .api import register_api_doc_endpoints, build_swagger_20_swagger_dot_json
 from .ingest import get_swagger_schema
 from .ingest import get_swagger_spec
+from .tween import get_swagger_versions, SWAGGER_12, SWAGGER_20
 
 
 def includeme(config):
@@ -15,18 +15,17 @@ def includeme(config):
     :type config: :class:`pyramid.config.Configurator`
     """
     settings = config.registry.settings
+    swagger_versions = get_swagger_versions(settings)
 
-    # Add the SwaggerSchema to settings to make it avialable to the validation
+    # Add the SwaggerSchema to settings to make it available to the validation
     # tween and `register_api_doc_endpoints`
-    swagger_version = settings.get('pyramid_swagger.swagger_version', '2.0')
+    if SWAGGER_12 in swagger_versions:
+        # Store under two keys so that 1.2 and 2.0 can co-exist.
+        settings['pyramid_swagger.schema'] = \
+            settings['pyramid_swagger.schema12'] = get_swagger_schema(settings)
 
-    if swagger_version == '1.2':
-        settings['pyramid_swagger.schema'] = get_swagger_schema(settings)
-    elif swagger_version == '2.0':
+    if SWAGGER_20 in swagger_versions:
         settings['pyramid_swagger.schema'] = get_swagger_spec(settings)
-    else:
-        raise TypeError('Unsupported pyramid_swagger.swagger_version: {0}'
-                        .format(swagger_version))
 
     config.add_tween(
         "pyramid_swagger.tween.validation_tween_factory",
@@ -34,8 +33,15 @@ def includeme(config):
     )
 
     if settings.get('pyramid_swagger.enable_api_doc_views', True):
-        if swagger_version == '1.2':
-            register_api_doc_endpoints(config)
+        # TODO: add a new setting to pyramid_swagger that allows setting a
+        #       different base_path for api_docs, and pass it in here
+        if SWAGGER_12 in swagger_versions:
+            register_api_doc_endpoints(
+                config,
+                settings['pyramid_swagger.schema12'].get_api_doc_endpoints())
 
-        if swagger_version == '2.0':
-            register_swagger_json_endpoint(config)
+        if SWAGGER_20 in swagger_versions:
+            register_api_doc_endpoints(
+                config,
+                [build_swagger_20_swagger_dot_json(config)],
+                base_path='')

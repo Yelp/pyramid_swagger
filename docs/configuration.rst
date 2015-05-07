@@ -12,9 +12,18 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Add the pyramid_swagger validation tween to your app (required)
         pyramid.includes = pyramid_swagger
 
-        # `api_docs.json` directory location.
+        # `api_docs.json` for Swagger 1.2 and/or `swagger.json` for Swagger 2.0
+        # directory location.
         # Default: 'api_docs/'
         pyramid_swagger.schema_directory = "schemas/live/here"
+
+        # Versions of Swagger to support. When both Swagger 1.2 and 2.0 are
+        # supported, it is required for both schemas to define identical APIs.
+        # In this dual-support mode, requests are validated against the Swagger
+        # 2.0 schema only.
+        # Default: ['2.0']
+        # Supported versions: '1.2', '2.0'
+        pyramid_swagger.swagger_versions = ['2.0']
 
         # Check the correctness of Swagger spec files.
         # Default: True
@@ -36,8 +45,8 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
 
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
-        # Default: [r'^/static/?', r'^/api-docs/?']
-        pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?']
+        # Default: [r'^/static/?', r'^/api-docs/?, r'^/swagger.json']
+        pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?', r'^/swagger.json']
 
         # Exclude pyramid routes from validation. Accepts a list of strings
         pyramid_swagger.exclude_routes = ['catchall', 'no-validation']
@@ -70,8 +79,8 @@ Note that, equivalently, you can add these during webapp configuration:
             config.include('pyramid_swagger')
 
 
-generate_resource_listing
--------------------------
+generate_resource_listing (Swagger 1.2 only)
+--------------------------------------------
 
 With a large API (many Resource objects) the boilerplate ``apis`` field of
 the `Resource Listing`_ document can become painful to maintain. This
