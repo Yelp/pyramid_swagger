@@ -1,0 +1,2 @@
+# TODO: Remove once bravado-core in pypi
+-e git://github.com/Yelp/bravado-core.git@#egg=bravado-core

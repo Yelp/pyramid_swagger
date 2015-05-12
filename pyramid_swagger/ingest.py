@@ -3,8 +3,11 @@ from __future__ import unicode_literals
 
 import glob
 import os.path
-import simplejson
 
+import simplejson
+from bravado_core.spec import Spec
+
+from .api import build_swagger_12_endpoints
 from .load_schema import load_schema
 from .model import SwaggerSchema
 from .spec import API_DOCS_FILENAME, validate_swagger_schema
@@ -119,7 +122,8 @@ def compile_swagger_schema(schema_dir, resource_listing):
     """
     mapping = build_schema_mapping(schema_dir, resource_listing)
     resource_validators = ingest_resources(mapping, schema_dir)
-    return SwaggerSchema(resource_listing, mapping, resource_validators)
+    endpoints = list(build_swagger_12_endpoints(resource_listing, mapping))
+    return SwaggerSchema(endpoints, resource_validators)
 
 
 def get_swagger_schema(settings):
@@ -143,6 +147,33 @@ def get_swagger_schema(settings):
         validate_swagger_schema(schema_dir, resource_listing)
 
     return compile_swagger_schema(schema_dir, resource_listing)
+
+
+def get_swagger_spec(settings):
+    """Return a :class:`bravado_core.spec.Spec` constructed from
+    the swagger specs in `pyramid_swagger.schema_directory`. If
+    `pyramid_swagger.enable_swagger_spec_validation` is enabled the schema
+    will be validated before returning it.
+
+    :param settings: a pyramid registry settings with configuration for
+        building a swagger schema
+    :type settings: dict
+    :rtype: :class:`bravado_core.spec.Spec`
+    """
+    schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
+    with open(os.path.join(schema_dir, 'swagger.json'), 'r') as f:
+        spec_dict = simplejson.loads(f.read())
+
+    spec_config = {
+        'validate_requests':
+            settings.get('pyramid_swagger.enable_request_validation'),
+        'validate_responses':
+            settings.get('pyramid_swagger.enable_response_validation'),
+        'validate_swagger_spec':
+            settings.get('pyramid_swagger.enable_swagger_spec_validation'),
+    }
+    spec = Spec.from_dict(spec_dict, config=spec_config)
+    return spec
 
 
 def ingest_resources(mapping, schema_dir):

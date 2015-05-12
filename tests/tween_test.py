@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 """Unit tests for tweens.py"""
+from bravado_core.operation import Operation
+from bravado_core.spec import Spec
 import mock
+from mock import Mock
 import re
+from pyramid.request import Request
+from pyramid.urldispatch import Route
 import pytest
 import simplejson
-from mock import Mock
 from pyramid.response import Response
 
 
 from pyramid_swagger.exceptions import ResponseValidationError
-from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
+from pyramid_swagger.load_schema import ValidatorMap, SchemaValidator
+from pyramid_swagger.model import PathNotMatchedError
+from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request
 from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import get_exclude_paths
+from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import handle_request
 from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
@@ -108,18 +115,20 @@ def test_validation_content_type_with_json():
         body=simplejson.dumps(body),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    validate_response(response, fake_validator)
+    validator_map = mock.Mock(spec=ValidatorMap, response=fake_validator)
+    validate_response(response, validator_map)
     fake_validator.validate.assert_called_once_with(body)
 
 
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
-    fake_validator = mock.Mock(schema=fake_schema)
+    fake_validator = mock.Mock(spec=SchemaValidator, schema=fake_schema)
     response = Response(
         body='abe1351f',
         headers={'Content-Type': 'application/text; charset=UTF-8'},
     )
-    validate_response(response, fake_validator)
+    validator_map = mock.Mock(spec=ValidatorMap, response=fake_validator)
+    validate_response(response, validator_map)
     fake_validator.validate.assert_called_once_with(
         response.body.decode('utf-8'))
 
@@ -168,5 +177,55 @@ def test_handle_request_returns_request_data():
         'bar': {'more': 'foo'},
     }
 
-    request_data = handle_request(mock_request, noop_context, validator_map)
+    request_data = handle_request(mock_request, validator_map, noop_context,)
     assert request_data == expected
+
+
+def test_get_op_for_request_found():
+    request = Mock(spec=Request)
+    route_info = {'route': Mock(spec=Route, path='/foo/{id}')}
+    expected_op = Mock(spec=Operation)
+    swagger_spec = Mock(spec=Spec,
+                        get_op_for_request=Mock(return_value=expected_op))
+    assert expected_op == get_op_for_request(request, route_info, swagger_spec)
+
+
+def test_get_op_for_request_not_found_when_route_has_no_path():
+    request = Mock(spec=Request, method='GET', url='http://localhost/foo/1')
+    route_info = {'route': Mock(spec=[])}
+    swagger_spec = Mock(spec=Spec)
+    with pytest.raises(PathNotMatchedError) as excinfo:
+        get_op_for_request(request, route_info, swagger_spec)
+    assert 'Could not find a matching Swagger operation' in str(excinfo.value)
+
+
+def test_get_op_for_request_not_found_when_no_match_in_swagger_spec():
+    request = Mock(spec=Request, method='GET', url='http://localhost/foo/1')
+    route_info = {'route': Mock(spec=Route, path='/foo/{id}')}
+    mock_bravado_core_get_op_for_request = Mock(return_value=None)
+    swagger_spec = Mock(
+        spec=Spec, get_op_for_request=mock_bravado_core_get_op_for_request)
+    with pytest.raises(PathNotMatchedError) as excinfo:
+        get_op_for_request(request, route_info, swagger_spec)
+    assert 'Could not find a matching Swagger operation' in str(excinfo.value)
+    assert mock_bravado_core_get_op_for_request.call_count == 1
+
+
+def test_get_swagger_versions_success():
+    for versions in (['1.2'], ['2.0'], ['1.2', '2.0']):
+        settings = {'pyramid_swagger.swagger_versions': versions}
+        assert versions == get_swagger_versions(settings)
+
+
+def test_get_swagger_versions_empty():
+    settings = {'pyramid_swagger.swagger_versions': []}
+    with pytest.raises(ValueError) as excinfo:
+        get_swagger_versions(settings)
+    assert 'pyramid_swagger.swagger_versions is empty' in str(excinfo.value)
+
+
+def test_get_swagger_versions_unsupported():
+    settings = {'pyramid_swagger.swagger_versions': ['10.0', '2.0']}
+    with pytest.raises(ValueError) as excinfo:
+        get_swagger_versions(settings)
+    assert 'Swagger version 10.0 is not supported' in str(excinfo.value)

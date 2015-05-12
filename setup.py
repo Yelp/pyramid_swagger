@@ -43,9 +43,9 @@ setup(
     },
     include_package_data=True,
     install_requires=[
+        'bravado-core',
         'jsonschema',
         'pyramid',
         'simplejson',
-        'swagger_spec_validator >= 1.0.10',
     ],
 )
