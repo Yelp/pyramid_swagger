@@ -1,5 +1,4 @@
 from bravado_core.spec import Spec
-from jsonschema.exceptions import ValidationError
 import mock
 from pyramid.config import Configurator
 from pyramid.registry import Registry
