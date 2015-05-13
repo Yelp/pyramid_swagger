@@ -28,5 +28,6 @@ Contents:
    quickstart
    changelog
    configuration
+   migrating_to_swagger_20
    external_resources
    glossary
