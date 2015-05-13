@@ -10,6 +10,12 @@ Changelog
 
 .. _Migrating to Swagger 2.0: http://pyramid-swagger.readthedocs.org/en/latest/
 
+1.5.0 (2015-05-12)
+++++++++++++++++++++++
+
+* Now using swagger_spec_validator package for spec validation. Should be far
+  more robust than the previous implementation.
+
 1.5.0-rc2 (2015-04-1)
 ++++++++++++++++++++++
 
