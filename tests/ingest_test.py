@@ -39,7 +39,7 @@ def test_get_swagger_schema_default():
     }
 
     swagger_schema = get_swagger_schema(settings)
-    assert swagger_schema.resource_listing
+    assert len(swagger_schema.pyramid_endpoints) == 4
     assert swagger_schema.resource_validators
 
 
@@ -52,6 +52,7 @@ def test_get_swagger_schema_no_validation():
     get_swagger_schema(settings)
 
 
+@pytest.mark.xfail(reason='Remove 1.2 test')
 def test_generate_resource_listing():
     listing = {'swaggerVersion': 1.2}
 

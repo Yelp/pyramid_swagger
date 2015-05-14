@@ -11,6 +11,8 @@ your interfaces in a `Pyramid <http://www.pylonsproject.org/>`_ webapp.
 
 Features include:
 
+* Support for Swagger 1.2 and Swagger 2.0
+
 * Request and response validation
 
 * Swagger spec validation
@@ -26,5 +28,6 @@ Contents:
    quickstart
    changelog
    configuration
+   migrating_to_swagger_20
    external_resources
    glossary
