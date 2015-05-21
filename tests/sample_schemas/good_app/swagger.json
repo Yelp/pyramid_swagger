@@ -198,6 +198,25 @@
         ]
       }
     },
+    "/post_with_file_upload": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Upload succeeded"
+          }
+        },
+        "summary": "Test uploading a file",
+        "operationId": "post_with_file_upload",
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "photo_file",
+            "required": true,
+            "type": "file"
+          }
+        ]
+      }
+    },
     "/get_with_non_string_query_args": {
       "get": {
         "responses": {

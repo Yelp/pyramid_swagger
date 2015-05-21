@@ -88,6 +88,15 @@ def build_swagger_type_validator(models):
     return swagger_type_validator
 
 
+def type_validator(validator, types, instance, schema):
+    """Swagger 1.2 supports parameters of 'type': 'File'. Skip validation of
+    the 'type' field in this case.
+    """
+    if schema.get('type') == 'File':
+        return []
+    return _validators.type_draft3(validator, types, instance, schema)
+
+
 def required_validator(validator, req, instance, schema):
     """Swagger 1.2 expects `required` to be a bool in the Parameter object, but
     a list of properties in a Model object.
@@ -124,6 +133,7 @@ Swagger12ParamValidator = validators.extend(
     {
         'paramType': ignore,
         'name': ignore,
+        'type': type_validator,
     }
 )
 

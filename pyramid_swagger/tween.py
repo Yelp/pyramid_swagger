@@ -197,7 +197,7 @@ class PyramidSwaggerRequest(RequestLike):
     @property
     def files(self):
         result = {}
-        for k, v in self.request.params.mixed():
+        for k, v in self.request.params.mixed().iteritems():
             if hasattr(v, 'file'):
                 result[k] = v.file
         return result

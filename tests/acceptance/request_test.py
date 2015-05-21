@@ -43,6 +43,13 @@ def test_200_with_form_params(test_app):
     ).status_code == 200
 
 
+def test_200_with_file_upload(test_app):
+    assert test_app.post(
+        '/post_with_file_upload',
+        upload_files=[('photo_file', 'photo.jpg', '<binary data goes here>')],
+    ).status_code == 200
+
+
 def test_400_with_form_params_wrong_type(test_app):
     assert test_app.post(
         '/post_with_form_params',
