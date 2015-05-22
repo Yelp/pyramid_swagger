@@ -372,7 +372,8 @@ def validation_error(exc_class):
         def _validate(*args, **kwargs):
             try:
                 return f(*args, **kwargs)
-            except jsonschema.exceptions.ValidationError as exc:
+            except (jsonschema.exceptions.ValidationError,
+                    SwaggerMappingError) as exc:
                 # This will alter our stack trace slightly, but Pyramid knows
                 # how to render it. And the real value is in the message
                 # anyway.
@@ -487,17 +488,7 @@ def swaggerize_response(response, op):
     :type response: :class:`pyramid.response.Response`
     :type op: :class:`bravado_core.operation.Operation`
     """
-    try:
-        response_spec = get_response_spec(response.status_int, op)
-    except SwaggerMappingError:
-        error = ResponseValidationError(
-            "Could not find a matching Swagger response for {0} request {1}"
-            "with http_status {2}.".format(
-                op.http_method.upper(), op.path_name, response.status_code))
-
-        # See https://github.com/jcrocholl/pep8/issues/34
-        raise error, None, sys.exc_info()[2]  # flake8: noqa
-
+    response_spec = get_response_spec(response.status_int, op)
     bravado_core.response.validate_response(
         response_spec, op, PyramidSwaggerResponse(response))
 
