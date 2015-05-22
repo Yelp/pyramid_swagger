@@ -35,6 +35,8 @@ class EnhancedDummyRequest(pyramid.testing.DummyRequest):
     def __init__(self, **kw):
         super(EnhancedDummyRequest, self).__init__(**kw)
         self.GET = MultiDict(self.GET)
+        # Make sure content_type attr exists is not passed in via **kw
+        self.content_type = getattr(self, 'content_type', None)
 
 
 @contextmanager

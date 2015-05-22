@@ -85,6 +85,25 @@
             ]
         },
         {
+            "path": "/post_with_file_upload",
+            "operations": [
+                {
+                    "method": "POST",
+                    "consumes": ["multipart/form-data"],
+                    "nickname": "post_with_file_upload",
+                    "type": "object",
+                    "parameters": [
+                        {
+                            "name": "photo_file",
+                            "type": "File",
+                            "paramType": "form",
+                            "required": true
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "path": "/get_with_non_string_query_args",
             "operations": [
                 {

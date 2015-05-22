@@ -186,7 +186,7 @@ class PyramidSwaggerRequest(RequestLike):
         :rtype: dict
         """
         # Don't read the POST dict unless the body is form encoded
-        if self.request.headers.get('Content-Type') in self.FORM_TYPES:
+        if self.request.content_type in self.FORM_TYPES:
             return self.request.POST.mixed()
         return {}
 
@@ -197,7 +197,7 @@ class PyramidSwaggerRequest(RequestLike):
     @property
     def files(self):
         result = {}
-        for k, v in self.request.params.mixed():
+        for k, v in self.request.params.mixed().iteritems():
             if hasattr(v, 'file'):
                 result[k] = v.file
         return result
