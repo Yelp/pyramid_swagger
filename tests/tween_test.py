@@ -1,21 +1,24 @@
 # -*- coding: utf-8 -*-
 """Unit tests for tweens.py"""
+import re
+
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
 import mock
 from mock import Mock
-import re
 from pyramid.request import Request
+from pyramid.response import Response
 from pyramid.urldispatch import Route
 import pytest
 import simplejson
-from pyramid.response import Response
-
 
 from pyramid_swagger.exceptions import ResponseValidationError
+from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.load_schema import ValidatorMap, SchemaValidator
 from pyramid_swagger.model import PathNotMatchedError
-from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request
+from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request, \
+    validation_error
 from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import get_swagger_versions
@@ -229,3 +232,14 @@ def test_get_swagger_versions_unsupported():
     with pytest.raises(ValueError) as excinfo:
         get_swagger_versions(settings)
     assert 'Swagger version 10.0 is not supported' in str(excinfo.value)
+
+
+def test_validaton_error_decorator_transforms_SwaggerMappingError():
+
+    @validation_error(RequestValidationError)
+    def foo():
+        raise SwaggerMappingError('kaboom')
+
+    with pytest.raises(RequestValidationError) as excinfo:
+        foo()
+    assert 'kaboom' in str(excinfo.value)
