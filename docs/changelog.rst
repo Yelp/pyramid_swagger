@@ -1,9 +1,10 @@
 Changelog
 =========
 
-2.0.0-rc2 (2015-XX-XX)
+2.0.0-rc2 (2015-05-26)
 ++++++++++++++++++++++
-
+* Upgraded bravado-core to 1.0.0-rc1 so basePath is used when matching a request to an operation
+* Updates for refactored SwaggerError exception hierarchy in bravado-core
 * Fixed file uploads that use Content-Type: multipart/form-data
 
 2.0.0-rc1 (2015-05-13)
