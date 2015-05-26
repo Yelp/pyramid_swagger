@@ -250,7 +250,6 @@
     }
   },
   "host": "localhost:9999",
-  "basePath": "/sample",
   "schemes": [
     "http"
   ],

@@ -36,14 +36,10 @@ setup(
         'Programming Language :: Python :: 3.4',
     ],
     keywords='pyramid swagger validation',
-
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
-    package_data={
-        'pyramid_swagger': ['pyramid_swagger/swagger_spec_schemas/v1.2/*'],
-    },
     include_package_data=True,
     install_requires=[
-        'bravado-core',
+        'bravado-core >= 1.0.0-rc1',
         'jsonschema',
         'pyramid',
         'simplejson',
