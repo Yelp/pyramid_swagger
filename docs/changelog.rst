@@ -3,7 +3,7 @@ Changelog
 
 2.0.0-rc3 (2015-XX-XX)
 ++++++++++++++++++++++
-* Added pyramid_swagger.use_models config setting for Swagger 2.0 backwards compatibility with existing Swagger 1.2 views
+* Added ``use_models`` configuration option for Swagger 2.0 backwards compatibility with existing Swagger 1.2 views
 
 2.0.0-rc2 (2015-05-26)
 ++++++++++++++++++++++

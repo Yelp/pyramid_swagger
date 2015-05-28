@@ -3,7 +3,7 @@ Migrating to Swagger 2.0
 
 So you're using pyramid_swagger with Swagger 1.2 and now it is time to upgrade to Swagger 2.0.
 
-Just set the version of Swagger to support via configuration. Also, set use_models to false so that your existing Swagger 1.2 views will continue to received models in incoming requests as dicts instead of Python classes.
+Just set the version of Swagger to support via configuration. Also, set ``use_models`` to ``false`` so that your existing Swagger 1.2 views will continue to received models in incoming requests as dicts instead of Python classes.
 
 .. code-block:: ini
 
