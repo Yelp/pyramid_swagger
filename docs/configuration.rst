@@ -43,6 +43,11 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: True
         pyramid_swagger.enable_path_validation = True
 
+        # Use Python classes instead of dicts to represent models in incoming
+        # requests.
+        # Default: Whatever the default is in bravado_core, currently True
+        pyramid_swagger.use_models = True
+
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
         # Default: [r'^/static/?', r'^/api-docs/?, r'^/swagger.json']
