@@ -45,8 +45,8 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
 
         # Use Python classes instead of dicts to represent models in incoming
         # requests.
-        # Default: Whatever the default is in bravado_core, currently True
-        pyramid_swagger.use_models = True
+        # Default: False
+        pyramid_swagger.use_models = False
 
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.

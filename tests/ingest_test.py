@@ -99,9 +99,8 @@ def test_get_resource_listing_default():
         assert resource_listing == simplejson.load(fh)
 
 
-def test_create_bravado_core_config_empty():
-    bravado_core_config = create_bravado_core_config({})
-    assert len(bravado_core_config) == 0
+def test_create_bravado_core_config_with_defaults():
+    assert {'use_models': False} == create_bravado_core_config({})
 
 
 def test_create_bravado_core_config_non_empty():
@@ -109,13 +108,13 @@ def test_create_bravado_core_config_non_empty():
         'pyramid_swagger.enable_request_validation': True,
         'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': True,
-        'pyramid_swagger.use_models': False,
+        'pyramid_swagger.use_models': True,
     }
     expected_bravado_core_config = {
         'validate_requests': True,
         'validate_responses': False,
         'validate_swagger_spec': True,
-        'use_models': False
+        'use_models': True
     }
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
     assert expected_bravado_core_config == bravado_core_config

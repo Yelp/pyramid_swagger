@@ -195,10 +195,14 @@ def create_bravado_core_config(settings):
         'pyramid_swagger.use_models': 'use_models'
     }
 
-    return dict(
+    bravado_core_config_defaults = {
+        'use_models': False
+    }
+
+    return dict(bravado_core_config_defaults, **dict(
         (bravado_core_key, settings[pyramid_swagger_key])
         for pyramid_swagger_key, bravado_core_key in config_keys.iteritems()
-        if pyramid_swagger_key in settings)
+        if pyramid_swagger_key in settings))
 
 
 def ingest_resources(mapping, schema_dir):
