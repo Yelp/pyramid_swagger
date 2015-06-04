@@ -104,7 +104,7 @@ models defined in ``#/definitions`` as Python classes instead of dicts.
 
 .. code-block:: python
 
-    @view_config(route_name='add.user)
+    @view_config(route_name='add.user')
     def add_user(request):
         user = request.swagger_data['user']
         assert isinstance(user, bravado_core.models.User)
@@ -115,7 +115,7 @@ Otherwise, models are represented as dicts.
 
 .. code-block:: python
 
-    @view_config(route_name='add.user)
+    @view_config(route_name='add.user')
     def add_user(request):
         user = request.swagger_data['user']
         assert isinstance(user, dict)
