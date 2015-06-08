@@ -36,12 +36,18 @@ def find_resource_paths(schema_dir):
     def not_api_doc_file(filename):
         return not filename.endswith(API_DOCS_FILENAME)
 
+    def not_swagger_dot_json(filename):
+        # Exclude a Swagger 2.0 schema file if it happens to exist.
+        return not os.path.basename(filename) == 'swagger.json'
+
     def filename_to_path(filename):
         filename, _ext = os.path.splitext(os.path.basename(filename))
         return '/' + filename
 
     filenames = glob.glob('{0}/*.json'.format(schema_dir))
-    return map(filename_to_path, filter(not_api_doc_file, sorted(filenames)))
+    return map(filename_to_path,
+               filter(not_swagger_dot_json,
+                      filter(not_api_doc_file, sorted(filenames))))
 
 
 def build_schema_mapping(schema_dir, resource_listing):
@@ -164,16 +170,39 @@ def get_swagger_spec(settings):
     with open(os.path.join(schema_dir, 'swagger.json'), 'r') as f:
         spec_dict = simplejson.loads(f.read())
 
-    spec_config = {
-        'validate_requests':
-            settings.get('pyramid_swagger.enable_request_validation'),
-        'validate_responses':
-            settings.get('pyramid_swagger.enable_response_validation'),
-        'validate_swagger_spec':
-            settings.get('pyramid_swagger.enable_swagger_spec_validation'),
+    return Spec.from_dict(
+        spec_dict,
+        config=create_bravado_core_config(settings))
+
+
+def create_bravado_core_config(settings):
+    """Create a configuration dict for bravado_core based on pyramid_swagger
+    settings.
+
+    :param settings: pyramid registry settings with configuration for
+        building a swagger schema
+    :type settings: dict
+    :returns: config dict suitable for passing into
+        bravado_core.spec.Spec.from_dict(..)
+    :rtype: dict
+    """
+    # Map pyramid_swagger config key -> bravado_core config key
+    config_keys = {
+        'pyramid_swagger.enable_request_validation': 'validate_requests',
+        'pyramid_swagger.enable_response_validation': 'validate_responses',
+        'pyramid_swagger.enable_swagger_spec_validation':
+            'validate_swagger_spec',
+        'pyramid_swagger.use_models': 'use_models'
     }
-    spec = Spec.from_dict(spec_dict, config=spec_config)
-    return spec
+
+    bravado_core_config_defaults = {
+        'use_models': False
+    }
+
+    return dict(bravado_core_config_defaults, **dict(
+        (bravado_core_key, settings[pyramid_swagger_key])
+        for pyramid_swagger_key, bravado_core_key in config_keys.iteritems()
+        if pyramid_swagger_key in settings))
 
 
 def ingest_resources(mapping, schema_dir):

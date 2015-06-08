@@ -79,6 +79,48 @@ Example:
 The raw values (not-casted to any type) are still available from their
 usual place on the request (`matchdict`, `GET`, `POST`, `json()`, etc)
 
+If you have ``pyramid_swagger.use_models`` set to true, you can interact with
+models defined in ``#/definitions`` as Python classes instead of dicts.
+
+.. code-block:: json
+
+    {
+      "swagger": "2.0",
+      "definitions": {
+        "User": {
+          "type": "object",
+          "properties": {
+            "first_name": {
+              "type": "string"
+            },
+            "last_name": {
+              "type": "string"
+            }
+          }
+        }
+      }
+      ...
+    }
+
+.. code-block:: python
+
+    @view_config(route_name='add.user')
+    def add_user(request):
+        user = request.swagger_data['user']
+        assert isinstance(user, bravado_core.models.User)
+        first_name = user.first_name
+        ...
+
+Otherwise, models are represented as dicts.
+
+.. code-block:: python
+
+    @view_config(route_name='add.user')
+    def add_user(request):
+        user = request.swagger_data['user']
+        assert isinstance(user, dict)
+        first_name = user['first_name']
+        ...
 
 .. note::
 

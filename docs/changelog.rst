@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2.0.0-rc3 (2015-XX-XX)
+++++++++++++++++++++++
+* Added ``use_models`` configuration option for Swagger 2.0 backwards compatibility with existing pyramid views
+
 2.0.0-rc2 (2015-05-26)
 ++++++++++++++++++++++
 * Upgraded bravado-core to 1.0.0-rc1 so basePath is used when matching a request to an operation
