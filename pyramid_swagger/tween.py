@@ -352,6 +352,11 @@ def validate_response(response, validator):
         response.body in (None, b'', b'{}', b'null')
     ):
         return
+
+    # Don't attempt to validate non-success responses
+    if not 200 <= response.status_code <= 203:
+        return
+
     validator.validate(prepare_body(response))
 
 
