@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.5.1 (2015-06-17)
+++++++++++++++++++++++
+
+* No longer attempts to validate error responses, which typically don't follow
+  the same format as successful responses. (Closes: #121)
+
 1.5.0 (2015-05-12)
 ++++++++++++++++++++++
 
