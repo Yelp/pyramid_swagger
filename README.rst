@@ -28,3 +28,8 @@ Copyright © 2014 Scott Triglia. `License BSD 3-clause
 
 This is free software: you are free to change and redistribute it. There is
 NO WARRANTY, to the extent permitted by law.
+
+
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/striglia/pyramid_swagger
+   :target: https://gitter.im/striglia/pyramid_swagger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
