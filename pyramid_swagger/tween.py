@@ -9,6 +9,7 @@ import sys
 
 import bravado_core
 from bravado_core.exception import SwaggerMappingError
+from bravado_core.formatter import SwaggerFormat  # noqa
 from bravado_core.request import RequestLike, unmarshal_request
 from bravado_core.response import get_response_spec, OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
@@ -536,3 +537,9 @@ def get_swagger_versions(settings):
             raise ValueError('Swagger version {0} is not supported.'
                              .format(swagger_version))
     return swagger_versions
+
+
+def register_user_formatters(settings):
+    formats = settings.get('pyramid_swagger.user_formats', [])
+    for user_format in formats:
+        bravado_core.formatter.register_format(user_format)

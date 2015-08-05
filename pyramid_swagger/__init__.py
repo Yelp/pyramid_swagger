@@ -7,7 +7,8 @@ import pyramid
 from .api import register_api_doc_endpoints, build_swagger_20_swagger_dot_json
 from .ingest import get_swagger_schema
 from .ingest import get_swagger_spec
-from .tween import get_swagger_versions, SWAGGER_12, SWAGGER_20
+from .tween import (
+    get_swagger_versions, register_user_formatters, SWAGGER_12, SWAGGER_20)
 
 
 def includeme(config):
@@ -26,6 +27,7 @@ def includeme(config):
 
     if SWAGGER_20 in swagger_versions:
         settings['pyramid_swagger.schema'] = get_swagger_spec(settings)
+        register_user_formatters(settings)
 
     config.add_tween(
         "pyramid_swagger.tween.validation_tween_factory",

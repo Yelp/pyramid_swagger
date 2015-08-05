@@ -71,7 +71,8 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # below for more details
         pyramid_swagger.generate_resource_listing = false
 
-Note that, equivalently, you can add these during webapp configuration:
+
+Note that, equivalently, you can add these settings during webapp configuration:
 
 .. code-block:: python
 
@@ -82,6 +83,49 @@ Note that, equivalently, you can add these during webapp configuration:
             # ...and so on with the other settings...
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')
+
+
+user_formats (Swagger 2.0 only)
+---------------------------------------
+
+The option ``user_formats`` provides user defined formats which can be used
+for validations/format-conversions. This options can only be used via webapp
+configuration.
+
+Sample usage:
+
+.. code-block:: python
+
+        def main(global_config, **settings):
+            # ...
+            settings['pyramid_swagger.user_formats'] = [user_format]
+
+
+And, ``user_format`` used above can be defined like this:
+
+.. code-block:: python
+
+        import base64
+        from pyramid_swagger.tween import SwaggerFormat
+        user_format = SwaggerFormat(format='base64',
+                                    to_wire=base64.b64encode,
+                                    to_python=base64.b64decode,
+                                    validate=base64.b64decode,
+                                    description='base64 conversions')
+
+
+After defining this format, it can be used in the Swagger Spec definition like so:
+
+.. code-block:: json
+
+        {
+            "name": "petId",
+            "in": "path",
+            "description": "ID of pet to return",
+            "required": true,
+            "type": "string",
+            "format": "base64"
+        }
 
 
 generate_resource_listing (Swagger 1.2 only)
