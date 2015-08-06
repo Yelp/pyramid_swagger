@@ -1,0 +1,96 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Title was not specified",
+    "version": "0.1"
+  },
+  "produces": ["application/json"],
+  "paths": {
+    "/sample/{path_arg}/resource": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Return a standard_response",
+            "schema": {
+              "$ref": "#/definitions/standard_response"
+            }
+          }
+        },
+        "description": "",
+        "operationId": "standard",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "path_arg",
+            "required": true,
+            "type": "string",
+            "enum": ["path_arg1", "path_arg2"]
+          },
+          {
+            "in": "query",
+            "name": "required_arg",
+            "required": true,
+            "type": "string",
+            "format": "base64"
+          },
+          {
+            "in": "query",
+            "name": "optional_arg",
+            "required": false,
+            "type": "string"
+          }
+        ]
+      }
+    }
+  },
+  "host": "localhost:9999",
+  "schemes": [
+    "http"
+  ],
+  "definitions": {
+    "standard_response": {
+      "type": "object",
+      "required": [
+        "raw_response",
+        "logging_info"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "raw_response": {
+          "type": "string"
+        },
+        "logging_info": {
+          "type": "object"
+        }
+      }
+    },
+    "body_model": {
+      "type": "object",
+      "required": [
+        "foo"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "foo": {
+          "type": "string"
+        },
+        "bar": {
+          "type": "string"
+        }
+      }
+    },
+    "array_content_model": {
+      "required": [
+        "enum_value"
+      ],
+      "properties": {
+        "enum_value": {
+          "type": "string",
+          "enum": [
+            "good_enum_value"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,10 @@
 Changelog
 =========
 
-2.X.X (2015-0X-XX)
+2.1.0 (2015-08-06)
 ++++++++++++++++++++++
 * Added ``user_formats`` configuration option to provide user-defined formats which can be used for validations
-  and conversions to wire-python-wire formats
+  and conversions to wire-python-wire formats. (See :ref:`user-format-label`)
 
 2.0.0 (2015-06-25)
 ++++++++++++++++++++++
