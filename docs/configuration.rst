@@ -130,6 +130,23 @@ After defining this format, it can be used in the Swagger Spec definition like s
             "format": "base64"
         }
 
+.. note::
+
+    The ``type`` need not be ``string`` always. The feature also works for other primitive
+    types like integer, boolean, etc. More details are in the Swagger Spec v2.0 `Data Types`_.
+
+    There are two types of validations which happen for user-defined formats.
+    The first one is the usual type checking which is similarly done for all the other values.
+    The second check is done by the ``validate`` function (provided by the user)
+    which is run on the serialised format. If the value doesn't conform to the format, the
+    ``validate`` function should raise :class:`bravado_core.exception.SwaggerValidationError`.
+
+    All the parameters to ``SwaggerFormat`` are mandatory. If you want any of the functions
+    to behave as a no-op, assign them a value ``lambda x: x``. On providing a user-format, the
+    default marshal/unmarshal behavior associated with that primitive type gets overridden by
+    the ``to_wire``/``to_python`` behavior registered with that user-format, respectively.
+
+.. _Data Types: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#user-content-data-types
 
 generate_resource_listing (Swagger 1.2 only)
 --------------------------------------------
