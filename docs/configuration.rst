@@ -137,9 +137,10 @@ After defining this format, it can be used in the Swagger Spec definition like s
 
     There are two types of validations which happen for user-defined formats.
     The first one is the usual type checking which is similarly done for all the other values.
-    The second check is done by the ``validate`` function (provided by the user)
+    The second check is done by the ``validate`` function (from the ``user_format`` you configured for this type)
     which is run on the serialised format. If the value doesn't conform to the format, the
-    ``validate`` function should raise :class:`bravado_core.exception.SwaggerValidationError`.
+    ``validate`` function MUST raise an error and that error should be
+    :class:`bravado_core.exception.SwaggerValidationError`.
 
     All the parameters to ``SwaggerFormat`` are mandatory. If you want any of the functions
     to behave as a no-op, assign them a value ``lambda x: x``. On providing a user-format, the
