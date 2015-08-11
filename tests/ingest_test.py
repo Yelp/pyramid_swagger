@@ -10,6 +10,7 @@ from pyramid_swagger.ingest import create_bravado_core_config
 from pyramid_swagger.ingest import _load_resource_listing
 from pyramid_swagger.ingest import generate_resource_listing
 from pyramid_swagger.ingest import get_swagger_schema
+from pyramid_swagger.ingest import get_swagger_spec
 from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.ingest import ingest_resources
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
@@ -32,6 +33,19 @@ def test_proper_error_on_missing_api_declaration():
             'fake',
         )
     assert 'fake/sample_resource.json' in str(exc)
+
+
+@mock.patch('six.moves.builtins.open', return_value=mock.MagicMock())
+@mock.patch('os.path.abspath', return_value='/bar/foo/swagger.json')
+@mock.patch('simplejson.loads', return_value=mock.Mock(spec=dict))
+@mock.patch('pyramid_swagger.ingest.Spec.from_dict')
+def test_get_swagger_spec_passes_absolute_url(mock_spec, mock_simple,
+                                              mock_abs, mock_open):
+    get_swagger_spec({'pyramid_swagger.schema_directory': 'foo/'})
+    mock_abs.assert_called_once_with('foo/swagger.json')
+    expected_url = "file:///bar/foo/swagger.json"
+    mock_spec.assert_called_once_with(mock.ANY, config=mock.ANY,
+                                      origin_url=expected_url)
 
 
 def test_get_swagger_schema_default():
