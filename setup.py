@@ -41,7 +41,7 @@ setup(
     install_requires=[
         'bravado-core >= 2.1.0',
         'jsonschema',
-        'pyramid',
+        'pyramid<1.6.0a',
         'simplejson',
     ],
 )
