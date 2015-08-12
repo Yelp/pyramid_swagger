@@ -71,7 +71,8 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # below for more details
         pyramid_swagger.generate_resource_listing = false
 
-Note that, equivalently, you can add these during webapp configuration:
+
+Note that, equivalently, you can add these settings during webapp configuration:
 
 .. code-block:: python
 
@@ -83,6 +84,70 @@ Note that, equivalently, you can add these during webapp configuration:
             config = Configurator(settings=settings)
             config.include('pyramid_swagger')
 
+
+.. _user-format-label:
+
+user_formats (Swagger 2.0 only)
+---------------------------------------
+
+The option ``user_formats`` provides user defined formats which can be used
+for validations/format-conversions. This options can only be used via webapp
+configuration.
+
+Sample usage:
+
+.. code-block:: python
+
+        def main(global_config, **settings):
+            # ...
+            settings['pyramid_swagger.user_formats'] = [user_format]
+
+
+``user_format`` used above is an instance of
+:class:`bravado_core.formatter.SwaggerFormat` (`ref <http://bravado-core.readthedocs.org/en/latest/bravado_core.html#bravado_core.formatter.SwaggerFormat>`_) and can be defined like this:
+
+.. code-block:: python
+
+        import base64
+        from pyramid_swagger.tween import SwaggerFormat
+        user_format = SwaggerFormat(format='base64',
+                                    to_wire=base64.b64encode,
+                                    to_python=base64.b64decode,
+                                    validate=base64.b64decode,
+                                    description='base64 conversions')
+
+
+After defining this format, it can be used in the Swagger Spec definition like so:
+
+.. code-block:: json
+
+        {
+            "name": "petId",
+            "in": "path",
+            "description": "ID of pet to return",
+            "required": true,
+            "type": "string",
+            "format": "base64"
+        }
+
+.. note::
+
+    The ``type`` need not be ``string`` always. The feature also works for other primitive
+    types like integer, boolean, etc. More details are in the Swagger Spec v2.0 `Data Types`_.
+
+    There are two types of validations which happen for user-defined formats.
+    The first one is the usual type checking which is similarly done for all the other values.
+    The second check is done by the ``validate`` function (from the ``user_format`` you configured for this type)
+    which is run on the serialised format. If the value doesn't conform to the format, the
+    ``validate`` function MUST raise an error and that error should be
+    :class:`bravado_core.exception.SwaggerValidationError`.
+
+    All the parameters to ``SwaggerFormat`` are mandatory. If you want any of the functions
+    to behave as a no-op, assign them a value ``lambda x: x``. On providing a user-format, the
+    default marshal/unmarshal behavior associated with that primitive type gets overridden by
+    the ``to_wire``/``to_python`` behavior registered with that user-format, respectively.
+
+.. _Data Types: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#user-content-data-types
 
 generate_resource_listing (Swagger 1.2 only)
 --------------------------------------------

@@ -20,11 +20,13 @@ from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request, \
     validation_error
 from pyramid_swagger.tween import PyramidSwaggerRequest
+from pyramid_swagger.tween import SwaggerFormat
 from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import handle_request
 from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
+from pyramid_swagger.tween import register_user_formatters
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
 from pyramid_swagger.tween import validate_response
@@ -232,6 +234,14 @@ def test_get_swagger_versions_unsupported():
     with pytest.raises(ValueError) as excinfo:
         get_swagger_versions(settings)
     assert 'Swagger version 10.0 is not supported' in str(excinfo.value)
+
+
+def test_user_defined_formats_get_registered():
+    foo_formatter = Mock(spec=SwaggerFormat)
+    settings = {'pyramid_swagger.user_formats': [foo_formatter]}
+    with mock.patch('bravado_core.formatter.register_format') as m:
+        register_user_formatters(settings)
+        m.assert_called_once_with(foo_formatter)
 
 
 def test_validaton_error_decorator_transforms_SwaggerMappingError():
