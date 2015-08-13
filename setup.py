@@ -39,7 +39,7 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
     include_package_data=True,
     install_requires=[
-        'bravado-core >= 2.1.0',
+        'bravado-core >= 2.4.0',
         'jsonschema',
         'pyramid<1.6.0a',
         'simplejson',

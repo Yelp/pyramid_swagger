@@ -1,0 +1,29 @@
+{
+    "no_models": {
+      "get": {
+        "responses": {
+          "200": {
+              "$ref": "../responses/common.json#/200"
+          }
+        },
+        "description": "",
+        "operationId": "no_models_get"
+      }
+    },
+    "sample_resource": {
+      "get": {
+        "responses": {
+          "200": {
+              "$ref": "../responses/common.json#/200"
+          }
+        },
+        "description": "",
+        "operationId": "standard",
+        "parameters": [
+          {
+            "$ref": "../parameters/common.json#/path_arg"
+          }
+        ]
+      }
+    }
+}
