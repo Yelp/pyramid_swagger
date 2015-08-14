@@ -1,10 +1,11 @@
 Changelog
 =========
 
-2.1.0 (2015-08-06)
+2.1.0 (2015-08-14)
 ++++++++++++++++++++++
 * Added ``user_formats`` configuration option to provide user-defined formats which can be used for validations
   and conversions to wire-python-wire formats. (See :ref:`user-format-label`)
+* Added support for relative cross-refs in Swagger v2.0 specs.
 
 2.0.0 (2015-06-25)
 ++++++++++++++++++++++
