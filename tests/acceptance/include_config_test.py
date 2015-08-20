@@ -25,7 +25,7 @@ def test_app_with_no_include_conf(settings):
 @pytest.fixture
 def test_app_with_include_conf(settings):
     """Fixture for setting up a Swagger 2.0 version of the test test_app."""
-    settings['pyramid_swagger.include_2dot0_routes'] = ['standard']
+    settings['pyramid_swagger.prefer_20_routes'] = ['standard']
     return TestApp(main({}, **settings))
 
 

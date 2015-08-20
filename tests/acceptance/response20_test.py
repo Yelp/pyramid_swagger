@@ -44,7 +44,8 @@ def _validate_against_tween(request, response=None, path_pattern='/',
     )
 
     spec = get_swagger_spec(settings)
-    settings['pyramid_swagger.schema'] = spec
+    settings['pyramid_swagger.schema12'] = None
+    settings['pyramid_swagger.schema20'] = spec
 
     registry = get_registry(settings)
 

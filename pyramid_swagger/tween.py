@@ -40,7 +40,6 @@ DEFAULT_EXCLUDED_PATHS = [
 class Settings(namedtuple(
     'Settings',
     [
-        'schema',
         'swagger12_handler',
         'swagger20_handler',
         'validate_request',
@@ -48,13 +47,12 @@ class Settings(namedtuple(
         'validate_path',
         'exclude_paths',
         'exclude_routes',
-        'include_2dot0_routes',
+        'prefer_20_routes',
     ]
 )):
 
     """A settings object for configuratble options.
 
-    :param schema: a :class:`pyramid_swagger.model.SwaggerSchema`
     :param swagger12_handler: a :class:`SwaggerHandler` for v1.2 or None
     :param swagger20_handler: a :class:`SwaggerHandler` for v2.0 or None
     :param validate_swagger_spec: check Swagger files for correctness.
@@ -67,7 +65,7 @@ class Settings(namedtuple(
     :rtype: namedtuple
     :param exclude_routes: list of route names that should be excluded from
         validation.
-    :param include_2dot0_routes: list of route names that should be handled
+    :param prefer_20_routes: list of route names that should be handled
         via v2.0 spec when `2.0` is in `swagger_versions`. All others will be
         handled via v1.2 spec. [i.e. Make v2.0 an opt-in feature]
     """
@@ -99,32 +97,38 @@ def _get_validation_context(registry):
         return noop_context
 
 
-def get_swagger_handler(settings, route_info, registry):
-    """Contains callables that isolate implementation differences in the tween
-    to handle both Swagger 1.2 and Swagger 2.0.
+def get_swagger_objects(settings, route_info, registry):
+    """Returns appropriate swagger handler and swagger spec schema.
 
-    Exception is made when `settings.include_2dot0_routes` are non-empty and
+    Swagger Handler contains callables that isolate implementation differences
+    in the tween to handle both Swagger 1.2 and Swagger 2.0.
+
+    Exception is made when `settings.prefer_20_routes` are non-empty and
     ['1.2', '2.0'] both are present in available swagger versions. In this
     special scenario, '2.0' spec is chosen only for requests which are listed
-    in the `include_2dot0_routes`. This helps in incremental migration of
+    in the `prefer_20_routes`. This helps in incremental migration of
     routes from v1.2 to v2.0 by making moving to v2.0 opt-in.
 
-    :rtype: :class:`SwaggerHandler`
+    :rtype: (:class:`SwaggerHandler`,
+             :class:`pyramid_swagger.model.SwaggerSchema` OR
+                :class:`bravado_core.spec.Spec`)
     """
     enabled_swagger_versions = get_swagger_versions(registry.settings)
+    schema12 = registry.settings['pyramid_swagger.schema12']
+    schema20 = registry.settings['pyramid_swagger.schema20']
 
     if (SWAGGER_20 in enabled_swagger_versions
         and SWAGGER_12 in enabled_swagger_versions
-        and settings.include_2dot0_routes
+        and settings.prefer_20_routes
         and route_info.get('route')
-            and route_info['route'].name not in settings.include_2dot0_routes):
-        return settings.swagger12_handler
+            and route_info['route'].name not in settings.prefer_20_routes):
+        return settings.swagger12_handler, schema12
 
     if SWAGGER_20 in enabled_swagger_versions:
-        return settings.swagger20_handler
+        return settings.swagger20_handler, schema20
 
     if SWAGGER_12 in enabled_swagger_versions:
-        return settings.swagger12_handler
+        return settings.swagger12_handler, schema12
 
 
 def validation_tween_factory(handler, registry):
@@ -141,7 +145,8 @@ def validation_tween_factory(handler, registry):
         # matchdict so we can validate it and use it to exclude routes from
         # validation.
         route_info = route_mapper(request)
-        swagger_handler = get_swagger_handler(settings, route_info, registry)
+        swagger_handler, spec = get_swagger_objects(settings, route_info,
+                                                    registry)
 
         if should_exclude_request(settings, request, route_info):
             return handler(request)
@@ -150,7 +155,7 @@ def validation_tween_factory(handler, registry):
 
         try:
             op_or_validators_map = swagger_handler.op_for_request(
-                request, route_info=route_info, spec=settings.schema)
+                request, route_info=route_info, spec=spec)
         except PathNotMatchedError as exc:
             if settings.validate_path:
                 with validation_context(request):
@@ -303,9 +308,7 @@ def handle_request(request, validator_map, validation_context, **kwargs):
 
 
 def load_settings(registry):
-    schema = registry.settings['pyramid_swagger.schema']
     return Settings(
-        schema=schema,
         swagger12_handler=build_swagger12_handler(
             registry.settings.get('pyramid_swagger.schema12')),
         swagger20_handler=build_swagger20_handler(),
@@ -325,8 +328,8 @@ def load_settings(registry):
         exclude_routes=set(registry.settings.get(
             'pyramid_swagger.exclude_routes',
         ) or []),
-        include_2dot0_routes=set(registry.settings.get(
-            'pyramid_swagger.include_2dot0_routes',) or []),
+        prefer_20_routes=set(registry.settings.get(
+            'pyramid_swagger.prefer_20_routes',) or []),
     )
 
 
