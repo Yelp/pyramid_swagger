@@ -84,7 +84,8 @@ def _validate_against_tween(request, response=None, **overrides):
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/'},
         **overrides
     )
-    settings['pyramid_swagger.schema'] = get_swagger_schema()
+    settings['pyramid_swagger.schema'] = \
+        settings['pyramid_swagger.schema12'] = get_swagger_schema()
     registry = get_registry(settings)
 
     # Let's make request validation a no-op so we can focus our tests.

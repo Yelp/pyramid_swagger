@@ -41,8 +41,8 @@ class Settings(namedtuple(
     'Settings',
     [
         'schema',
-        'swagger_handler',
         'swagger12_handler',
+        'swagger20_handler',
         'validate_request',
         'validate_response',
         'validate_path',
@@ -55,8 +55,8 @@ class Settings(namedtuple(
     """A settings object for configuratble options.
 
     :param schema: a :class:`pyramid_swagger.model.SwaggerSchema`
-    :param swagger_handler: a :class:`SwaggerHandler` could be v1.2 or v2.0
-    :param swagger12_handler: a :class:`SwaggerHandler` always for v1.2 or None
+    :param swagger12_handler: a :class:`SwaggerHandler` for v1.2 or None
+    :param swagger20_handler: a :class:`SwaggerHandler` for v2.0 or None
     :param validate_swagger_spec: check Swagger files for correctness.
     :param validate_request: check requests against Swagger spec.
     :param validate_response: check responses against Swagger spec.
@@ -100,7 +100,8 @@ def _get_validation_context(registry):
 
 
 def get_swagger_handler(settings, route_info, registry):
-    """This returns back `settings.swagger_handler` in almost of the cases.
+    """Contains callables that isolate implementation differences in the tween
+    to handle both Swagger 1.2 and Swagger 2.0.
 
     Exception is made when `settings.include_2dot0_routes` are non-empty and
     ['1.2', '2.0'] both are present in available swagger versions. In this
@@ -111,6 +112,7 @@ def get_swagger_handler(settings, route_info, registry):
     :rtype: :class:`SwaggerHandler`
     """
     enabled_swagger_versions = get_swagger_versions(registry.settings)
+
     if (SWAGGER_20 in enabled_swagger_versions
         and SWAGGER_12 in enabled_swagger_versions
         and settings.include_2dot0_routes
@@ -118,7 +120,11 @@ def get_swagger_handler(settings, route_info, registry):
             and route_info['route'].name not in settings.include_2dot0_routes):
         return settings.swagger12_handler
 
-    return settings.swagger_handler
+    if SWAGGER_20 in enabled_swagger_versions:
+        return settings.swagger20_handler
+
+    if SWAGGER_12 in enabled_swagger_versions:
+        return settings.swagger12_handler
 
 
 def validation_tween_factory(handler, registry):
@@ -300,9 +306,9 @@ def load_settings(registry):
     schema = registry.settings['pyramid_swagger.schema']
     return Settings(
         schema=schema,
-        swagger_handler=build_swagger_handler(registry.settings, schema),
-        swagger12_handler=build_swagger12_handler_wrapper(
+        swagger12_handler=build_swagger12_handler(
             registry.settings.get('pyramid_swagger.schema12')),
+        swagger20_handler=build_swagger20_handler(),
         validate_request=registry.settings.get(
             'pyramid_swagger.enable_request_validation',
             True
@@ -328,24 +334,6 @@ SwaggerHandler = namedtuple('SwaggerHandler',
                             'op_for_request handle_request handle_response')
 
 
-def build_swagger_handler(settings, schema):
-    """
-    Contains callables that isolate implementation differences in the tween to
-    handle both Swagger 1.2 and Swagger 2.0.
-
-    :type settings: dict
-    :type schema: :class:`pyramid_swagger.model.SwaggerSchema`
-    :rtype: :class:`SwaggerHandler`
-    """
-    swagger_versions = get_swagger_versions(settings)
-
-    if SWAGGER_20 in swagger_versions:
-        return build_swagger20_handler()
-
-    if SWAGGER_12 in swagger_versions:
-        return build_swagger12_handler(schema)
-
-
 def build_swagger20_handler():
     return SwaggerHandler(
         op_for_request=get_op_for_request,
@@ -355,21 +343,17 @@ def build_swagger20_handler():
 
 
 def build_swagger12_handler(schema):
-    return SwaggerHandler(
-        op_for_request=schema.validators_for_request,
-        handle_request=handle_request,
-        handle_response=validate_response,
-    )
-
-
-def build_swagger12_handler_wrapper(schema):
     """Builds a swagger12 handler or returns None if no schema is present.
 
     :type schema: :class:`pyramid_swagger.model.SwaggerSchema`
     :rtype: :class:`SwaggerHandler` or None
     """
     if schema:
-        return build_swagger12_handler(schema)
+        return SwaggerHandler(
+            op_for_request=schema.validators_for_request,
+            handle_request=handle_request,
+            handle_response=validate_response,
+        )
 
 
 def get_exclude_paths(registry):
