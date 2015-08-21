@@ -20,13 +20,15 @@ def includeme(config):
 
     # Add the SwaggerSchema to settings to make it available to the validation
     # tween and `register_api_doc_endpoints`
+    settings['pyramid_swagger.schema12'] = None
+    settings['pyramid_swagger.schema20'] = None
+
+    # Store under two keys so that 1.2 and 2.0 can co-exist.
     if SWAGGER_12 in swagger_versions:
-        # Store under two keys so that 1.2 and 2.0 can co-exist.
-        settings['pyramid_swagger.schema'] = \
-            settings['pyramid_swagger.schema12'] = get_swagger_schema(settings)
+        settings['pyramid_swagger.schema12'] = get_swagger_schema(settings)
 
     if SWAGGER_20 in swagger_versions:
-        settings['pyramid_swagger.schema'] = get_swagger_spec(settings)
+        settings['pyramid_swagger.schema20'] = get_swagger_spec(settings)
         register_user_formatters(settings)
 
     config.add_tween(

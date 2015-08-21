@@ -16,7 +16,6 @@ def test_disable_api_doc_views(_1, _2, mock_register):
     settings = {
         'pyramid_swagger.enable_api_doc_views': False,
         'pyramid_swagger.enable_swagger_spec_validation': False,
-        'pyramid_swagger.schema': None,
     }
 
     mock_config = mock.Mock(
@@ -58,9 +57,7 @@ def test_swagger_12_only(mock_register):
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
     pyramid_swagger.includeme(mock_config)
-    assert isinstance(settings['pyramid_swagger.schema'], SwaggerSchema)
-    assert settings['pyramid_swagger.schema'] == \
-        settings['pyramid_swagger.schema12']
+    assert isinstance(settings['pyramid_swagger.schema12'], SwaggerSchema)
     assert mock_register.call_count == 1
 
 
@@ -72,8 +69,8 @@ def test_swagger_20_only(mock_register):
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
     pyramid_swagger.includeme(mock_config)
-    assert isinstance(settings['pyramid_swagger.schema'], Spec)
-    assert 'pyramid_swagger.schema12' not in settings
+    assert isinstance(settings['pyramid_swagger.schema20'], Spec)
+    assert not settings['pyramid_swagger.schema12']
     assert mock_register.call_count == 1
 
 
@@ -85,6 +82,6 @@ def test_swagger_12_and_20(mock_register):
     }
     mock_config = mock.Mock(registry=mock.Mock(settings=settings))
     pyramid_swagger.includeme(mock_config)
-    assert isinstance(settings['pyramid_swagger.schema'], Spec)
+    assert isinstance(settings['pyramid_swagger.schema20'], Spec)
     assert isinstance(settings['pyramid_swagger.schema12'], SwaggerSchema)
     assert mock_register.call_count == 2

@@ -40,3 +40,23 @@ Next, create a Swagger 2.0 version of your swagger schema. There are some great 
 * `Swagger 2.0 Specification <https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md>`_
 
 Finally, place your Swagger 2.0 schema ``swagger.json`` file in the same directory as your Swagger 1.2 schema and you're ready to go.
+
+.. _prefer20migration:
+
+Incremental Migration
+---------------------
+
+If your v1.2 spec is too large and you are looking to migrate specs incrementally, then the below
+config can be useful.
+
+.. code-block:: ini
+
+        [app:main]
+        pyramid_swagger.prefer_20_routes = ['route_foo']
+
+.. note::
+
+    The above config is read only when both `['1.2', '2.0']` are present in `swagger_versions` config. If that
+    is the case and the request's route is present in `prefer_20_routes`, ONLY then the request is served through
+    swagger 2.0 otherwise through 1.2. The only exception is either the config is not defined at all or both of the
+    swagger versions are not enabled, in any of these cases, v2.0 is preferred (as mentioned in above note).

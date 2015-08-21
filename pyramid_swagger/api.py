@@ -98,7 +98,7 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
 def build_swagger_20_swagger_dot_json(config):
 
     def view_for_swagger_dot_json(request):
-        spec = config.registry.settings['pyramid_swagger.schema']
+        spec = config.registry.settings['pyramid_swagger.schema20']
         return spec.spec_dict
 
     return PyramidEndpoint(
