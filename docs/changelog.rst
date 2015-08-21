@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.2.0 (2015-08-19)
+++++++++++++++++++++++
+* Added ``prefer_20_routes`` configuration option to ease incremental migrations from v1.2 to
+  v2.0. (See :ref:`prefer20migration`)
+
 2.1.0 (2015-08-14)
 ++++++++++++++++++++++
 * Added ``user_formats`` configuration option to provide user-defined formats which can be used for validations

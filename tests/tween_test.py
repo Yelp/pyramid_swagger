@@ -22,13 +22,16 @@ from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request, \
 from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import SwaggerFormat
 from pyramid_swagger.tween import get_exclude_paths
+from pyramid_swagger.tween import get_swagger_objects
 from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import handle_request
 from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import register_user_formatters
+from pyramid_swagger.tween import Settings
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
+from pyramid_swagger.tween import SWAGGER_12, SWAGGER_20
 from pyramid_swagger.tween import validate_response
 
 
@@ -253,3 +256,82 @@ def test_validaton_error_decorator_transforms_SwaggerMappingError():
     with pytest.raises(RequestValidationError) as excinfo:
         foo()
     assert 'kaboom' in str(excinfo.value)
+
+
+@pytest.fixture
+def registry():
+    config = {
+        'pyramid_swagger.schema12': None,
+        'pyramid_swagger.schema20': None,
+        }
+    return Mock(settings=config)
+
+
+@pytest.fixture
+def settings():
+    return Mock(spec=Settings)
+
+
+def test_get_swagger20_objects_if_only_swagger20_version_is_present(
+        settings, registry):
+    registry.settings['pyramid_swagger.swagger_versions'] = [SWAGGER_20]
+    registry.settings['pyramid_swagger.schema20'] = 'schema20'
+    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
+    assert 'swagger20_handler' in str(swagger_handler)
+    assert 'schema20' == spec
+
+
+def test_get_swagger12_objects_if_only_swagger12_version_is_present(
+        settings, registry):
+    registry.settings['pyramid_swagger.swagger_versions'] = [SWAGGER_12]
+    registry.settings['pyramid_swagger.schema12'] = 'schema12'
+    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
+    assert 'swagger12_handler' in str(swagger_handler)
+    assert 'schema12' == spec
+
+
+def test_get_swagger20_objects_if_both_present_but_no_prefer20_config(
+        settings, registry):
+    registry.settings['pyramid_swagger.swagger_versions'] = [
+        SWAGGER_12, SWAGGER_20]
+    registry.settings['pyramid_swagger.schema20'] = 'schema20'
+    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
+    assert 'swagger20_handler' in str(swagger_handler)
+    assert 'schema20' == spec
+
+
+def test_get_swagger20_objects_if_both_present_but_route_in_prefer20(
+        settings, registry):
+    settings.prefer_20_routes = ['swagger20_route']
+    registry.settings['pyramid_swagger.swagger_versions'] = [
+        SWAGGER_12, SWAGGER_20]
+    route_info = {'route': Mock()}
+    route_info['route'].name = 'swagger20_route'
+    registry.settings['pyramid_swagger.schema20'] = 'schema20'
+    swagger_handler, spec = get_swagger_objects(settings, route_info, registry)
+    assert 'swagger20_handler' in str(swagger_handler)
+    assert 'schema20' == spec
+
+
+def test_get_swagger20_objects_if_both_present_but_request_has_no_route(
+        settings, registry):
+    settings.prefer_20_routes = ['swagger20_route']
+    registry.settings['pyramid_swagger.swagger_versions'] = [
+        SWAGGER_12, SWAGGER_20]
+    registry.settings['pyramid_swagger.schema20'] = 'schema20'
+    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
+    assert 'swagger20_handler' in str(swagger_handler)
+    assert 'schema20' == spec
+
+
+def test_get_swagger12_objects_if_both_present_but_route_not_in_prefer20(
+        settings, registry):
+    settings.prefer_20_routes = ['swagger20_route']
+    registry.settings['pyramid_swagger.swagger_versions'] = [
+        SWAGGER_12, SWAGGER_20]
+    route_info = {'route': Mock()}
+    route_info['route'].name = 'swagger12_route'
+    registry.settings['pyramid_swagger.schema12'] = 'schema12'
+    swagger_handler, spec = get_swagger_objects(settings, route_info, registry)
+    assert 'swagger12_handler' in str(swagger_handler)
+    assert 'schema12' == spec
