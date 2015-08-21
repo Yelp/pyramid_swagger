@@ -58,5 +58,5 @@ config can be useful.
 
     The above config is read only when both `['1.2', '2.0']` are present in `swagger_versions` config. If that
     is the case and the request's route is present in `prefer_20_routes`, ONLY then the request is served through
-    swagger 2.0 otherwise through 1.2. The only exception is when the config is not defined at all, in that case
-    v2.0 is preferred (as mentioned in above note).
+    swagger 2.0 otherwise through 1.2. The only exception is either the config is not defined at all or both of the
+    swagger versions are not enabled, in any of these cases, v2.0 is preferred (as mentioned in above note).
