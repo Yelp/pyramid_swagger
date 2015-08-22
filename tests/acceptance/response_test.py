@@ -234,6 +234,15 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
         assert app.get('/this/path/doesnt/exist')
 
 
+def test_error_handling_for_12():
+    app = test_app(
+        request=Mock(spec=FixtureRequest, param=['1.2']),
+        **{'pyramid_swagger.enable_response_validation': True}
+    )
+    # Should throw 400 and not 500 (response type not correct error)
+    assert app.get('/throw_400', expect_errors=True).status_code == 400
+
+
 def test_response_validation_context():
     request = EnhancedDummyRequest(
         method='GET',

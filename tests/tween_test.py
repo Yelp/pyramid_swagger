@@ -128,6 +128,18 @@ def test_validation_content_type_with_json():
     fake_validator.validate.assert_called_once_with(body)
 
 
+def test_skips_validating_errors():
+    fake_schema = mock.Mock(response_body_schema={'type': 'string'})
+    fake_validator = mock.Mock(schema=fake_schema)
+    fake_validator_map = mock.Mock(response=fake_validator)
+    response = Response(
+        body='abe1351f',
+        status_code=403,
+    )
+    validate_response(response, fake_validator_map)
+    assert not fake_validator.validate.called
+
+
 def test_raw_string():
     fake_schema = mock.Mock(response_body_schema={'type': 'string'})
     fake_validator = mock.Mock(spec=SchemaValidator, schema=fake_schema)
