@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.2.1 (2015-08-20)
+++++++++++++++++++++++
+* No longer attempts to validate error responses, which typically don't follow
+  the same format as successful responses. (Closes: #121)
+
 2.2.0 (2015-08-19)
 ++++++++++++++++++++++
 * Added ``prefer_20_routes`` configuration option to ease incremental migrations from v1.2 to

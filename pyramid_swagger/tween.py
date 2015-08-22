@@ -485,6 +485,10 @@ def validate_response(response, validator_map):
     if returns_nothing and body_empty:
         return
 
+    # Don't attempt to validate non-success responses in v1.2
+    if not 200 <= response.status_code <= 203:
+        return
+
     validator.validate(prepare_body(response))
 
 

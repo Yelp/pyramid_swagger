@@ -2,6 +2,14 @@
 from pyramid.config import Configurator
 from pyramid.view import view_config
 
+import webob
+
+
+@view_config(route_name='throw_400', renderer='json')
+def throw_error(request):
+    request.response.status = webob.exc.HTTPBadRequest.code
+    return dict(error=dict(details='Throwing error!'))
+
 
 @view_config(route_name='standard', renderer='json')
 def standard(request, path_arg):
@@ -44,6 +52,7 @@ def main(global_config, **settings):
     config.add_route('post_with_file_upload', '/post_with_file_upload')
     config.add_route('sample_post', '/sample')
     config.add_route('sample_header', '/sample/header')
+    config.add_route('throw_400', '/throw_400')
 
     config.scan()
     return config.make_wsgi_app()

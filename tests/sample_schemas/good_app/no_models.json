@@ -13,6 +13,17 @@
                     "parameters": []
                 }
             ]
+        },
+        {
+            "path": "/throw_400",
+            "operations": [
+                {
+                    "method": "GET",
+                    "nickname": "throw_400",
+                    "type": "string",
+                    "parameters": []
+                }
+            ]
         }
     ],
     "models": {
