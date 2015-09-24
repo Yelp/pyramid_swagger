@@ -53,6 +53,25 @@ With that, when your app starts you will get the benefit of:
 * Automatic validation for correctness of your Swagger Schema at application startup
 * Automatic serving of your Swagger Schema from the /swagger.json endpoint
 
+Update the routes
+-----------------
+
+For each of the routes declared in your swagger.json, you need to add the route to the Pyramid dispatch using traditional methods. For example, in your __init__.py:
+
+.. code-block:: python
+
+    def main(global_config, **settings):
+        """ This function returns a Pyramid WSGI application.
+        """
+        config = Configurator(settings=settings)
+        config.include('pyramid_chameleon')
+        config.add_static_view('static', 'static', cache_max_age=3600)
+        config.add_route('api.things.get', '/api/things', request_method='GET')
+        #
+        # Additional routes go here
+        #
+        config.scan()
+        return config.make_wsgi_app()      
 
 Accessing request data
 ----------------------
