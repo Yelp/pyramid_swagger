@@ -9,9 +9,7 @@ Welcome to pyramid_swagger's documentation!
 This project offers convenient tools for using `Swagger <https://helloreverb.com/developers/swagger>`_ to define and validate
 your interfaces in a `Pyramid <http://www.pylonsproject.org/>`_ webapp.
 
-Features include:
-
-* Support for Swagger 1.2 and Swagger 2.0
+**You must supply** a working Pyramid application, and a Swagger schema describing your application's interface. In return, pyramid_swagger will provide:
 
 * Request and response validation
 
@@ -19,12 +17,14 @@ Features include:
 
 * Automatically serving the swagger schema to interested clients (e.g. `Swagger UI <https://github.com/swagger-api/swagger-ui>`_)
 
+pyramid_swagger works for both the 1.2 and 2.0 Swagger specifications, although users are strongly encouraged to use 2.0 going forward.
 
 Contents:
 
 .. toctree::
    :maxdepth: 1
 
+   what_is_swagger
    quickstart
    changelog
    configuration
