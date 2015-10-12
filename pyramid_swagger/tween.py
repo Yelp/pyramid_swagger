@@ -51,7 +51,7 @@ class Settings(namedtuple(
     ]
 )):
 
-    """A settings object for configuratble options.
+    """A settings object for configurable options.
 
     :param swagger12_handler: a :class:`SwaggerHandler` for v1.2 or None
     :param swagger20_handler: a :class:`SwaggerHandler` for v2.0 or None
@@ -514,7 +514,7 @@ def swaggerize_request(request, op, **kwargs):
 
     :type request: :class:`pyramid.request.Request`
     :type op: :class:`bravado_core.operation.Operation`
-    :type validatation_context: context manager
+    :type validation_context: context manager
     """
     validation_context = kwargs['validation_context']
     with validation_context(request):
@@ -578,9 +578,3 @@ def get_swagger_versions(settings):
             raise ValueError('Swagger version {0} is not supported.'
                              .format(swagger_version))
     return swagger_versions
-
-
-def register_user_formatters(settings):
-    formats = settings.get('pyramid_swagger.user_formats', [])
-    for user_format in formats:
-        bravado_core.formatter.register_format(user_format)
