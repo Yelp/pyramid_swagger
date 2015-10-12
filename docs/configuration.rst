@@ -104,7 +104,7 @@ Sample usage:
 
 
 ``user_format`` used above is an instance of
-:class:`bravado_core.formatter.SwaggerFormat` (`ref <http://bravado-core.readthedocs.org/en/latest/bravado_core.html#bravado_core.formatter.SwaggerFormat>`_) and can be defined like this:
+:class:`bravado_core.formatter.SwaggerFormat` and can be defined like this:
 
 .. code-block:: python
 
