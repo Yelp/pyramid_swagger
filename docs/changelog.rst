@@ -1,9 +1,9 @@
 Changelog
 =========
 
-2.2.2 (2015-XX-XX)
+2.2.2 (2015-10-12)
 ++++++++++++++++++++++
-* Upgrade to bravado-core 3.0.2 which includes a change in the way user-defined formats are registered.
+* Upgrade to bravado-core 3.0.0, which includes a change in the way user-defined formats are registered.
 
 2.2.1 (2015-08-20)
 ++++++++++++++++++++++
