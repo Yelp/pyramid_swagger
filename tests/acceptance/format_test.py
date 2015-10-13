@@ -28,21 +28,21 @@ def user_format():
 
 
 @pytest.fixture
-def test_app_with_base64(settings, user_format):
-    """Fixture for setting up a Swagger 2.0 version of the test test_app."""
+def testapp_with_base64(settings, user_format):
+    """Fixture for setting up a Swagger 2.0 version of the test testapp."""
     settings['pyramid_swagger.swagger_versions'] = ['2.0']
     settings['pyramid_swagger.user_formats'] = [user_format]
     return TestApp(main({}, **settings))
 
 
-def test_user_format_happy_case(test_app_with_base64):
-    response = test_app_with_base64.get('/sample/path_arg1/resource',
-                                        params={'required_arg': 'MQ=='},)
+def test_user_format_happy_case(testapp_with_base64):
+    response = testapp_with_base64.get('/sample/path_arg1/resource',
+                                       params={'required_arg': 'MQ=='},)
     assert response.status_code == 200
 
 
-def test_user_format_failure_case(test_app_with_base64):
+def test_user_format_failure_case(testapp_with_base64):
     # 'MQ' is not a valid base64 encoded string.
     with pytest.raises(Exception):
-        test_app_with_base64.get('/sample/path_arg1/resource',
-                                 params={'required_arg': 'MQ'},)
+        testapp_with_base64.get('/sample/path_arg1/resource',
+                                params={'required_arg': 'MQ'},)

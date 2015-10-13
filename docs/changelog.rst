@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2.2.2 (2015-XX-XX)
+++++++++++++++++++++++
+* Upgrade to bravado-core 3.0.2 which includes a change in the way user-defined formats are registered.
+
 2.2.1 (2015-08-20)
 ++++++++++++++++++++++
 * No longer attempts to validate error responses, which typically don't follow

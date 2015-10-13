@@ -16,6 +16,7 @@ from pyramid_swagger.ingest import ingest_resources
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
 from pyramid_swagger.ingest import ResourceListingGenerationError
 from pyramid_swagger.ingest import ResourceListingNotFoundError
+from pyramid_swagger.tween import SwaggerFormat
 
 
 def test_proper_error_on_missing_resource_listing():
@@ -118,17 +119,20 @@ def test_create_bravado_core_config_with_defaults():
 
 
 def test_create_bravado_core_config_non_empty():
+    some_format = mock.Mock(spec=SwaggerFormat)
     pyramid_swagger_config = {
         'pyramid_swagger.enable_request_validation': True,
         'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': True,
         'pyramid_swagger.use_models': True,
+        'pyramid_swagger.user_formats': [some_format],
     }
     expected_bravado_core_config = {
         'validate_requests': True,
         'validate_responses': False,
         'validate_swagger_spec': True,
-        'use_models': True
+        'use_models': True,
+        'formats': [some_format]
     }
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
     assert expected_bravado_core_config == bravado_core_config

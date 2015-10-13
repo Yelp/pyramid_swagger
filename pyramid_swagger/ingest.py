@@ -197,7 +197,8 @@ def create_bravado_core_config(settings):
         'pyramid_swagger.enable_response_validation': 'validate_responses',
         'pyramid_swagger.enable_swagger_spec_validation':
             'validate_swagger_spec',
-        'pyramid_swagger.use_models': 'use_models'
+        'pyramid_swagger.use_models': 'use_models',
+        'pyramid_swagger.user_formats': 'formats',
     }
 
     bravado_core_config_defaults = {
