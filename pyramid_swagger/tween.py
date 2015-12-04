@@ -237,7 +237,7 @@ class PyramidSwaggerRequest(RequestLike):
     @property
     def files(self):
         result = {}
-        for k, v in self.request.params.mixed().iteritems():
+        for k, v in self.request.params.mixed().items():
             if hasattr(v, 'file'):
                 result[k] = v.file
         return result
@@ -415,7 +415,9 @@ def validation_error(exc_class):
                 # This will alter our stack trace slightly, but Pyramid knows
                 # how to render it. And the real value is in the message
                 # anyway.
-                raise exc_class(str(exc)), None, sys.exc_info()[2]
+                e = exc_class(str(exc))
+                e._traceback = sys.exc_info()[2]
+                raise e
 
         return _validate
 
