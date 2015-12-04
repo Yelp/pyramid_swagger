@@ -46,7 +46,7 @@ def test_200_with_form_params(test_app):
 def test_200_with_file_upload(test_app):
     assert test_app.post(
         '/post_with_file_upload',
-        upload_files=[('photo_file', 'photo.jpg', '<binary data goes here>')],
+        upload_files=[('photo_file', 'photo.jpg', b'<binary data goes here>')],
     ).status_code == 200
 
 
