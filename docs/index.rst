@@ -6,7 +6,7 @@
 Welcome to pyramid_swagger's documentation!
 ===========================================
 
-This project offers convenient tools for using `Swagger <https://helloreverb.com/developers/swagger>`_ to define and validate
+This project offers convenient tools for using `Swagger <http://swagger.io/getting-started/>`_ to define and validate
 your interfaces in a `Pyramid <http://www.pylonsproject.org/>`_ webapp.
 
 Features include:
