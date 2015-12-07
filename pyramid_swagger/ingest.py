@@ -207,7 +207,7 @@ def create_bravado_core_config(settings):
 
     return dict(bravado_core_config_defaults, **dict(
         (bravado_core_key, settings[pyramid_swagger_key])
-        for pyramid_swagger_key, bravado_core_key in config_keys.iteritems()
+        for pyramid_swagger_key, bravado_core_key in config_keys.items()
         if pyramid_swagger_key in settings))
 
 
