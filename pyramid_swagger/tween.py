@@ -117,11 +117,14 @@ def get_swagger_objects(settings, route_info, registry):
     schema12 = registry.settings['pyramid_swagger.schema12']
     schema20 = registry.settings['pyramid_swagger.schema20']
 
-    if (SWAGGER_20 in enabled_swagger_versions
-        and SWAGGER_12 in enabled_swagger_versions
-        and settings.prefer_20_routes
-        and route_info.get('route')
-            and route_info['route'].name not in settings.prefer_20_routes):
+    fallback_to_swagger12_route = (
+        SWAGGER_20 in enabled_swagger_versions and
+        SWAGGER_12 in enabled_swagger_versions and
+        settings.prefer_20_routes and
+        route_info.get('route') and
+        route_info['route'].name not in settings.prefer_20_routes
+    )
+    if fallback_to_swagger12_route:
         return settings.swagger12_handler, schema12
 
     if SWAGGER_20 in enabled_swagger_versions:
