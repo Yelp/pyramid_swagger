@@ -552,7 +552,10 @@ def get_op_for_request(request, route_info, spec):
     # pyramid.urldispath.Route
     route = route_info['route']
     if hasattr(route, 'path'):
-        op = spec.get_op_for_request(request.method, route.path)
+        route_path = route.path
+        if route_path[0] != '/':
+            route_path = '/' + route_path
+        op = spec.get_op_for_request(request.method, route_path)
         if op is not None:
             return op
     raise PathNotMatchedError(
