@@ -2,10 +2,10 @@
 import sys
 
 import six
-from pyramid.httpexceptions import HTTPClientError, HTTPInternalServerError
+from pyramid.httpexceptions import HTTPBadRequest, HTTPInternalServerError
 
 
-class RequestValidationError(HTTPClientError):
+class RequestValidationError(HTTPBadRequest):
     pass
 
 
