@@ -51,8 +51,12 @@ def main(global_config, **settings):
     config.add_route('post_with_form_params', '/post_with_form_params')
     config.add_route('post_with_file_upload', '/post_with_file_upload')
     config.add_route('sample_post', '/sample')
-    config.add_route('sample_header', '/sample/header')
+    config.include(include_samples, route_prefix='/sample')
     config.add_route('throw_400', '/throw_400')
 
     config.scan()
     return config.make_wsgi_app()
+
+
+def include_samples(config):
+    config.add_route('sample_header', '/header')

@@ -71,7 +71,7 @@ For each of the routes declared in your swagger.json, you need to add the route 
         # Additional routes go here
         #
         config.scan()
-        return config.make_wsgi_app()      
+        return config.make_wsgi_app()
 
 Accessing request data
 ----------------------
@@ -118,7 +118,6 @@ models defined in ``#/definitions`` as Python classes instead of dicts.
           }
         }
       }
-      ...
     }
 
 .. code-block:: python
@@ -143,5 +142,5 @@ Otherwise, models are represented as dicts.
 
 .. note::
 
-    Values in ``request.swagger_data`` are only available if 
+    Values in ``request.swagger_data`` are only available if
     ``pyramid_swawgger.enable_request_validation`` is enabled.
