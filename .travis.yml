@@ -3,9 +3,8 @@ language: python
 env:
 - TOX_ENV=py26
 - TOX_ENV=py27
-# TODO: re-enable when bravado-core supports py3.x - https://github.com/Yelp/bravado-core/issues/10
-#- TOX_ENV=py33
-#- TOX_ENV=py34
+- TOX_ENV=py34
+- TOX_ENV=py27-pyramid15
 - TOX_ENV=docs
 - TOX_ENV=pep8
 install:
