@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.2.3 (2016-02-09)
+++++++++++++++++++++++
+* Restore testing of py3x versions
+* Support pyramid 1.6 and beyond.
+* Support specification of routes using route_prefix
+
 2.2.2 (2015-10-12)
 ++++++++++++++++++++++
 * Upgrade to bravado-core 3.0.0, which includes a change in the way user-defined formats are registered.
