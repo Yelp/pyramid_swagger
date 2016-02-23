@@ -43,5 +43,6 @@ setup(
         'jsonschema',
         'pyramid',
         'simplejson',
+        'pyyaml',
     ],
 )

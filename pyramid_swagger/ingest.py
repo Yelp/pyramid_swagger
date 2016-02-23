@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import glob
 import os.path
+import yaml
 
 import simplejson
 from bravado_core.spec import Spec
@@ -168,11 +169,20 @@ def get_swagger_spec(settings):
     :rtype: :class:`bravado_core.spec.Spec`
     """
     schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
-    schema_path = os.path.join(schema_dir, 'swagger.json')
+    schema_filename = settings.get('pyramid_swagger.schema_file', 'swagger.json')
+    schema_path = os.path.join(schema_dir, schema_filename)
     schema_url = urlparse.urljoin('file:', os.path.abspath(schema_path))
 
-    with open(schema_path, 'r') as f:
-        spec_dict = simplejson.loads(f.read())
+    fname, ext = os.path.splitext(schema_filename)
+    ext = ext.lower()
+    if ext == '.json':
+        with open(schema_path, 'r') as f:
+            spec_dict = simplejson.loads(f.read())
+    elif ext in ('.yaml', '.yml'):
+        with open(schema_path, 'r') as f:
+            spec_dict = yaml.load(f)
+    else:
+        raise Exception("Unknown extension: %s" % ext)
 
     return Spec.from_dict(
         spec_dict,
