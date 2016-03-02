@@ -169,7 +169,8 @@ def get_swagger_spec(settings):
     :rtype: :class:`bravado_core.spec.Spec`
     """
     schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
-    schema_filename = settings.get('pyramid_swagger.schema_file', 'swagger.json')
+    schema_filename = settings.get('pyramid_swagger.schema_file',
+                                   'swagger.json')
     schema_path = os.path.join(schema_dir, schema_filename)
     schema_url = urlparse.urljoin('file:', os.path.abspath(schema_path))
 
