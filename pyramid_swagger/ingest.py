@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 
 import glob
 import os.path
-import yaml
 
 import simplejson
-from bravado_core.spec import Spec
+from bravado_core.spec import Spec, build_http_handlers
 from six.moves.urllib import parse as urlparse
 
 from .api import build_swagger_12_endpoints
@@ -174,16 +173,9 @@ def get_swagger_spec(settings):
     schema_path = os.path.join(schema_dir, schema_filename)
     schema_url = urlparse.urljoin('file:', os.path.abspath(schema_path))
 
-    fname, ext = os.path.splitext(schema_filename)
-    ext = ext.lower()
-    if ext == '.json':
-        with open(schema_path, 'r') as f:
-            spec_dict = simplejson.loads(f.read())
-    elif ext in ('.yaml', '.yml'):
-        with open(schema_path, 'r') as f:
-            spec_dict = yaml.load(f)
-    else:
-        raise Exception("Unknown extension: %s" % ext)
+    handlers = build_http_handlers(None)  # don't need http_client for file:
+    file_handler = handlers['file']
+    spec_dict = file_handler(schema_url)
 
     return Spec.from_dict(
         spec_dict,
