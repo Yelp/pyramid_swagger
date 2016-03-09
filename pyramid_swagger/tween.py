@@ -33,7 +33,7 @@ SUPPORTED_SWAGGER_VERSIONS = [SWAGGER_12, SWAGGER_20]
 DEFAULT_EXCLUDED_PATHS = [
     r'^/static/?',
     r'^/api-docs/?',
-    r'^/swagger.json',
+    r'^/swagger.(json|yaml)',
 ]
 
 

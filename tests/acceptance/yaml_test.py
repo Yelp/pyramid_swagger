@@ -47,3 +47,81 @@ def test_user_format_failure_case(testapp_with_base64):
     with pytest.raises(Exception):
         testapp_with_base64.get('/sample/path_arg1/resource',
                                 params={'required_arg': 'MQ'},)
+
+
+def test_swagger_json_api_doc_route(testapp_with_base64):
+    expected_schema = {
+        'host': 'localhost:9999',
+        'info': {
+            'title': 'Title was not specified',
+            'version': '0.1',
+        },
+        'produces': ['application/json'],
+        'schemes': ['http'],
+        'swagger': '2.0',
+        'paths': {
+            '/sample/{path_arg}/resource': {
+                'get': {
+                    'description': '',
+                    'operationId': 'standard',
+                    'parameters': [
+                        {
+                            'enum': ['path_arg1', 'path_arg2'],
+                            'in': 'path',
+                            'name': 'path_arg',
+                            'required': True,
+                            'type': 'string',
+                        }, {
+                            'format': 'base64',
+                            'in': 'query',
+                            'name': 'required_arg',
+                            'required': True,
+                            'type': 'string',
+                        }, {
+                            'in': 'query',
+                            'name': 'optional_arg',
+                            'required': False,
+                            'type': 'string',
+                        },
+                    ],
+                    'responses': {
+                        '200': {
+                            'description': 'Return a standard_response',
+                            'schema': {
+                                '$ref': {
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'logging_info': {'type': 'object'},
+                                        'raw_response': {'type': 'string'},
+                                    },
+                                    'required': [
+                                        'raw_response',
+                                        'logging_info',
+                                    ],
+                                    'type': 'object',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    }
+
+    response = testapp_with_base64.get(
+        '/swagger.json',
+    )
+    assert response.status_code == 200
+    assert response.headers['content-type'] == ('application/json; '
+                                                'charset=UTF-8')
+    import json
+    assert json.loads(response.body.decode("utf-8")) == expected_schema
+
+    response = testapp_with_base64.get(
+        '/swagger.yaml',
+    )
+    assert response.status_code == 200
+    assert response.headers['content-type'] == ('application/x-yaml; '
+                                                'charset=UTF-8')
+    import yaml
+    assert yaml.load(response.body) == expected_schema
