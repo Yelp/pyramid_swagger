@@ -111,8 +111,6 @@ def resolve_refs(spec, val):
             if key == '$ref':
                 # assume $ref is the only key in the dict
                 return resolve_ref(spec, subval)
-            elif key == 'x-scope':
-                pass   # ignore this; implementation details
             else:
                 new_dict[key] = resolve_refs(spec, subval)
         return new_dict
