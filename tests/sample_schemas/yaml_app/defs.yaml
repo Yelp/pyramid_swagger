@@ -28,3 +28,21 @@ definitions:
         type: "string"
         enum:
           - "good_enum_value"
+
+operations:
+  post:
+    parameters:
+      - name: path_arg
+        in: path
+        type: string
+        required: true
+      - name: request
+        in: body
+        required: true
+        schema:
+          $ref: "#/definitions/body_model"
+    responses:
+      default:
+        description: test response
+        schema:
+          $ref: "#/definitions/standard_response"

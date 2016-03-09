@@ -98,9 +98,10 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
 
 
 def resolve_ref(spec, url):
-    abs_path, spec_dict = spec.resolver.resolve(url)
-    spec_dict = copy.deepcopy(spec_dict)
-    return resolve_refs(spec, spec_dict)
+    with spec.resolver.resolving(url):
+        abs_path, spec_dict = spec.resolver.resolve(url)
+        spec_dict = copy.deepcopy(spec_dict)
+        return resolve_refs(spec, spec_dict)
 
 
 def resolve_refs(spec, val):
@@ -108,7 +109,8 @@ def resolve_refs(spec, val):
         new_dict = {}
         for key, subval in val.items():
             if key == '$ref':
-                new_dict[key] = resolve_ref(spec, subval)
+                # assume $ref is the only key in the dict
+                return resolve_ref(spec, subval)
             elif key == 'x-scope':
                 pass   # ignore this; implementation details
             else:
