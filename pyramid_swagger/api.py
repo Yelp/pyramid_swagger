@@ -99,7 +99,7 @@ def build_swagger_20_swagger_dot_json(config):
 
     def view_for_swagger_dot_json(request):
         spec = config.registry.settings['pyramid_swagger.schema20']
-        return spec.spec_dict
+        return spec.client_spec_dict
 
     return PyramidEndpoint(
         path='/swagger.json',
