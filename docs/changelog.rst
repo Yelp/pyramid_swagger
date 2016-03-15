@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.3.0 (in development)
+++++++++++++++++++++++
+* Support for YAML spec files
+* Bugfix: remove extraneous x-scope in digested spec (see https://github.com/Yelp/bravado-core/issues/78)
+
 2.2.3 (2016-02-09)
 ++++++++++++++++++++++
 * Restore testing of py3x versions
