@@ -138,7 +138,7 @@ def build_swagger_20_swagger_schema_views(config):
         resolved_dict = settings.get('pyramid_swagger.schema20_resolved')
         if not resolved_dict:
             spec = settings['pyramid_swagger.schema20']
-            spec_copy = copy.deepcopy(spec.spec_dict)
+            spec_copy = copy.deepcopy(spec.client_spec_dict)
             resolved_dict = resolve_refs(spec, spec_copy)
             settings['pyramid_swagger.schema20_resolved'] = resolved_dict
         return resolved_dict
