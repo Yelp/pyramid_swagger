@@ -169,7 +169,7 @@ def test_500_when_response_arg_is_wrong_type():
     )
     with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween(request, response=response)
-    assert "1.0 is not of type 'string'" in str(excinfo.value)
+    assert "1.0 is not of type " in str(excinfo.value)
 
 
 def test_500_for_bad_validated_array_response():
@@ -183,7 +183,7 @@ def test_500_for_bad_validated_array_response():
     )
     with pytest.raises(ResponseValidationError) as excinfo:
         _validate_against_tween(request, response=response)
-    assert "is not one of ['good_enum_value']" in str(excinfo.value)
+    assert "is not one of [" in str(excinfo.value)
 
 
 def test_200_for_good_validated_array_response():

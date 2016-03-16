@@ -1,0 +1,39 @@
+---
+swagger: "2.0"
+info:
+  title: "Title was not specified"
+  version: "0.1"
+host: "localhost:9999"
+schemes:
+  - "http"
+produces:
+  - "application/json"
+paths:
+  "/sample/{path_arg}/resource":
+    get:
+      responses:
+        "200":
+          description: "Return a standard_response"
+          schema:
+            "$ref": "defs.yaml#/definitions/standard_response"
+      description: ""
+      operationId: "standard"
+      parameters:
+        - in: "path"
+          name: "path_arg"
+          required: true
+          type: "string"
+          enum:
+            - "path_arg1"
+            - "path_arg2"
+        - in: "query"
+          name: "required_arg"
+          required: true
+          type: "string"
+          format: "base64"
+        - in: "query"
+          name: "optional_arg"
+          required: false
+          type: "string"
+    post:
+      $ref: defs.yaml#/operations/post

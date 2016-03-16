@@ -5,7 +5,7 @@ import glob
 import os.path
 
 import simplejson
-from bravado_core.spec import Spec
+from bravado_core.spec import Spec, build_http_handlers
 from six.moves.urllib import parse as urlparse
 
 from .api import build_swagger_12_endpoints
@@ -168,11 +168,14 @@ def get_swagger_spec(settings):
     :rtype: :class:`bravado_core.spec.Spec`
     """
     schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
-    schema_path = os.path.join(schema_dir, 'swagger.json')
+    schema_filename = settings.get('pyramid_swagger.schema_file',
+                                   'swagger.json')
+    schema_path = os.path.join(schema_dir, schema_filename)
     schema_url = urlparse.urljoin('file:', os.path.abspath(schema_path))
 
-    with open(schema_path, 'r') as f:
-        spec_dict = simplejson.loads(f.read())
+    handlers = build_http_handlers(None)  # don't need http_client for file:
+    file_handler = handlers['file']
+    spec_dict = file_handler(schema_url)
 
     return Spec.from_dict(
         spec_dict,

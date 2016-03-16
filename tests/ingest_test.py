@@ -36,12 +36,13 @@ def test_proper_error_on_missing_api_declaration():
     assert 'fake/sample_resource.json' in str(exc)
 
 
-@mock.patch('six.moves.builtins.open', return_value=mock.MagicMock())
+@mock.patch('pyramid_swagger.ingest.build_http_handlers',
+            return_value={'file': mock.Mock()})
 @mock.patch('os.path.abspath', return_value='/bar/foo/swagger.json')
-@mock.patch('simplejson.loads', return_value=mock.Mock(spec=dict))
 @mock.patch('pyramid_swagger.ingest.Spec.from_dict')
-def test_get_swagger_spec_passes_absolute_url(mock_spec, mock_simple,
-                                              mock_abs, mock_open):
+def test_get_swagger_spec_passes_absolute_url(
+    mock_spec, mock_abs, mock_http_handlers,
+):
     get_swagger_spec({'pyramid_swagger.schema_directory': 'foo/'})
     mock_abs.assert_called_once_with('foo/swagger.json')
     expected_url = "file:///bar/foo/swagger.json"
