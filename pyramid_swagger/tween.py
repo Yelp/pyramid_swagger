@@ -220,10 +220,6 @@ class PyramidSwaggerRequest(RequestLike):
         return self.route_info.get('match') or {}
 
     @property
-    def headers(self):
-        return self.request.headers
-
-    @property
     def form(self):
         """
         :rtype: dict
@@ -248,6 +244,12 @@ class PyramidSwaggerRequest(RequestLike):
     def json(self, **kwargs):
         return getattr(self.request, 'json_body', {})
 
+    def __getattr__(self, name):
+        try:
+            return getattr(self.request, name)
+        except:
+            return super(PyramidSwaggerRequest, self).__getattr__(name)
+
 
 class PyramidSwaggerResponse(OutgoingResponse):
     """Adapter for a :class:`pyramid.response.Response` which exposes response
@@ -269,6 +271,12 @@ class PyramidSwaggerResponse(OutgoingResponse):
 
     def json(self, **kwargs):
         return getattr(self.response, 'json_body', {})
+
+    def __getattr__(self, name):
+        try:
+            return getattr(self.response, name)
+        except:
+            return super(PyramidSwaggerResponse, self).__getattr__(name)
 
 
 def handle_request(request, validator_map, validation_context, **kwargs):
