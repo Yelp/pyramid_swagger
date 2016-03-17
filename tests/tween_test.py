@@ -341,14 +341,11 @@ def test_get_swagger12_objects_if_both_present_but_route_not_in_prefer20(
 
 
 def test_request_properties():
-    root_request = Request(
-        {},
-        body='{"myKey": 42}',
-        headers={"X-Some-Special-Header": "foobar"})
-    # this assert is intended to force the pyramid.request.Request to initialize its
-    # internal data structures correctly: without it, the json_body read will sometimes
-    # (but apparently not always) fail
-    assert '{"myKey": 42}' == root_request.body
+    root_request = Request({}, headers={"X-Some-Special-Header": "foobar"})
+    # this is a slightly baroque mechanism to make sure that the request is
+    # internally consistent for all test environments
+    root_request.body = '{"myKey": 42}'.encode()
+    assert '{"myKey": 42}' == root_request.text
     request = PyramidSwaggerRequest(root_request, {})
     assert {"myKey": 42} == request.body
     assert "foobar" == request.headers["X-Some-Special-Header"]
