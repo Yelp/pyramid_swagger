@@ -247,7 +247,7 @@ class PyramidSwaggerRequest(RequestLike):
     def __getattr__(self, name):
         try:
             return getattr(self.request, name)
-        except:
+        except AttributeError:
             return super(PyramidSwaggerRequest, self).__getattr__(name)
 
 
@@ -275,7 +275,7 @@ class PyramidSwaggerResponse(OutgoingResponse):
     def __getattr__(self, name):
         try:
             return getattr(self.response, name)
-        except:
+        except AttributeError:
             return super(PyramidSwaggerResponse, self).__getattr__(name)
 
 
