@@ -345,6 +345,10 @@ def test_request_properties():
         {},
         body='{"myKey": 42}',
         headers={"X-Some-Special-Header": "foobar"})
+    # this assert is intended to force the pyramid.request.Request to initialize its
+    # internal data structures correctly: without it, the json_body read will sometimes
+    # (but apparently not always) fail
+    assert '{"myKey": 42}' == root_request.body
     request = PyramidSwaggerRequest(root_request, {})
     assert {"myKey": 42} == request.body
     assert "foobar" == request.headers["X-Some-Special-Header"]
