@@ -2,6 +2,7 @@ Changelog
 =========
 
 2.3.0 (in development)
+2.3.0-rc1 (2016-03-21)
 ++++++++++++++++++++++
 * Support for YAML spec files
 * Bugfix: remove extraneous x-scope in digested spec (see https://github.com/Yelp/bravado-core/issues/78)
