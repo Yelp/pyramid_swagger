@@ -3,6 +3,8 @@
 Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
+import hashlib
+import os.path
 import simplejson
 import yaml
 
@@ -97,29 +99,68 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def resolve_ref(spec, url):
-    with spec.resolver.resolving(url):
-        abs_path, spec_dict = spec.resolver.resolve(url)
-        spec_dict = copy.deepcopy(spec_dict)
-        return resolve_refs(spec, spec_dict)
+class RefResolver(object):
+    def __init__(self, spec):
+        self.spec = spec
+        self.origin_url = spec.origin_url
 
+        self.definitions = {}
+        self.defs_to_uuids = {}
 
-def resolve_refs(spec, val):
-    if isinstance(val, dict):
-        new_dict = {}
-        for key, subval in val.items():
-            if key == '$ref':
-                # assume $ref is the only key in the dict
-                return resolve_ref(spec, subval)
-            else:
-                new_dict[key] = resolve_refs(spec, subval)
-        return new_dict
+    def resolve(self):
+        spec_copy = copy.deepcopy(self.spec.client_spec_dict)
+        resolved_spec = self._resolve_refs(spec_copy)
+        if self.definitions:
+            resolved_spec['definitions'] = self.definitions
+        return resolved_spec
 
-    if isinstance(val, list):
-        for index, subval in enumerate(val):
-            val[index] = resolve_refs(spec, subval)
+    def _create_key(self, abs_path):
+        common = os.path.commonprefix([
+            self.origin_url,
+            abs_path,
+        ])
+        unique_path = abs_path.replace(common, '')
+        m = hashlib.md5()
+        m.update(unique_path.encode('utf-8'))
+        key = m.hexdigest()
 
-    return val
+        return key
+
+    def _resolve_ref(self, url):
+        with self.spec.resolver.resolving(url):
+            abs_path, spec_dict = self.spec.resolver.resolve(url)
+            if abs_path.startswith(self.origin_url):
+                # if it's internal to the original, don't resolve
+                return {'$ref': url}
+
+            key = self.defs_to_uuids.get(abs_path)
+            if not key:
+                key = self._create_key(abs_path)
+                self.defs_to_uuids[abs_path] = key
+
+                spec_dict = copy.deepcopy(spec_dict)
+                resolved = self._resolve_refs(spec_dict)
+
+                self.definitions[key] = resolved
+
+            return {'$ref': '#/definitions/%s' % key}
+
+    def _resolve_refs(self, val):
+        if isinstance(val, dict):
+            new_dict = {}
+            for key, subval in val.items():
+                if key == '$ref':
+                    # assume $ref is the only key in the dict
+                    return self._resolve_ref(subval)
+                else:
+                    new_dict[key] = self._resolve_refs(subval)
+            return new_dict
+
+        if isinstance(val, list):
+            for index, subval in enumerate(val):
+                val[index] = self._resolve_refs(subval)
+
+        return val
 
 
 class YamlRendererFactory(object):
@@ -138,8 +179,8 @@ def build_swagger_20_swagger_schema_views(config):
         resolved_dict = settings.get('pyramid_swagger.schema20_resolved')
         if not resolved_dict:
             spec = settings['pyramid_swagger.schema20']
-            spec_copy = copy.deepcopy(spec.client_spec_dict)
-            resolved_dict = resolve_refs(spec, spec_copy)
+            resolver = RefResolver(spec)
+            resolved_dict = resolver.resolve()
             settings['pyramid_swagger.schema20_resolved'] = resolved_dict
         return resolved_dict
 

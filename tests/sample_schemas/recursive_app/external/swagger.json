@@ -1,0 +1,38 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Bug demo",
+    "description": "Recursive object definitions cause problems",
+    "version": "0.1.0"
+  },
+  "definitions": {
+    "widget": {
+      "$ref": "external.json#/widget"
+    }
+  },
+  "paths": {
+    "/resources/widget/{code}" : {
+      "parameters" : [
+        {
+          "name": "code",
+          "description": "The CODE value for a widget",
+          "in": "path",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "View a single widget",
+        "produces": ["application/json"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description":"Widget local content (without parents or descendents)",
+            "schema": {"$ref":"external.json#/widget"}
+          },
+          "404": {"description": "The widget does not exist"}
+        }
+      }
+    }
+  }
+}
