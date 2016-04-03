@@ -56,6 +56,56 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
             'title': 'Title was not specified',
             'version': '0.1',
         },
+        'definitions': {
+            '14bbccfbb528a176e560337905b4f9a5': {
+                'parameters': [
+                    {
+                        'in': 'path',
+                        'name': 'path_arg',
+                        'required': True,
+                        'type': 'string',
+                    }, {
+                        'in': 'body',
+                        'name': 'request',
+                        'required': True,
+                        'schema': {
+                            '$ref': '#/definitions/'
+                                    'd6de80d11d77b7f30906cd755c4bb99e',
+                        },
+                    },
+                ],
+                'responses': {
+                    'default': {
+                        'description': 'test response',
+                        'schema': {
+                            '$ref': '#/definitions/'
+                                    'b2bbc4901725f7ac48936b574761d65a'
+                        },
+                    },
+                },
+            },
+            'b2bbc4901725f7ac48936b574761d65a': {
+                'additionalProperties': False,
+                'properties': {
+                    'logging_info': {'type': 'object'},
+                    'raw_response': {'type': 'string'},
+                },
+                'required': [
+                    'raw_response',
+                    'logging_info',
+                ],
+                'type': 'object',
+            },
+            'd6de80d11d77b7f30906cd755c4bb99e': {
+                'additionalProperties': False,
+                'properties': {
+                    'bar': {'type': 'string'},
+                    'foo': {'type': 'string'},
+                },
+                'required': ['foo'],
+                'type': 'object',
+            },
+        },
         'produces': ['application/json'],
         'schemes': ['http'],
         'swagger': '2.0',
@@ -88,60 +138,14 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
                         '200': {
                             'description': 'Return a standard_response',
                             'schema': {
-                                'additionalProperties': False,
-                                'properties': {
-                                    'logging_info': {'type': 'object'},
-                                    'raw_response': {'type': 'string'},
-                                },
-                                'required': [
-                                    'raw_response',
-                                    'logging_info',
-                                ],
-                                'type': 'object',
+                                '$ref': '#/definitions/'
+                                        'b2bbc4901725f7ac48936b574761d65a',
                             },
                         },
                     },
                 },
                 'post': {
-                    'parameters': [
-                        {
-                            'in': 'path',
-                            'name': 'path_arg',
-                            'required': True,
-                            'type': 'string',
-                        }, {
-                            'in': 'body',
-                            'name': 'request',
-                            'required': True,
-                            'schema': {
-                                'additionalProperties': False,
-                                'properties': {
-                                    'bar': {'type': 'string'},
-                                    'foo': {'type': 'string'},
-                                },
-                                'required': ['foo'],
-                                'type': 'object',
-                            },
-                        },
-                    ],
-                    'responses': {
-                        'default': {
-                            'description': 'test '
-                            'response',
-                            'schema': {
-                                'additionalProperties': False,
-                                'properties': {
-                                    'logging_info': {'type': 'object'},
-                                    'raw_response': {'type': 'string'},
-                                },
-                                'required': [
-                                    'raw_response',
-                                    'logging_info'
-                                ],
-                                'type': 'object',
-                            },
-                        },
-                    },
+                    '$ref': '#/definitions/14bbccfbb528a176e560337905b4f9a5',
                 },
             },
         },

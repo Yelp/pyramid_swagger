@@ -1,0 +1,18 @@
+{
+  "widget": {
+    "description": "A widget which may have multiple generations of child widgets",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
+      },
+      "children": {
+        "type": "array",
+        "items": {
+          "$ref":"#/widget"
+        }
+      }
+    }
+  }
+}
