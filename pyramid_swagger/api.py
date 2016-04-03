@@ -4,6 +4,7 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
 import hashlib
+import os.path
 import simplejson
 import yaml
 
@@ -113,6 +114,18 @@ class RefResolver(object):
             resolved_spec['definitions'] = self.definitions
         return resolved_spec
 
+    def _create_key(self, abs_path):
+        common = os.path.commonprefix([
+            self.origin_url,
+            abs_path,
+        ])
+        unique_path = abs_path.replace(common, '')
+        m = hashlib.md5()
+        m.update(unique_path.encode('utf-8'))
+        key = m.hexdigest()
+
+        return key
+
     def _resolve_ref(self, url):
         with self.spec.resolver.resolving(url):
             abs_path, spec_dict = self.spec.resolver.resolve(url)
@@ -122,9 +135,7 @@ class RefResolver(object):
 
             key = self.defs_to_uuids.get(abs_path)
             if not key:
-                m = hashlib.md5()
-                m.update(abs_path.encode('utf-8'))
-                key = m.hexdigest()
+                key = self._create_key(abs_path)
                 self.defs_to_uuids[abs_path] = key
 
                 spec_dict = copy.deepcopy(spec_dict)

@@ -57,7 +57,7 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
             'version': '0.1',
         },
         'definitions': {
-            '14bbccfbb528a176e560337905b4f9a5': {
+            'ab93f4a613e0c16483a66223dc431894': {
                 'parameters': [
                     {
                         'in': 'path',
@@ -70,7 +70,7 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
                         'required': True,
                         'schema': {
                             '$ref': '#/definitions/'
-                                    'd6de80d11d77b7f30906cd755c4bb99e',
+                                    '8d88ccc5bec30137d053608584efb9e4',
                         },
                     },
                 ],
@@ -79,12 +79,12 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
                         'description': 'test response',
                         'schema': {
                             '$ref': '#/definitions/'
-                                    'b2bbc4901725f7ac48936b574761d65a'
+                                    '0eb5f566c9c69b1b9b8a34d6bce04f7c'
                         },
                     },
                 },
             },
-            'b2bbc4901725f7ac48936b574761d65a': {
+            '0eb5f566c9c69b1b9b8a34d6bce04f7c': {
                 'additionalProperties': False,
                 'properties': {
                     'logging_info': {'type': 'object'},
@@ -96,7 +96,7 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
                 ],
                 'type': 'object',
             },
-            'd6de80d11d77b7f30906cd755c4bb99e': {
+            '8d88ccc5bec30137d053608584efb9e4': {
                 'additionalProperties': False,
                 'properties': {
                     'bar': {'type': 'string'},
@@ -139,13 +139,13 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
                             'description': 'Return a standard_response',
                             'schema': {
                                 '$ref': '#/definitions/'
-                                        'b2bbc4901725f7ac48936b574761d65a',
+                                        '0eb5f566c9c69b1b9b8a34d6bce04f7c',
                             },
                         },
                     },
                 },
                 'post': {
-                    '$ref': '#/definitions/14bbccfbb528a176e560337905b4f9a5',
+                    '$ref': '#/definitions/ab93f4a613e0c16483a66223dc431894',
                 },
             },
         },
