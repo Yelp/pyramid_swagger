@@ -357,10 +357,19 @@ def test_response_properties():
         body='{"myKey": 42}'
     )
     # these must be set for the "text" attribute of webob.Response to be
-    # readable, and setting them in the constructor appears ineffective:
+    # readable, and setting them in the constructor gets into a conflict
+    # with the custom header argument
     root_response.content_type = "application/json"
     root_response.charset = 'utf8'
     response = PyramidSwaggerResponse(root_response)
     assert '{"myKey": 42}' == response.text
     assert "foobar" == response.headers["X-Some-Special-Header"]
-    assert "utf8" == response.charset
+    assert 'application/json' == response.content_type
+
+
+def test_empty_response_properties():
+    root_response = Response(headers={"X-Some-Special-Header": "foobar"})
+    response = PyramidSwaggerResponse(root_response)
+    assert response.text is None
+    assert "foobar" == response.headers["X-Some-Special-Header"]
+    assert response.content_type is None

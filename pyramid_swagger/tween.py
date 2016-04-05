@@ -10,7 +10,7 @@ import sys
 import bravado_core
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
-from bravado_core.request import RequestLike, unmarshal_request
+from bravado_core.request import IncomingRequest, unmarshal_request
 from bravado_core.response import get_response_spec, OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
 import jsonschema.exceptions
@@ -188,9 +188,18 @@ def validation_tween_factory(handler, registry):
     return validator_tween
 
 
-class PyramidSwaggerRequest(RequestLike):
+class PyramidSwaggerRequest(IncomingRequest):
     """Adapter for a :class:`pyramid.request.Request` which exposes request
     data for casting and validation.
+
+    The following properties are exposed in order to comply with the interface
+    of :class:`bravado_core.request.IncomingRequest`:
+
+        path: a dictionary of URL path parameters
+        query: a dictionary of parameters from the query string
+        form: a dictionary of form parameters from a POST
+        headers: a dictionary of request headers
+        files: a dictionary of uploaded filename to content
     """
 
     FORM_TYPES = [
@@ -205,6 +214,10 @@ class PyramidSwaggerRequest(RequestLike):
         """
         self.request = request
         self.route_info = route_info
+
+    @property
+    def headers(self):
+        return self.request.headers
 
     @property
     def query(self):
@@ -244,16 +257,17 @@ class PyramidSwaggerRequest(RequestLike):
     def json(self, **kwargs):
         return getattr(self.request, 'json_body', {})
 
-    def __getattr__(self, name):
-        try:
-            return getattr(self.request, name)
-        except AttributeError:
-            return super(PyramidSwaggerRequest, self).__getattr__(name)
-
 
 class PyramidSwaggerResponse(OutgoingResponse):
     """Adapter for a :class:`pyramid.response.Response` which exposes response
     data for validation.
+
+    The following properties are exposed in order to comply with the interface
+    of :class:`bravado_core.response.OutgoingResponse`:
+
+        content_type: a standard content-type string
+        text: the response body as a string
+        headers: a dictionary of response headers
     """
     def __init__(self, response):
         """
@@ -266,17 +280,28 @@ class PyramidSwaggerResponse(OutgoingResponse):
         return self.response.content_type
 
     @property
+    def headers(self):
+        return self.response.headers
+
+    @property
     def text(self):
-        return self.response.text
+
+        # Treating webob.Response carefully: first check if there's a
+        # non-empty body attribute, since if not, we can short circuit
+        if not self.response.body:
+            return None
+        # if there's a response body, try to read it as text, but carefully
+        try:
+            return self.response.text
+        except AttributeError as prev_ex:
+            # pyramid.response.Response raises AttributeError if you try to
+            # read this property without setting the charset first: trap that
+            # so it doesn't show up as a missing "text" attribute (and get
+            # its error message swallowed by the base class)
+            raise Exception(str(prev_ex))
 
     def json(self, **kwargs):
         return getattr(self.response, 'json_body', {})
-
-    def __getattr__(self, name):
-        try:
-            return getattr(self.response, name)
-        except AttributeError:
-            return super(PyramidSwaggerResponse, self).__getattr__(name)
 
 
 def handle_request(request, validator_map, validation_context, **kwargs):
