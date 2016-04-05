@@ -2,7 +2,9 @@
 """
 Module for automatically serving /api-docs* via Pyramid.
 """
+import copy
 import simplejson
+import yaml
 
 from pyramid_swagger.model import PyramidEndpoint
 
@@ -95,14 +97,62 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def build_swagger_20_swagger_dot_json(config):
+def resolve_ref(spec, url):
+    with spec.resolver.resolving(url):
+        abs_path, spec_dict = spec.resolver.resolve(url)
+        spec_dict = copy.deepcopy(spec_dict)
+        return resolve_refs(spec, spec_dict)
 
-    def view_for_swagger_dot_json(request):
-        spec = config.registry.settings['pyramid_swagger.schema20']
-        return spec.client_spec_dict
 
-    return PyramidEndpoint(
+def resolve_refs(spec, val):
+    if isinstance(val, dict):
+        new_dict = {}
+        for key, subval in val.items():
+            if key == '$ref':
+                # assume $ref is the only key in the dict
+                return resolve_ref(spec, subval)
+            else:
+                new_dict[key] = resolve_refs(spec, subval)
+        return new_dict
+
+    if isinstance(val, list):
+        for index, subval in enumerate(val):
+            val[index] = resolve_refs(spec, subval)
+
+    return val
+
+
+class YamlRendererFactory(object):
+    def __init__(self, info):
+        pass
+
+    def __call__(self, value, system):
+        response = system['request'].response
+        response.headers['Content-Type'] = 'application/x-yaml; charset=UTF-8'
+        return yaml.dump(value).encode('utf-8')
+
+
+def build_swagger_20_swagger_schema_views(config):
+    def view_for_swagger_schema(request):
+        settings = config.registry.settings
+        resolved_dict = settings.get('pyramid_swagger.schema20_resolved')
+        if not resolved_dict:
+            spec = settings['pyramid_swagger.schema20']
+            spec_copy = copy.deepcopy(spec.client_spec_dict)
+            resolved_dict = resolve_refs(spec, spec_copy)
+            settings['pyramid_swagger.schema20_resolved'] = resolved_dict
+        return resolved_dict
+
+    yield PyramidEndpoint(
         path='/swagger.json',
-        route_name='pyramid_swagger.swagger20.api_docs',
-        view=view_for_swagger_dot_json,
-        renderer='json')
+        route_name='pyramid_swagger.swagger20.api_docs.json',
+        view=view_for_swagger_schema,
+        renderer='json',
+    )
+
+    yield PyramidEndpoint(
+        path='/swagger.yaml',
+        route_name='pyramid_swagger.swagger20.api_docs.yaml',
+        view=view_for_swagger_schema,
+        renderer='yaml',
+    )

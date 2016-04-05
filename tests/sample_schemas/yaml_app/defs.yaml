@@ -1,0 +1,48 @@
+definitions:
+  standard_response:
+    type: "object"
+    required:
+      - "raw_response"
+      - "logging_info"
+    additionalProperties: false
+    properties:
+      raw_response:
+        type: "string"
+      logging_info:
+        type: "object"
+  body_model:
+    type: "object"
+    required:
+      - "foo"
+    additionalProperties: false
+    properties:
+      foo:
+        type: "string"
+      bar:
+        type: "string"
+  array_content_model:
+    required:
+      - "enum_value"
+    properties:
+      enum_value:
+        type: "string"
+        enum:
+          - "good_enum_value"
+
+operations:
+  post:
+    parameters:
+      - name: path_arg
+        in: path
+        type: string
+        required: true
+      - name: request
+        in: body
+        required: true
+        schema:
+          $ref: "#/definitions/body_model"
+    responses:
+      default:
+        description: test response
+        schema:
+          $ref: "#/definitions/standard_response"

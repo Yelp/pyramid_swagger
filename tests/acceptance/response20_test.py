@@ -157,7 +157,7 @@ def test_500_when_response_arg_is_wrong_type():
             response=response,
             path_pattern='/sample/{path_arg}/resource')
 
-    assert "1.0 is not of type 'string'" in str(excinfo.value)
+    assert "1.0 is not of type " in str(excinfo.value)
 
 
 def test_500_for_bad_validated_array_response():
@@ -175,7 +175,7 @@ def test_500_for_bad_validated_array_response():
             response=response,
             path_pattern='/sample_array_response')
 
-    assert "'bad_enum_value' is not one of ['good_enum_value']" in \
+    assert "'bad_enum_value' is not one of " in \
            str(excinfo.value)
 
 
