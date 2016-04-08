@@ -214,7 +214,7 @@ def test_get_op_for_request_not_found_when_route_has_no_path():
     swagger_spec = Mock(spec=Spec)
     with pytest.raises(PathNotMatchedError) as excinfo:
         get_op_for_request(request, route_info, swagger_spec)
-    assert 'Could not find a matching Swagger operation' in str(excinfo.value)
+    assert 'Could not find a matching route' in str(excinfo.value)
 
 
 def test_get_op_for_request_not_found_when_no_match_in_swagger_spec():

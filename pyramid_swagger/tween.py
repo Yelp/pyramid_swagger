@@ -549,7 +549,7 @@ def get_op_for_request(request, route_info, spec):
     :type route_info: dict (usually has 'match' and 'route' keys)
     :type spec: :class:`bravado_core.spec.Spec`
     :rtype: :class:`bravado_core.operation.Operation`
-    :raises: RequestValidationError when a matching Swagger operation is not
+    :raises: PathNotMatchedError when a matching Swagger operation is not
         found.
     """
     # pyramid.urldispath.Route
@@ -561,6 +561,11 @@ def get_op_for_request(request, route_info, spec):
         op = spec.get_op_for_request(request.method, route_path)
         if op is not None:
             return op
+    else:
+        raise PathNotMatchedError(
+            "Could not find a matching route for {0} request {1}. " \
+            "Have you registed this endpoint with Pyramid?"
+            .format(request.method, request.url))
     raise PathNotMatchedError(
         "Could not find a matching Swagger operation for {0} request {1}"
         .format(request.method, request.url))
