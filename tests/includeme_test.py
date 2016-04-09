@@ -43,6 +43,7 @@ def test_bad_schema_not_validated_if_spec_validation_is_disabled(_):
     settings = {
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/bad_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
+        'pyramid_swagger.enable_api_doc_views': False,
     }
     mock_config = mock.Mock(
         spec=Configurator, registry=mock.Mock(settings=settings))

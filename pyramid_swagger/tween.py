@@ -382,6 +382,16 @@ def get_exclude_paths(registry):
     return [re.compile(r) for r in regexes]
 
 
+def is_swagger_documentation_route(route_info):
+    if not route_info:
+        return False
+
+    route = route_info.get('route')
+    if not route:
+        return False
+    return route.name.startswith('pyramid_swagger.swagger20.api_docs.')
+
+
 def should_exclude_request(settings, request, route_info):
     disable_all_validation = not any((
         settings.validate_request,
@@ -391,7 +401,8 @@ def should_exclude_request(settings, request, route_info):
     return (
         disable_all_validation or
         should_exclude_path(settings.exclude_paths, request.path) or
-        should_exclude_route(settings.exclude_routes, route_info)
+        should_exclude_route(settings.exclude_routes, route_info) or
+        is_swagger_documentation_route(route_info)
     )
 
 
