@@ -50,3 +50,18 @@ def test_proper_error_on_missing_api_declaration():
         'tests/sample_schemas/missing_api_declaration/missing.json'
         in str(exc)
     )
+
+
+def test_ignore_absolute_paths():
+    from pyramid_swagger.api import get_path_if_relative
+    assert get_path_if_relative(
+        'http://www.google.com/some/special/schema.json',
+    ) is None
+
+    assert get_path_if_relative(
+        '//www.google.com/some/schema.yaml',
+    ) is None
+
+    assert get_path_if_relative(
+        '/usr/lib/shared/schema.json',
+    ) is None

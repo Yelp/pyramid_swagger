@@ -337,3 +337,8 @@ def test_get_swagger12_objects_if_both_present_but_route_not_in_prefer20(
     swagger_handler, spec = get_swagger_objects(settings, route_info, registry)
     assert 'swagger12_handler' in str(swagger_handler)
     assert 'schema12' == spec
+
+
+def test_is_swagger_documentation_route_without_route_is_safe():
+    from pyramid_swagger.tween import is_swagger_documentation_route
+    assert is_swagger_documentation_route(None) is False

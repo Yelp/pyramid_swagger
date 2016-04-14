@@ -136,6 +136,24 @@ class NodeWalker(object):
         return value
 
 
+def get_path_if_relative(url):
+    parts = urlparse(url)
+
+    if parts.scheme or parts.netloc:
+        # only rewrite relative paths
+        return
+
+    if not parts.path:
+        # don't rewrite internal refs
+        return
+
+    if parts.path.startswith('/'):
+        # don't rewrite absolute refs
+        return
+
+    return parts
+
+
 class NodeWalkerForRefFiles(NodeWalker):
     def walk(self, spec):
         all_refs = []
@@ -156,35 +174,17 @@ class NodeWalkerForRefFiles(NodeWalker):
 
         return all_refs
 
-    @staticmethod
-    def get_filename_without_schema(url):
-        parts = urlparse(url)
-
-        if parts.scheme or parts.netloc:
-            # only rewrite relative paths
-            return
-
-        if not parts.path:
-            # don't rewrite internal refs
-            return
-
-        if parts.path.startswith('/'):
-            # don't rewrite absolute refs
-            return
-
-        return parts.path
-
     def _walk_dict_item(self, key, value, spec, dirname, all_refs):
         if key != '$ref':
             parent = super(NodeWalkerForRefFiles, self)
             return parent._walk_dict_item(key, value, spec, dirname, all_refs)
 
         # assume $ref is the only key in the dict
-        subval_fname = self.get_filename_without_schema(value)
-        if not subval_fname:
+        parts = get_path_if_relative(value)
+        if not parts:
             return value
 
-        full_fname = os.path.join(dirname, subval_fname)
+        full_fname = os.path.join(dirname, parts.path)
         norm_fname = os.path.normpath(full_fname)
         all_refs.append(norm_fname)
 
@@ -200,18 +200,8 @@ class NodeWalkerForCleaningRefs(NodeWalker):
 
     @staticmethod
     def fix_ref(ref, schema_format):
-        parts = urlparse(ref)
-
-        if parts.scheme or parts.netloc:
-            # only rewrite relative paths
-            return
-
-        if not parts.path:
-            # don't rewrite internal refs
-            return
-
-        if parts.path.startswith('/'):
-            # don't rewrite absolute refs
+        parts = get_path_if_relative(ref)
+        if not parts:
             return
 
         path, ext = os.path.splitext(parts.path)
@@ -222,7 +212,7 @@ class NodeWalkerForCleaningRefs(NodeWalker):
             parts.params,
             parts.query,
             parts.fragment,
-            ])
+        ])
 
     def _walk_dict_item(self, key, value, schema_format):
         if key != '$ref':
