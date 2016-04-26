@@ -2,6 +2,8 @@ Changelog
 =========
 
 2.3.0 (in development)
+++++++++++++++++++++++
+
 2.3.0-rc1 (2016-03-21)
 ++++++++++++++++++++++
 * Support for YAML spec files
