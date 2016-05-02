@@ -20,6 +20,7 @@ from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request, \
     validation_error
 from pyramid_swagger.tween import PyramidSwaggerRequest
+from pyramid_swagger.tween import PyramidSwaggerResponse
 from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import get_swagger_objects
 from pyramid_swagger.tween import get_swagger_versions
@@ -337,3 +338,38 @@ def test_get_swagger12_objects_if_both_present_but_route_not_in_prefer20(
     swagger_handler, spec = get_swagger_objects(settings, route_info, registry)
     assert 'swagger12_handler' in str(swagger_handler)
     assert 'schema12' == spec
+
+
+def test_request_properties():
+    root_request = Request({}, headers={"X-Some-Special-Header": "foobar"})
+    # this is a slightly baroque mechanism to make sure that the request is
+    # internally consistent for all test environments
+    root_request.body = '{"myKey": 42}'.encode()
+    assert '{"myKey": 42}' == root_request.text
+    request = PyramidSwaggerRequest(root_request, {})
+    assert {"myKey": 42} == request.body
+    assert "foobar" == request.headers["X-Some-Special-Header"]
+
+
+def test_response_properties():
+    root_response = Response(
+        headers={"X-Some-Special-Header": "foobar"},
+        body='{"myKey": 42}'
+    )
+    # these must be set for the "text" attribute of webob.Response to be
+    # readable, and setting them in the constructor gets into a conflict
+    # with the custom header argument
+    root_response.content_type = "application/json"
+    root_response.charset = 'utf8'
+    response = PyramidSwaggerResponse(root_response)
+    assert '{"myKey": 42}' == response.text
+    assert "foobar" == response.headers["X-Some-Special-Header"]
+    assert 'application/json' == response.content_type
+
+
+def test_empty_response_properties():
+    root_response = Response(headers={"X-Some-Special-Header": "foobar"})
+    response = PyramidSwaggerResponse(root_response)
+    assert response.text is None
+    assert "foobar" == response.headers["X-Some-Special-Header"]
+    assert response.content_type is None
