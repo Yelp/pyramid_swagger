@@ -3,6 +3,7 @@ Changelog
 
 2.3.0 (in development)
 ++++++++++++++++++++++
+* Bugfix: responses with headers in the spec no longer break request validation (see #159 for details)
 
 2.3.0-rc1 (2016-03-21)
 ++++++++++++++++++++++
