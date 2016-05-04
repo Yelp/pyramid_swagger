@@ -25,3 +25,8 @@ def test_app(settings):
 def test_running_query_for_relative_ref(test_app):
     response = test_app.get('/sample/path_arg1/resource', params={},)
     assert response.status_code == 200
+
+
+def test_build_swagger_20_schema_with_relative_refs(test_app):
+    response = test_app.get('/swagger.json', params={},)
+    assert response.status_code == 200
