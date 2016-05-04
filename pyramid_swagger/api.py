@@ -98,10 +98,9 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
 
 
 def resolve_ref(spec, url):
-    with spec.resolver.resolving(url):
-        abs_path, spec_dict = spec.resolver.resolve(url)
-        spec_dict = copy.deepcopy(spec_dict)
-        return resolve_refs(spec, spec_dict)
+    with spec.resolver.resolving(url) as resolved_spec_dict:
+        resolved_spec_dict = copy.deepcopy(resolved_spec_dict)
+        return resolve_refs(spec, resolved_spec_dict)
 
 
 def resolve_refs(spec, val):
