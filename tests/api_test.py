@@ -53,6 +53,10 @@ def test_proper_error_on_missing_api_declaration():
 
 
 def test_ignore_absolute_paths():
+    """
+    we don't have the ability to automagically translate these external
+    resources from yaml to json and vice versa, so ignore them altogether.
+    """
     from pyramid_swagger.api import get_path_if_relative
     assert get_path_if_relative(
         'http://www.google.com/some/special/schema.json',

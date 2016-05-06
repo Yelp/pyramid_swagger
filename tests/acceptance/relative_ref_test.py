@@ -31,25 +31,31 @@ def test_running_query_for_relative_ref(test_app):
     assert response.status_code == 200
 
 
-def fix_ref(ref, schema_format):
+def translate_ref_extension(ref, schema_format):
     if schema_format == 'json':
         return ref  # all refs are already yaml
     return ref.replace('.json', '.%s' % schema_format)
 
 
-def walk_schema_for_refs(schema_item, schema_format):
+def recursively_rewrite_refs(schema_item, schema_format):
+    """
+    Fix a schema's refs so that they all read the same format. Ensures that
+    consumers requesting a yaml resource don't have to know how to read json.
+    """
     if isinstance(schema_item, dict):
         for key, value in schema_item.items():
             if key == '$ref':
-                schema_item[key] = fix_ref(value, schema_format)
+                schema_item[key] = translate_ref_extension(
+                    value, schema_format,
+                )
             else:
-                walk_schema_for_refs(value, schema_format)
+                recursively_rewrite_refs(value, schema_format)
     elif isinstance(schema_item, list):
         for item in schema_item:
-            walk_schema_for_refs(item, schema_format)
+            recursively_rewrite_refs(item, schema_format)
 
 
-@pytest.mark.parametrize('schema_format', ['json', 'yaml'])
+@pytest.mark.parametrize('schema_format', ['json', 'yaml', ])
 def test_swagger_schema_retrieval(schema_format, test_app):
     here = os.path.dirname(__file__)
     deserializers = {
@@ -76,7 +82,7 @@ def test_swagger_schema_retrieval(schema_format, test_app):
         with open(os.path.join(*gold_path_parts)) as f:
             expected_dict = json.load(f)
 
-        walk_schema_for_refs(expected_dict, schema_format)
+        recursively_rewrite_refs(expected_dict, schema_format)
 
         actual_dict = deserializer(response)
 

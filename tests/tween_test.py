@@ -340,5 +340,9 @@ def test_get_swagger12_objects_if_both_present_but_route_not_in_prefer20(
 
 
 def test_is_swagger_documentation_route_without_route_is_safe():
+    """
+    Not sure if `None` is an option for the `route_info` dict, but make
+    sure nothing crashes in that possible scenario.
+    """
     from pyramid_swagger.tween import is_swagger_documentation_route
     assert is_swagger_documentation_route(None) is False
