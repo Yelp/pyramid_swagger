@@ -563,7 +563,8 @@ def get_op_for_request(request, route_info, spec):
             return op
         else:
             raise PathNotMatchedError(
-                "Could not find a matching Swagger operation for {0} request {1}"
+                "Could not find a matching Swagger "
+                "operation for {0} request {1}"
                 .format(request.method, request.url))
     else:
         raise PathNotMatchedError(
