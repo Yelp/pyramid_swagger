@@ -63,22 +63,22 @@ def validate_yaml_response(response, expected_dict):
     assert yaml.load(response.body) == expected_dict
 
 
-def fix_ref(ref, schema_format):
+def _rewrite_ref(ref, schema_format):
     if schema_format == 'yaml':
         return ref  # all refs are already yaml
     return ref.replace('.yaml', '.%s' % schema_format)
 
 
-def walk_schema_for_refs(schema_item, schema_format):
+def _recursively_rewrite_refs(schema_item, schema_format):
     if isinstance(schema_item, dict):
         for key, value in schema_item.items():
             if key == '$ref':
-                schema_item[key] = fix_ref(value, schema_format)
+                schema_item[key] = _rewrite_ref(value, schema_format)
             else:
-                walk_schema_for_refs(value, schema_format)
+                _recursively_rewrite_refs(value, schema_format)
     elif isinstance(schema_item, list):
         for item in schema_item:
-            walk_schema_for_refs(item, schema_format)
+            _recursively_rewrite_refs(item, schema_format)
 
 
 def test_swagger_json_api_doc_route(testapp_with_base64):
@@ -102,6 +102,6 @@ def test_swagger_json_api_doc_route(testapp_with_base64):
             with open(fname, 'r') as f:
                 expected_schema = yaml.load(f)
 
-            walk_schema_for_refs(expected_schema, schema_format)
+            _recursively_rewrite_refs(expected_schema, schema_format)
 
             validate_schema(response, expected_schema)
