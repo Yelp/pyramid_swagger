@@ -561,14 +561,15 @@ def get_op_for_request(request, route_info, spec):
         op = spec.get_op_for_request(request.method, route_path)
         if op is not None:
             return op
+        else:
+            raise PathNotMatchedError(
+                "Could not find a matching Swagger operation for {0} request {1}"
+                .format(request.method, request.url))
     else:
         raise PathNotMatchedError(
             "Could not find a matching route for {0} request {1}. "
             "Have you registed this endpoint with Pyramid?"
             .format(request.method, request.url))
-    raise PathNotMatchedError(
-        "Could not find a matching Swagger operation for {0} request {1}"
-        .format(request.method, request.url))
 
 
 def get_swagger_versions(settings):

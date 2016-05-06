@@ -208,7 +208,7 @@ def test_get_op_for_request_found():
     assert expected_op == get_op_for_request(request, route_info, swagger_spec)
 
 
-def test_get_op_for_request_not_found_when_route_has_no_path():
+def test_get_op_for_request_not_found_route_not_registered():
     request = Mock(spec=Request, method='GET', url='http://localhost/foo/1')
     route_info = {'route': Mock(spec=[])}
     swagger_spec = Mock(spec=Spec)
