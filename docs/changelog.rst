@@ -20,7 +20,7 @@ Changelog
 ++++++++++++++++++++++
 * Upgrade to bravado-core 3.0.0, which includes a change in the way user-defined formats are registered. See the `Bravado 3.0.0 changelog entry`_ for more detail.
 
-.. _Bravado 3.0.0 changelog entry: https://github.com/Yelp/bravado-core/blob/master/CHANGELOG.rst#300-2015-10-07
+.. _Bravado 3.0.0 changelog entry: http://github.com/Yelp/bravado-core/blob/master/CHANGELOG.rst
 
 
 2.2.1 (2015-08-20)
