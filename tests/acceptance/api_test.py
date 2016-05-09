@@ -77,3 +77,22 @@ def test_default_only_serves_up_swagger_20_schema(default_test_app):
     # swagger 1.2 schemas should 404
     for path in ('/api-docs', '/api-docs/sample', '/api-docs/other_sample'):
         default_test_app.get(path, status=404)
+
+
+def test_recursive_swagger_api_internal_refs():
+    recursive_test_app = TestApp(main({}, **{
+        'pyramid_swagger.schema_directory':
+            'tests/sample_schemas/recursive_app/internal/',
+    }))
+
+    recursive_test_app.get('/swagger.json', status=200)
+
+
+def test_recursive_swagger_api_external_refs():
+    recursive_test_app = TestApp(main({}, **{
+        'pyramid_swagger.schema_directory':
+            'tests/sample_schemas/recursive_app/external/',
+    }))
+
+    recursive_test_app.get('/swagger.json', status=200)
+    recursive_test_app.get('/external.json', status=200)

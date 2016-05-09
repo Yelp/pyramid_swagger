@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
+import json
+import yaml
 
 import pytest
 from webtest import TestApp
@@ -49,118 +51,57 @@ def test_user_format_failure_case(testapp_with_base64):
                                 params={'required_arg': 'MQ'},)
 
 
+def validate_json_response(response, expected_dict):
+    assert response.headers['content-type'] == \
+           'application/json; charset=UTF-8'
+    assert json.loads(response.body.decode("utf-8")) == expected_dict
+
+
+def validate_yaml_response(response, expected_dict):
+    assert response.headers['content-type'] == \
+           'application/x-yaml; charset=UTF-8'
+    assert yaml.load(response.body) == expected_dict
+
+
+def _rewrite_ref(ref, schema_format):
+    if schema_format == 'yaml':
+        return ref  # all refs are already yaml
+    return ref.replace('.yaml', '.%s' % schema_format)
+
+
+def _recursively_rewrite_refs(schema_item, schema_format):
+    if isinstance(schema_item, dict):
+        for key, value in schema_item.items():
+            if key == '$ref':
+                schema_item[key] = _rewrite_ref(value, schema_format)
+            else:
+                _recursively_rewrite_refs(value, schema_format)
+    elif isinstance(schema_item, list):
+        for item in schema_item:
+            _recursively_rewrite_refs(item, schema_format)
+
+
 def test_swagger_json_api_doc_route(testapp_with_base64):
-    expected_schema = {
-        'host': 'localhost:9999',
-        'info': {
-            'title': 'Title was not specified',
-            'version': '0.1',
-        },
-        'produces': ['application/json'],
-        'schemes': ['http'],
-        'swagger': '2.0',
-        'paths': {
-            '/sample/{path_arg}/resource': {
-                'get': {
-                    'description': '',
-                    'operationId': 'standard',
-                    'parameters': [
-                        {
-                            'enum': ['path_arg1', 'path_arg2'],
-                            'in': 'path',
-                            'name': 'path_arg',
-                            'required': True,
-                            'type': 'string',
-                        }, {
-                            'format': 'base64',
-                            'in': 'query',
-                            'name': 'required_arg',
-                            'required': True,
-                            'type': 'string',
-                        }, {
-                            'in': 'query',
-                            'name': 'optional_arg',
-                            'required': False,
-                            'type': 'string',
-                        },
-                    ],
-                    'responses': {
-                        '200': {
-                            'description': 'Return a standard_response',
-                            'schema': {
-                                'additionalProperties': False,
-                                'properties': {
-                                    'logging_info': {'type': 'object'},
-                                    'raw_response': {'type': 'string'},
-                                },
-                                'required': [
-                                    'raw_response',
-                                    'logging_info',
-                                ],
-                                'type': 'object',
-                            },
-                        },
-                    },
-                },
-                'post': {
-                    'parameters': [
-                        {
-                            'in': 'path',
-                            'name': 'path_arg',
-                            'required': True,
-                            'type': 'string',
-                        }, {
-                            'in': 'body',
-                            'name': 'request',
-                            'required': True,
-                            'schema': {
-                                'additionalProperties': False,
-                                'properties': {
-                                    'bar': {'type': 'string'},
-                                    'foo': {'type': 'string'},
-                                },
-                                'required': ['foo'],
-                                'type': 'object',
-                            },
-                        },
-                    ],
-                    'responses': {
-                        'default': {
-                            'description': 'test '
-                            'response',
-                            'schema': {
-                                'additionalProperties': False,
-                                'properties': {
-                                    'logging_info': {'type': 'object'},
-                                    'raw_response': {'type': 'string'},
-                                },
-                                'required': [
-                                    'raw_response',
-                                    'logging_info'
-                                ],
-                                'type': 'object',
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    }
+    test_files = [
+        'swagger',
+        'defs',
+    ]
 
-    response = testapp_with_base64.get(
-        '/swagger.json',
-    )
-    assert response.status_code == 200
-    assert response.headers['content-type'] == ('application/json; '
-                                                'charset=UTF-8')
-    import json
-    assert json.loads(response.body.decode("utf-8")) == expected_schema
+    test_formats = [
+        ('yaml', validate_yaml_response),
+        ('json', validate_json_response),
+    ]
 
-    response = testapp_with_base64.get(
-        '/swagger.yaml',
-    )
-    assert response.status_code == 200
-    assert response.headers['content-type'] == ('application/x-yaml; '
-                                                'charset=UTF-8')
-    import yaml
-    assert yaml.load(response.body) == expected_schema
+    for test_file in test_files:
+        for schema_format, validate_schema in test_formats:
+            url = '/%s.%s' % (test_file, schema_format)
+            response = testapp_with_base64.get(url)
+            assert response.status_code == 200
+
+            fname = 'tests/sample_schemas/yaml_app/%s.yaml' % test_file
+            with open(fname, 'r') as f:
+                expected_schema = yaml.load(f)
+
+            _recursively_rewrite_refs(expected_schema, schema_format)
+
+            validate_schema(response, expected_schema)

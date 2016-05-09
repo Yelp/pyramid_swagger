@@ -3,9 +3,13 @@
 Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
+import os.path
 import simplejson
 import yaml
 
+
+from bravado_core.spec import strip_xscope
+from six.moves.urllib.parse import urlparse, urlunparse
 from pyramid_swagger.model import PyramidEndpoint
 
 
@@ -97,29 +101,125 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def resolve_ref(spec, url):
-    with spec.resolver.resolving(url):
-        abs_path, spec_dict = spec.resolver.resolve(url)
-        spec_dict = copy.deepcopy(spec_dict)
-        return resolve_refs(spec, spec_dict)
+class NodeWalker(object):
+    def __init__(self):
+        pass
+
+    def walk(self, item, *args, **kwargs):
+        dupe = copy.deepcopy(item)
+        return self._walk(dupe, *args, **kwargs)
+
+    def _walk(self, item, *args, **kwargs):
+        if isinstance(item, list):
+            return self._walk_list(item, *args, **kwargs)
+
+        elif isinstance(item, dict):
+            return self._walk_dict(item, *args, **kwargs)
+
+        else:
+            return self._walk_item(item, *args, **kwargs)
+
+    def _walk_list(self, item, *args, **kwargs):
+        for index, subitem in enumerate(item):
+            item[index] = self._walk(subitem, *args, **kwargs)
+        return item
+
+    def _walk_dict(self, item, *args, **kwargs):
+        for key, value in item.items():
+            item[key] = self._walk_dict_item(key, value, *args, **kwargs)
+        return item
+
+    def _walk_dict_item(self, key, value, *args, **kwargs):
+        return self._walk(value, *args, **kwargs)
+
+    def _walk_item(self, value, *args, **kwargs):
+        return value
 
 
-def resolve_refs(spec, val):
-    if isinstance(val, dict):
-        new_dict = {}
-        for key, subval in val.items():
-            if key == '$ref':
-                # assume $ref is the only key in the dict
-                return resolve_ref(spec, subval)
-            else:
-                new_dict[key] = resolve_refs(spec, subval)
-        return new_dict
+def get_path_if_relative(url):
+    parts = urlparse(url)
 
-    if isinstance(val, list):
-        for index, subval in enumerate(val):
-            val[index] = resolve_refs(spec, subval)
+    if parts.scheme or parts.netloc:
+        # only rewrite relative paths
+        return
 
-    return val
+    if not parts.path:
+        # don't rewrite internal refs
+        return
+
+    if parts.path.startswith('/'):
+        # don't rewrite absolute refs
+        return
+
+    return parts
+
+
+class NodeWalkerForRefFiles(NodeWalker):
+    def walk(self, spec):
+        all_refs = []
+
+        spec_fname = spec.origin_url
+        if spec_fname.startswith('file://'):
+            spec_fname = spec_fname.replace('file://', '')
+        spec_dirname = os.path.dirname(spec_fname)
+
+        parent = super(NodeWalkerForRefFiles, self)
+        parent.walk(spec.client_spec_dict, spec, spec_dirname, all_refs)
+
+        all_refs = [os.path.relpath(f, spec_dirname) for f in all_refs]
+        all_refs = set(all_refs)
+
+        core_dirname, core_fname = os.path.split(spec_fname)
+        all_refs.add(core_fname)
+
+        return all_refs
+
+    def _walk_dict_item(self, key, value, spec, dirname, all_refs):
+        if key != '$ref':
+            parent = super(NodeWalkerForRefFiles, self)
+            return parent._walk_dict_item(key, value, spec, dirname, all_refs)
+
+        # assume $ref is the only key in the dict
+        parts = get_path_if_relative(value)
+        if not parts:
+            return value
+
+        full_fname = os.path.join(dirname, parts.path)
+        norm_fname = os.path.normpath(full_fname)
+        all_refs.append(norm_fname)
+
+        with spec.resolver.resolving(value) as spec_dict:
+            dupe = copy.deepcopy(spec_dict)
+            self._walk(dupe, spec, os.path.dirname(norm_fname), all_refs)
+
+
+class NodeWalkerForCleaningRefs(NodeWalker):
+    def walk(self, item, schema_format):
+        parent = super(NodeWalkerForCleaningRefs, self)
+        return parent.walk(item, schema_format)
+
+    @staticmethod
+    def fix_ref(ref, schema_format):
+        parts = get_path_if_relative(ref)
+        if not parts:
+            return
+
+        path, ext = os.path.splitext(parts.path)
+        return urlunparse([
+            parts.scheme,
+            parts.netloc,
+            '%s.%s' % (path, schema_format),
+            parts.params,
+            parts.query,
+            parts.fragment,
+        ])
+
+    def _walk_dict_item(self, key, value, schema_format):
+        if key != '$ref':
+            parent = super(NodeWalkerForCleaningRefs, self)
+            return parent._walk_dict_item(key, value, schema_format)
+
+        return self.fix_ref(value, schema_format) or value
 
 
 class YamlRendererFactory(object):
@@ -133,26 +233,34 @@ class YamlRendererFactory(object):
 
 
 def build_swagger_20_swagger_schema_views(config):
+    spec = config.registry.settings['pyramid_swagger.schema20']
+
+    walker = NodeWalkerForRefFiles()
+    all_files = walker.walk(spec)
+
+    file_map = {}
+
     def view_for_swagger_schema(request):
-        settings = config.registry.settings
-        resolved_dict = settings.get('pyramid_swagger.schema20_resolved')
-        if not resolved_dict:
-            spec = settings['pyramid_swagger.schema20']
-            spec_copy = copy.deepcopy(spec.client_spec_dict)
-            resolved_dict = resolve_refs(spec, spec_copy)
-            settings['pyramid_swagger.schema20_resolved'] = resolved_dict
-        return resolved_dict
+        path, ext = os.path.splitext(request.path)
+        ext = ext.lstrip('.')
+        actual_fname = file_map[request.path]
+        with spec.resolver.resolving(actual_fname) as spec_dict:
+            clean_response = strip_xscope(spec_dict)
+            ref_walker = NodeWalkerForCleaningRefs()
+            fixed_spec = ref_walker.walk(clean_response, ext)
+            return fixed_spec
 
-    yield PyramidEndpoint(
-        path='/swagger.json',
-        route_name='pyramid_swagger.swagger20.api_docs.json',
-        view=view_for_swagger_schema,
-        renderer='json',
-    )
-
-    yield PyramidEndpoint(
-        path='/swagger.yaml',
-        route_name='pyramid_swagger.swagger20.api_docs.yaml',
-        view=view_for_swagger_schema,
-        renderer='yaml',
-    )
+    for ref_fname in all_files:
+        ref_fname_parts = os.path.splitext(ref_fname)
+        for schema_format in ['yaml', 'json']:
+            route_name = 'pyramid_swagger.swagger20.api_docs.%s.%s' % (
+                ref_fname.replace('/', '.'), schema_format,
+            )
+            path = '/%s.%s' % (ref_fname_parts[0], schema_format)
+            file_map[path] = ref_fname
+            yield PyramidEndpoint(
+                path=path,
+                route_name=route_name,
+                view=view_for_swagger_schema,
+                renderer=schema_format,
+            )
