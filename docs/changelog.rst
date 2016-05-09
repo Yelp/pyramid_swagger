@@ -1,10 +1,12 @@
 Changelog
 =========
 
-2.3.0 (in development)
+2.3.0-rc2 (2016-05-09)
 ++++++++++++++++++++++
+* Add ability for a single spec to serve YAML or JSON to clients
+* Support multi-file local specs, serving them over multiple HTTP endpoints
 * Improve Swagger validation messages when Pyramid cannot find your route (see #163)
-* Bugfix: responses with headers in the spec no longer break request validation (see #159 for details)
+* Bugfix: responses with headers in the spec no longer break request validation (see #159)
 
 2.3.0-rc1 (2016-03-21)
 ++++++++++++++++++++++
