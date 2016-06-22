@@ -9,6 +9,12 @@ from webtest import TestApp
 from .app import main
 
 
+DESERIALIZERS = {
+    'json': lambda r: json.loads(r.body.decode('utf-8')),
+    'yaml': lambda r: yaml.load(BytesIO(r.body)),
+}
+
+
 @pytest.fixture
 def settings():
     dir_path = 'tests/sample_schemas/relative_ref/'
@@ -16,13 +22,21 @@ def settings():
         'pyramid_swagger.schema_directory': dir_path,
         'pyramid_swagger.enable_request_validation': True,
         'pyramid_swagger.enable_swagger_spec_validation': True,
+        'pyramid_swagger.swagger_versions': ['2.0']
     }
 
 
 @pytest.fixture
 def test_app(settings):
     """Fixture for setting up a Swagger 2.0 version of the test test_app."""
-    settings['pyramid_swagger.swagger_versions'] = ['2.0']
+    return TestApp(main({}, **settings))
+
+
+@pytest.fixture
+def test_app_deref(settings):
+    """Fixture for setting up a Swagger 2.0 version of the test test_app
+    test app serves swagger schemas with refs dereferenced."""
+    settings['pyramid_swagger.dereference_served_schema'] = True
     return TestApp(main({}, **settings))
 
 
@@ -58,12 +72,7 @@ def recursively_rewrite_refs(schema_item, schema_format):
 @pytest.mark.parametrize('schema_format', ['json', 'yaml', ])
 def test_swagger_schema_retrieval(schema_format, test_app):
     here = os.path.dirname(__file__)
-    deserializers = {
-        'json': lambda r: json.loads(r.body.decode('utf-8')),
-        'yaml': lambda r: yaml.load(BytesIO(r.body)),
-    }
-
-    deserializer = deserializers[schema_format]
+    deserializer = DESERIALIZERS[schema_format]
 
     expected_files = [
         'parameters/common',
@@ -72,12 +81,17 @@ def test_swagger_schema_retrieval(schema_format, test_app):
         'swagger',
     ]
     for expected_file in expected_files:
-        response = test_app.get('/%s.%s' % (expected_file, schema_format))
+        response = test_app.get(
+            '/{0}.{1}'.format(expected_file, schema_format)
+        )
         assert response.status_code == 200
 
         gold_path_parts = [
-            here, '..', 'sample_schemas', 'relative_ref',
-            '%s.json' % expected_file,
+            here,
+            '..',
+            'sample_schemas',
+            'relative_ref',
+            '{0}.json'.format(expected_file),
         ]
         with open(os.path.join(*gold_path_parts)) as f:
             expected_dict = json.load(f)
@@ -87,3 +101,51 @@ def test_swagger_schema_retrieval(schema_format, test_app):
         actual_dict = deserializer(response)
 
         assert actual_dict == expected_dict
+
+
+@pytest.mark.parametrize('schema_format', ['json', 'yaml', ])
+def test_swagger_schema_retrieval_is_not_dereferenced(schema_format, test_app):
+
+    response = test_app.get('/swagger.{0}'.format(schema_format))
+
+    here = os.path.dirname(__file__)
+    swagger_path_parts = [
+        here,
+        '..',
+        'sample_schemas',
+        'relative_ref',
+        'dereferenced_swagger.json'
+    ]
+    dereferenced_swagger_path = os.path.join(*swagger_path_parts)
+    with open(dereferenced_swagger_path) as swagger_file:
+        expected_dict = json.load(swagger_file)
+
+    deserializer = DESERIALIZERS[schema_format]
+    actual_dict = deserializer(response)
+
+    assert '"$ref"' in json.dumps(actual_dict)
+    assert actual_dict != expected_dict
+
+
+@pytest.mark.parametrize('schema_format', ['json', 'yaml', ])
+def test_dereferenced_swagger_schema_retrieval(schema_format, test_app_deref):
+
+    response = test_app_deref.get('/swagger.{0}'.format(schema_format))
+
+    here = os.path.dirname(__file__)
+    swagger_path_parts = [
+        here,
+        '..',
+        'sample_schemas',
+        'relative_ref',
+        'dereferenced_swagger.json'
+    ]
+    dereferenced_swagger_path = os.path.join(*swagger_path_parts)
+    with open(dereferenced_swagger_path) as swagger_file:
+        expected_dict = json.load(swagger_file)
+
+    deserializer = DESERIALIZERS[schema_format]
+    actual_dict = deserializer(response)
+
+    assert '"$ref"' not in json.dumps(actual_dict)
+    assert actual_dict == expected_dict

@@ -1,20 +1,20 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "title": "Title was not specified",
-    "version": "0.1"
-  },
-  "produces": ["application/json"],
-  "paths": {
-    "/no_models": {
-        "$ref": "paths/common.json#/no_models"
+    "swagger": "2.0",
+    "info": {
+        "title": "Title was not specified",
+        "version": "0.1"
     },
-    "/sample/{path_arg}/resource": {
-        "$ref": "paths/common.json#/sample_resource"
-    }
-  },
-  "host": "localhost:9999",
-  "schemes": [
-    "http"
-  ]
+    "produces": ["application/json"],
+    "paths": {
+        "/no_models": {
+            "$ref": "paths/common.json#/no_models"
+        },
+        "/sample/{path_arg}/resource": {
+            "$ref": "paths/common.json#/sample_resource"
+        }
+    },
+    "host": "localhost:9999",
+    "schemes": [
+        "http"
+    ]
 }
