@@ -101,6 +101,29 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
+def resolve_ref(spec, url):
+    with spec.resolver.resolving(url) as resolved_spec_dict:
+        spec_dict = copy.deepcopy(resolved_spec_dict)
+        return resolve_refs(spec, spec_dict)
+
+
+def resolve_refs(spec, val):
+    if isinstance(val, dict):
+        new_dict = {}
+        for key, subval in val.items():
+            if key == '$ref':
+                # assume $ref is the only key in the dict
+                return resolve_ref(spec, subval)
+            else:
+                new_dict[key] = resolve_refs(spec, subval)
+        return new_dict
+
+    if isinstance(val, list):
+        for index, subval in enumerate(val):
+            val[index] = resolve_refs(spec, subval)
+    return val
+
+
 class NodeWalker(object):
     def __init__(self):
         pass
@@ -208,7 +231,7 @@ class NodeWalkerForCleaningRefs(NodeWalker):
         return urlunparse([
             parts.scheme,
             parts.netloc,
-            '%s.%s' % (path, schema_format),
+            '{0}.{1}'.format(path, schema_format),
             parts.params,
             parts.query,
             parts.fragment,
@@ -233,6 +256,37 @@ class YamlRendererFactory(object):
 
 
 def build_swagger_20_swagger_schema_views(config):
+    settings = config.registry.settings
+    if settings.get('pyramid_swagger.dereference_served_schema'):
+        views = _build_dereferenced_swagger_20_schema_views(config)
+    else:
+        views = _build_swagger_20_schema_views(config)
+    return views
+
+
+def _build_dereferenced_swagger_20_schema_views(config):
+    def view_for_swagger_schema(request):
+        settings = config.registry.settings
+        resolved_dict = settings.get('pyramid_swagger.schema20_resolved')
+        if not resolved_dict:
+            spec = settings['pyramid_swagger.schema20']
+            spec_copy = copy.deepcopy(spec.client_spec_dict)
+            resolved_dict = resolve_refs(spec, spec_copy)
+            settings['pyramid_swagger.schema20_resolved'] = resolved_dict
+        return resolved_dict
+
+    for schema_format in ['yaml', 'json']:
+        route_name = 'pyramid_swagger.swagger20.api_docs.{0}'\
+            .format(schema_format)
+        yield PyramidEndpoint(
+            path='/swagger.{0}'.format(schema_format),
+            view=view_for_swagger_schema,
+            route_name=route_name,
+            renderer=schema_format,
+        )
+
+
+def _build_swagger_20_schema_views(config):
     spec = config.registry.settings['pyramid_swagger.schema20']
 
     walker = NodeWalkerForRefFiles()
@@ -253,10 +307,9 @@ def build_swagger_20_swagger_schema_views(config):
     for ref_fname in all_files:
         ref_fname_parts = os.path.splitext(ref_fname)
         for schema_format in ['yaml', 'json']:
-            route_name = 'pyramid_swagger.swagger20.api_docs.%s.%s' % (
-                ref_fname.replace('/', '.'), schema_format,
-            )
-            path = '/%s.%s' % (ref_fname_parts[0], schema_format)
+            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}'\
+                .format(ref_fname.replace('/', '.'), schema_format)
+            path = '/{0}.{1}'.format(ref_fname_parts[0], schema_format)
             file_map[path] = ref_fname
             yield PyramidEndpoint(
                 path=path,

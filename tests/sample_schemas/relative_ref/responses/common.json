@@ -1,21 +1,21 @@
 {
     "200": {
-      "description": "Return a standard_response",
-      "schema": {
-          "type": "object",
-          "required": [
-            "raw_response",
-            "logging_info"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "raw_response": {
-              "type": "string"
-            },
-            "logging_info": {
-              "type": "object"
+        "description": "Return a standard_response",
+        "schema": {
+            "type": "object",
+            "required": [
+                "raw_response",
+                "logging_info"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "raw_response": {
+                    "type": "string"
+                },
+                "logging_info": {
+                    "type": "object"
+                }
             }
-          }
-      }
+        }
     }
 }
