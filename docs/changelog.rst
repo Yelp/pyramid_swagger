@@ -1,6 +1,12 @@
 Changelog
 =========
 
+2.3.0-rc3 (2016-06-28)
+++++++++++++++++++++++
+* Adds ``dereference_served_schema`` config flag to force served spec to be a
+  single file. Useful for avoiding mixed-spec inconsistencies when running
+  multiple versions of your service simultaneously.
+
 2.3.0-rc2 (2016-05-09)
 ++++++++++++++++++++++
 * Add ability for a single spec to serve YAML or JSON to clients
