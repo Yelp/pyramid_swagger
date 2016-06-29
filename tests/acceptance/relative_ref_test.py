@@ -2,6 +2,7 @@
 import json
 import os.path
 import pytest
+import re
 import yaml
 
 from six import BytesIO
@@ -147,5 +148,7 @@ def test_dereferenced_swagger_schema_retrieval(schema_format, test_app_deref):
     deserializer = DESERIALIZERS[schema_format]
     actual_dict = deserializer(response)
 
-    assert '"$ref"' not in json.dumps(actual_dict)
+    ref_pattern = re.compile('("\$ref": "[^#][^"]*")')  # pattern for references outside the current file
+    assert ref_pattern.findall(json.dumps(actual_dict)) == []
+
     assert actual_dict == expected_dict

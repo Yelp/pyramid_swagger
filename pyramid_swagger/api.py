@@ -4,11 +4,14 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
 import os.path
+
+import re
 import simplejson
 import yaml
 
 
 from bravado_core.spec import strip_xscope
+from jsonschema import RefResolutionError
 from six.moves.urllib.parse import urlparse, urlunparse
 from pyramid_swagger.model import PyramidEndpoint
 
@@ -101,27 +104,90 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def resolve_ref(spec, url):
+def dereference_definition(spec, url, current_file, definitions_dict):
+    """
+    Dereference a given definition (by URL) updating the definitions dictionary and fetching all the related objects
+    :param spec:
+    :param url: url of the reference to be extracted
+    :param current_file: base file used for relative url resolution
+    :param definitions_dict: dictionary containing all the definitions
+    :return: python object containing the model representation specified in url
+    """
+
+    def _translate_definition_target(target, prefix='', separator='|'):
+        """
+        Translate the definition target to a consistent way which not uses the '#' for the name definition
+        :param target: original definition target
+        :param prefix: prefix to be used if no file were specified on the target
+        :param separator: separator character to be used instead of '#'
+        :return: the converted target (it will be the new name of the link)
+        """
+        value = target.replace("#/definitions/", separator)
+        if value.split(separator)[0] == '':
+            value = prefix+value
+        return value
+
+    reference_value = _translate_definition_target(url)
+    if reference_value not in definitions_dict:
+        try:
+            with spec.resolver.resolving(url) as resolved_spec_dict:
+                spec_dict = copy.deepcopy(resolved_spec_dict)
+        except RefResolutionError:
+            with spec.resolver.resolving(current_file+url) as resolved_spec_dict:
+                spec_dict = copy.deepcopy(resolved_spec_dict)
+        definitions_dict[reference_value] = spec_dict
+        _resolve_refs(spec, spec_dict, definitions_dict, current_file=url.split('#')[0])
+    return reference_value
+
+
+def resolve_ref(spec, url, definitions_dict, current_file):
     with spec.resolver.resolving(url) as resolved_spec_dict:
         spec_dict = copy.deepcopy(resolved_spec_dict)
-        return resolve_refs(spec, spec_dict)
+        return _resolve_refs(spec, spec_dict, definitions_dict, current_file)
 
 
-def resolve_refs(spec, val):
+def _resolve_refs(spec, val, definitions_dict, current_file=''):  # Internal reference fetching
     if isinstance(val, dict):
         new_dict = {}
         for key, subval in val.items():
             if key == '$ref':
                 # assume $ref is the only key in the dict
-                return resolve_ref(spec, subval)
+                if "#/definitions/" in subval:
+                    # Update the reference target
+                    val[key] = "#/definitions/{reference_value}".format(
+                        reference_value=dereference_definition(spec, subval, current_file, definitions_dict),
+                    )
+                    return val
+                else:
+                    return resolve_ref(spec, subval, definitions_dict, current_file=subval.split('#')[0])
             else:
-                new_dict[key] = resolve_refs(spec, subval)
+                new_dict[key] = _resolve_refs(spec, subval, definitions_dict, current_file)
         return new_dict
 
     if isinstance(val, list):
         for index, subval in enumerate(val):
-            val[index] = resolve_refs(spec, subval)
+            val[index] = _resolve_refs(spec, subval, definitions_dict, current_file)
     return val
+
+
+def resolve_refs(spec, val, current_file=''):
+    """
+    Resolve all the needed references for a staring object
+    :param spec:
+    :param val: not dereferences swagger object
+    :param current_file: base file for the swagger spec
+    :return: a self-containing swagger specification object (references are possible BUT only inside the object)
+    """
+
+    # Create the definitions dictionary and mark the method to join the definitions on the resulting object
+    definitions_dict = {}
+
+    result = _resolve_refs(spec, val, definitions_dict, current_file)
+
+    # join definitions and resulting object (NOTE: to be executed only on the top level object)
+    result['definitions'] = definitions_dict
+
+    return result
 
 
 class NodeWalker(object):
@@ -271,7 +337,7 @@ def _build_dereferenced_swagger_20_schema_views(config):
         if not resolved_dict:
             spec = settings['pyramid_swagger.schema20']
             spec_copy = copy.deepcopy(spec.client_spec_dict)
-            resolved_dict = resolve_refs(spec, spec_copy)
+            resolved_dict = strip_xscope(resolve_refs(spec, spec_copy))
             settings['pyramid_swagger.schema20_resolved'] = resolved_dict
         return resolved_dict
 

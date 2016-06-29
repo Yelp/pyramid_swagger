@@ -21,7 +21,7 @@
             "operationId": "standard",
             "parameters": [
                 {
-                    "$ref": "../parameters/common.json#/path_arg"
+                    "$ref": "../parameters/common.json#/definitions/path_arg"
                 }
             ]
         }
