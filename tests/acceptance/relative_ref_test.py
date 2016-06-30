@@ -148,7 +148,8 @@ def test_dereferenced_swagger_schema_retrieval(schema_format, test_app_deref):
     deserializer = DESERIALIZERS[schema_format]
     actual_dict = deserializer(response)
 
-    ref_pattern = re.compile('("\$ref": "[^#][^"]*")')  # pattern for references outside the current file
+    # pattern for references outside the current file
+    ref_pattern = re.compile('("\$ref": "[^#][^"]*")')
     assert ref_pattern.findall(json.dumps(actual_dict)) == []
 
     assert actual_dict == expected_dict

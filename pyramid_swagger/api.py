@@ -119,7 +119,7 @@ def dereference_definition(spec, url, current_file, definitions_dict):
         Translate the definition target to a consistent way
         which does not uses the '#' for the name definition
         :param target: original definition target
-        :param prefix: prefix to be used if no file were specified on the target
+        :param prefix: prefix used if no file were specified on the target
         :param separator: separator character to be used instead of '#'
         :return: the converted target (it will be the new name of the link)
         """
@@ -134,10 +134,12 @@ def dereference_definition(spec, url, current_file, definitions_dict):
             with spec.resolver.resolving(url) as resolved_spec_dict:
                 spec_dict = copy.deepcopy(resolved_spec_dict)
         except RefResolutionError:
-            with spec.resolver.resolving(current_file + url) as resolved_spec_dict:
+            with spec.resolver.resolving(current_file + url) \
+                    as resolved_spec_dict:
                 spec_dict = copy.deepcopy(resolved_spec_dict)
         definitions_dict[reference_value] = spec_dict
-        _resolve_refs(spec, spec_dict, definitions_dict, current_file=url.split('#')[0])
+        _resolve_refs(spec, spec_dict, definitions_dict,
+                      current_file=url.split('#')[0])
     return reference_value
 
 
@@ -147,7 +149,7 @@ def resolve_ref(spec, url, definitions_dict, current_file):
         return _resolve_refs(spec, spec_dict, definitions_dict, current_file)
 
 
-def _resolve_refs(spec, val, definitions_dict, current_file=''):  # Internal reference fetching
+def _resolve_refs(spec, val, definitions_dict, current_file=''):
     if isinstance(val, dict):
         new_dict = {}
         for key, subval in val.items():
@@ -156,18 +158,22 @@ def _resolve_refs(spec, val, definitions_dict, current_file=''):  # Internal ref
                 if "#/definitions/" in subval:
                     # Update the reference target
                     val[key] = "#/definitions/{reference_value}".format(
-                        reference_value=dereference_definition(spec, subval, current_file, definitions_dict),
+                        reference_value=dereference_definition(
+                            spec, subval, current_file, definitions_dict),
                     )
                     return val
                 else:
-                    return resolve_ref(spec, subval, definitions_dict, current_file=subval.split('#')[0])
+                    return resolve_ref(spec, subval, definitions_dict,
+                                       current_file=subval.split('#')[0])
             else:
-                new_dict[key] = _resolve_refs(spec, subval, definitions_dict, current_file)
+                new_dict[key] = _resolve_refs(
+                    spec, subval, definitions_dict, current_file)
         return new_dict
 
     if isinstance(val, list):
         for index, subval in enumerate(val):
-            val[index] = _resolve_refs(spec, subval, definitions_dict, current_file)
+            val[index] = _resolve_refs(
+                spec, subval, definitions_dict, current_file)
     return val
 
 
@@ -177,15 +183,19 @@ def resolve_refs(spec, val, current_file=''):
     :param spec:
     :param val: not dereferences swagger object
     :param current_file: base file for the swagger spec
-    :return: a self-containing swagger specification object (references are possible BUT only inside the object)
+    :return: a self-containing swagger specification object
+
+    NOTE: internal references are still possible
     """
 
-    # Create the definitions dictionary and mark the method to join the definitions on the resulting object
+    # Create the definitions dictionary and mark the method to join the
+    # definitions on the resulting object
     definitions_dict = {}
 
     result = _resolve_refs(spec, val, definitions_dict, current_file)
 
-    # join definitions and resulting object (NOTE: to be executed only on the top level object)
+    # join definitions and resulting object (NOTE: to be executed only on the
+    # top level object)
     result['definitions'] = definitions_dict
 
     return result
