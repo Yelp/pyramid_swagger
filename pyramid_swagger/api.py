@@ -151,7 +151,9 @@ def dereference_definition(spec, url, current_file, definitions_dict):
 
         return value
 
-    reference_value = _translate_definition_target(target=url, prefix=current_file, current_file=current_file)
+    reference_value = _translate_definition_target(target=url,
+                                                   prefix=current_file,
+                                                   current_file=current_file)
     if reference_value not in definitions_dict:
         try:
             with spec.resolver.resolving(url) as resolved_spec_dict:
