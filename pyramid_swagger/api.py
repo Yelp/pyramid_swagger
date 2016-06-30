@@ -105,7 +105,47 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def dereference_definition(spec, url, current_file, definitions_dict):
+def _translate_definition_target(spec,
+                                 target,
+                                 current_file='',
+                                 def_separator='|',
+                                 path_separator='.'):
+    """
+    Translate the definition target to a consistent way
+    which does not uses the '#' for the name definition
+    :param target: original definition target
+    :param def_separator: separator character used instead of '#'
+    :param path_separator: separator character used instead of os.path.sep
+    :return: the converted target (it will be the new name of the link)
+    """
+
+    # get base swagger specs directory
+    spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
+
+    # generate a well format target (path#fragment)
+    target_url = urlparse(target)
+    if len(target_url.path) > 0:  # defined a path for the target
+        raw_path = os.path.join(os.path.dirname(current_file), target)
+    else:
+        raw_path = '{path}#{fragment}'.format(
+            path=current_file if len(current_file) > 0 else "swagger.json",
+            fragment=target_url.fragment
+        )
+
+    # extract a clean relative path
+    target = os.path.relpath(os.path.join(spec_dir, raw_path), spec_dir)
+
+    value = target.replace("#/", def_separator). \
+        replace(os.path.sep, path_separator)
+
+    return value
+
+
+def dereference_definition(spec,
+                           url,
+                           current_file,
+                           definitions_dict,
+                           current_path):
     """
     Dereference a given definition (by URL) updating the definitions
     dictionary and fetching all the related objects
@@ -113,47 +153,16 @@ def dereference_definition(spec, url, current_file, definitions_dict):
     :param url: url of the reference to be extracted
     :param current_file: base file used for relative url resolution
     :param definitions_dict: dictionary containing all the definitions
+    :param current_path: path in the object of the de-referencing (forward)
     :return: python object containing the model representation specified in url
     """
 
-    def _translate_definition_target(target,
-                                     prefix='',
-                                     current_file='',
-                                     def_separator='|',
-                                     path_separator='.'):
-        """
-        Translate the definition target to a consistent way
-        which does not uses the '#' for the name definition
-        :param target: original definition target
-        :param prefix: prefix used if no file were specified on the target
-        :param separator: separator character to be used instead of '#'
-        :return: the converted target (it will be the new name of the link)
-        """
+    reference_value = _translate_definition_target(
+        spec=spec,
+        target=url,
+        current_file=current_file
+    )
 
-        # get base swagger specs directory
-        spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
-
-        # generate a well format target (path#fragment)
-        target_url = urlparse(target)
-        if len(target_url.path) > 0:  # defined a path for the target
-            raw_path = os.path.join(os.path.dirname(current_file), target)
-        else:
-            raw_path = '{path}#{fragment}'.format(
-                path=current_file,
-                fragment=target_url.fragment
-            )
-
-        # extract a clean relative path
-        target = os.path.relpath(os.path.join(spec_dir, raw_path), spec_dir)
-
-        value = target.replace("#/definitions/", def_separator). \
-            replace(os.path.sep, path_separator)
-
-        return value
-
-    reference_value = _translate_definition_target(target=url,
-                                                   prefix=current_file,
-                                                   current_file=current_file)
     if reference_value not in definitions_dict:
         try:
             with spec.resolver.resolving(url) as resolved_spec_dict:
@@ -163,8 +172,13 @@ def dereference_definition(spec, url, current_file, definitions_dict):
                     as resolved_spec_dict:
                 spec_dict = copy.deepcopy(resolved_spec_dict)
         definitions_dict[reference_value] = spec_dict
-        _resolve_refs(spec, spec_dict, definitions_dict,
-                      current_file=url.split('#')[0])
+        _resolve_refs(
+            spec=spec,
+            val=spec_dict,
+            definitions_dict=definitions_dict,
+            current_file=url.split('#')[0],
+            current_path=current_path,
+        )
     return reference_value
 
 
@@ -174,31 +188,42 @@ def resolve_ref(spec, url, definitions_dict, current_file):
         return _resolve_refs(spec, spec_dict, definitions_dict, current_file)
 
 
-def _resolve_refs(spec, val, definitions_dict, current_file=''):
+def _resolve_refs(spec, val, definitions_dict,
+                  current_file='', current_path='/'):
     if isinstance(val, dict):
         new_dict = {}
         for key, subval in val.items():
             if key == '$ref':
                 # assume $ref is the only key in the dict
-                if "#/definitions/" in subval:
+                if "/definitions/" in subval or \
+                        "/definitions/" in current_path or \
+                        _translate_definition_target(
+                            spec, subval, current_file
+                        ) in definitions_dict:
                     # Update the reference target
-                    val[key] = "#/definitions/{reference_value}".format(
-                        reference_value=dereference_definition(
-                            spec, subval, current_file, definitions_dict),
+                    val[key] = "#/definitions/{dd}".format(
+                        dd=dereference_definition(
+                            spec, subval, current_file,
+                            definitions_dict, current_path,
+                        ),
                     )
                     return val
                 else:
                     return resolve_ref(spec, subval, definitions_dict,
                                        current_file=subval.split('#')[0])
             else:
-                new_dict[key] = _resolve_refs(
-                    spec, subval, definitions_dict, current_file)
+                item = _resolve_refs(
+                    spec, subval, definitions_dict,
+                    current_file, current_path + key + '/',
+                )
+                if key != "definitions":
+                    new_dict[key] = item
         return new_dict
 
     if isinstance(val, list):
         for index, subval in enumerate(val):
             val[index] = _resolve_refs(
-                spec, subval, definitions_dict, current_file)
+                spec, subval, definitions_dict, current_file, current_path)
     return val
 
 

@@ -6,14 +6,14 @@
     },
     "produces": ["application/json"],
     "definitions": {
-        "parameters.common.json|path_arg": {
+        "parameters.common.json|definitions.path_arg": {
             "in": "path",
             "name": "path_arg",
             "required": true,
             "type": "string",
             "enum": ["path_arg1", "path_arg2"]
         },
-        "paths.common.json|path_args": {
+        "paths.common.json|definitions.path_args": {
             "in": "query",
             "name": "path_args",
             "required": false,
@@ -76,10 +76,10 @@
                 "operationId": "standard",
                 "parameters": [
                     {
-                        "$ref": "#/definitions/parameters.common.json|path_arg"
+                        "$ref": "#/definitions/parameters.common.json|definitions.path_arg"
                     },
                     {
-                        "$ref": "#/definitions/paths.common.json|path_args"
+                        "$ref": "#/definitions/paths.common.json|definitions.path_args"
                     }
                 ]
             }
