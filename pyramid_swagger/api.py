@@ -5,7 +5,6 @@ Module for automatically serving /api-docs* via Pyramid.
 import copy
 import os.path
 
-import re
 import simplejson
 import yaml
 
@@ -124,7 +123,7 @@ def dereference_definition(spec, url, current_file, definitions_dict):
         """
         value = target.replace("#/definitions/", separator)
         if value.split(separator)[0] == '':
-            value = prefix+value
+            value = prefix + value
         return value
 
     reference_value = _translate_definition_target(url)
@@ -133,7 +132,7 @@ def dereference_definition(spec, url, current_file, definitions_dict):
             with spec.resolver.resolving(url) as resolved_spec_dict:
                 spec_dict = copy.deepcopy(resolved_spec_dict)
         except RefResolutionError:
-            with spec.resolver.resolving(current_file+url) as resolved_spec_dict:
+            with spec.resolver.resolving(current_file + url) as resolved_spec_dict:
                 spec_dict = copy.deepcopy(resolved_spec_dict)
         definitions_dict[reference_value] = spec_dict
         _resolve_refs(spec, spec_dict, definitions_dict, current_file=url.split('#')[0])
