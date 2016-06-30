@@ -8,7 +8,6 @@ import os.path
 import simplejson
 import yaml
 
-
 from bravado_core.spec import strip_xscope
 from jsonschema import RefResolutionError
 from six.moves.urllib.parse import urlparse, urlunparse
@@ -59,6 +58,7 @@ def build_swagger_12_resource_listing(resource_listing):
     :type resource_listing: dict
     :rtype: :class:`pyramid_swagger.model.PyramidEndpoint`
     """
+
     def view_for_resource_listing(request):
         # Thanks to the magic of closures, this means we gracefully return JSON
         # without file IO at request time.
@@ -94,12 +94,14 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     """Thanks to the magic of closures, this means we gracefully return JSON
     without file IO at request time.
     """
+
     def view_for_api_declaration(request):
         # Note that we rewrite basePath to always point at this server's root.
         return dict(
             api_declaration_json,
             basePath=str(request.application_url),
         )
+
     return view_for_api_declaration
 
 
@@ -114,7 +116,11 @@ def dereference_definition(spec, url, current_file, definitions_dict):
     :return: python object containing the model representation specified in url
     """
 
-    def _translate_definition_target(target, prefix='', separator='|'):
+    def _translate_definition_target(target,
+                                     prefix='',
+                                     current_file='',
+                                     def_separator='|',
+                                     path_separator='.'):
         """
         Translate the definition target to a consistent way
         which does not uses the '#' for the name definition
@@ -123,12 +129,29 @@ def dereference_definition(spec, url, current_file, definitions_dict):
         :param separator: separator character to be used instead of '#'
         :return: the converted target (it will be the new name of the link)
         """
-        value = target.replace("#/definitions/", separator)
-        if value.split(separator)[0] == '':
-            value = prefix + value
+
+        # get base swagger specs directory
+        spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
+
+        # generate a well format target (path#fragment)
+        target_url = urlparse(target)
+        if len(target_url.path) > 0:  # defined a path for the target
+            raw_path = os.path.join(os.path.dirname(current_file), target)
+        else:
+            raw_path = '{path}#{fragment}'.format(
+                path=current_file,
+                fragment=target_url.fragment
+            )
+
+        # extract a clean relative path
+        target = os.path.relpath(os.path.join(spec_dir, raw_path), spec_dir)
+
+        value = target.replace("#/definitions/", def_separator). \
+            replace(os.path.sep, path_separator)
+
         return value
 
-    reference_value = _translate_definition_target(url)
+    reference_value = _translate_definition_target(target=url, prefix=current_file, current_file=current_file)
     if reference_value not in definitions_dict:
         try:
             with spec.resolver.resolving(url) as resolved_spec_dict:
@@ -198,7 +221,7 @@ def resolve_refs(spec, val, current_file=''):
     # top level object)
     result['definitions'] = definitions_dict
 
-    return result
+    return strip_xscope(result)
 
 
 class NodeWalker(object):
@@ -348,12 +371,12 @@ def _build_dereferenced_swagger_20_schema_views(config):
         if not resolved_dict:
             spec = settings['pyramid_swagger.schema20']
             spec_copy = copy.deepcopy(spec.client_spec_dict)
-            resolved_dict = strip_xscope(resolve_refs(spec, spec_copy))
+            resolved_dict = resolve_refs(spec, spec_copy)
             settings['pyramid_swagger.schema20_resolved'] = resolved_dict
         return resolved_dict
 
     for schema_format in ['yaml', 'json']:
-        route_name = 'pyramid_swagger.swagger20.api_docs.{0}'\
+        route_name = 'pyramid_swagger.swagger20.api_docs.{0}' \
             .format(schema_format)
         yield PyramidEndpoint(
             path='/swagger.{0}'.format(schema_format),
@@ -384,7 +407,7 @@ def _build_swagger_20_schema_views(config):
     for ref_fname in all_files:
         ref_fname_parts = os.path.splitext(ref_fname)
         for schema_format in ['yaml', 'json']:
-            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}'\
+            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}' \
                 .format(ref_fname.replace('/', '.'), schema_format)
             path = '/{0}.{1}'.format(ref_fname_parts[0], schema_format)
             file_map[path] = ref_fname

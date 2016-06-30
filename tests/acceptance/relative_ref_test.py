@@ -18,7 +18,12 @@ DESERIALIZERS = {
 
 @pytest.fixture
 def settings():
-    dir_path = 'tests/sample_schemas/relative_ref/'
+    project_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', '..')
+    )
+    dir_path = '{project_path}/tests/sample_schemas/relative_ref/'.format(
+        project_path=project_path
+    )
     return {
         'pyramid_swagger.schema_directory': dir_path,
         'pyramid_swagger.enable_request_validation': True,
