@@ -105,7 +105,8 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
 
 def dereference_definition(spec, url, current_file, definitions_dict):
     """
-    Dereference a given definition (by URL) updating the definitions dictionary and fetching all the related objects
+    Dereference a given definition (by URL) updating the definitions
+    dictionary and fetching all the related objects
     :param spec:
     :param url: url of the reference to be extracted
     :param current_file: base file used for relative url resolution
@@ -115,7 +116,8 @@ def dereference_definition(spec, url, current_file, definitions_dict):
 
     def _translate_definition_target(target, prefix='', separator='|'):
         """
-        Translate the definition target to a consistent way which not uses the '#' for the name definition
+        Translate the definition target to a consistent way
+        which does not uses the '#' for the name definition
         :param target: original definition target
         :param prefix: prefix to be used if no file were specified on the target
         :param separator: separator character to be used instead of '#'
