@@ -4,12 +4,11 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
 import os.path
-
 import simplejson
 import yaml
 
+
 from bravado_core.spec import strip_xscope
-from jsonschema import RefResolutionError
 from six.moves.urllib.parse import urlparse, urlunparse
 from pyramid_swagger.model import PyramidEndpoint
 
@@ -58,7 +57,6 @@ def build_swagger_12_resource_listing(resource_listing):
     :type resource_listing: dict
     :rtype: :class:`pyramid_swagger.model.PyramidEndpoint`
     """
-
     def view_for_resource_listing(request):
         # Thanks to the magic of closures, this means we gracefully return JSON
         # without file IO at request time.
@@ -94,161 +92,316 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     """Thanks to the magic of closures, this means we gracefully return JSON
     without file IO at request time.
     """
-
     def view_for_api_declaration(request):
         # Note that we rewrite basePath to always point at this server's root.
         return dict(
             api_declaration_json,
             basePath=str(request.application_url),
         )
-
     return view_for_api_declaration
 
 
-def _translate_definition_target(spec,
-                                 target,
-                                 current_file='',
-                                 def_separator='|',
-                                 path_separator='.'):
-    """
-    Translate the definition target to a consistent way
-    which does not uses the '#' for the name definition
-    :param target: original definition target
-    :param def_separator: separator character used instead of '#'
-    :param path_separator: separator character used instead of os.path.sep
-    :return: the converted target (it will be the new name of the link)
-    """
+def _low_level_translate(path, is_marshaling=True):
+    # replacement of the scheme (valid only in un-marshaling phase)
+    scheme_replacements = [  # defined as tuples (un-marshaled, marshaled)
+        ('file://', 'file.'),
+        ('http://', 'http.'),
+        ('https://', 'https.'),
+    ]
+    # replacement over the whole string
+    replacement_patterns = [  # defined as tuples (un-marshaled, marshaled)
+        ('/', '..'),
+        ('#', '|'),
+    ]
 
-    # get base swagger specs directory
-    spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
+    # repl_idx allow to prevent if statements over the code execution
+    # instead of doing:
+    #       if is_marshaling:
+    #           x = x.replace(replacement[0], replacement[1])
+    #       else:
+    #           x = x.replace(replacement[1], replacement[0])
+    # we can achieve the same doing
+    #       x = x.replace(replacement[repl_idx], replacement[1-repl_idx])
+    repl_idx = 0 if is_marshaling else 1
+    replaced_scheme = ''
+    for replacement in scheme_replacements:
+        if path.startswith(replacement[repl_idx]):
+            replaced_scheme = replacement[1 - repl_idx]
+            path = path[len(replacement[repl_idx]):]
+            break
+    for replacement in replacement_patterns:
+        path = path.replace(replacement[repl_idx], replacement[1 - repl_idx])
+    return replaced_scheme + path
 
-    # generate a well format target (path#fragment)
-    target_url = urlparse(target)
-    if len(target_url.path) > 0:  # defined a path for the target
-        raw_path = os.path.join(os.path.dirname(current_file), target)
+
+def _get_absolute_link(spec, relative_path, current_path=''):
+    spec_url = urlparse(spec.origin_url)
+    spec_file = os.path.abspath(spec_url.path)
+    spec_dir = os.path.dirname(spec_file)
+
+    current_path_url = urlparse(current_path)
+
+    target_url = urlparse(relative_path)
+    if len(target_url.scheme) > 0:
+        target_scheme = target_url.scheme
+    elif len(current_path_url.scheme) > 0:
+        target_scheme = current_path_url.scheme
     else:
-        raw_path = '{path}#{fragment}'.format(
-            path=current_file if len(current_file) > 0 else "swagger.json",
-            fragment=target_url.fragment
-        )
+        target_scheme = 'file'
 
-    # extract a clean relative path
-    target = os.path.relpath(os.path.join(spec_dir, raw_path), spec_dir)
-
-    value = target.replace("#/", def_separator). \
-        replace(os.path.sep, path_separator)
-
-    return value
-
-
-def dereference_definition(spec,
-                           url,
-                           current_file,
-                           definitions_dict,
-                           current_path):
-    """
-    Dereference a given definition (by URL) updating the definitions
-    dictionary and fetching all the related objects
-    :param spec:
-    :param url: url of the reference to be extracted
-    :param current_file: base file used for relative url resolution
-    :param definitions_dict: dictionary containing all the definitions
-    :param current_path: path in the object of the de-referencing (forward)
-    :return: python object containing the model representation specified in url
-    """
-
-    reference_value = _translate_definition_target(
-        spec=spec,
-        target=url,
-        current_file=current_file
-    )
-
-    if reference_value not in definitions_dict:
-        try:
-            with spec.resolver.resolving(url) as resolved_spec_dict:
-                spec_dict = copy.deepcopy(resolved_spec_dict)
-        except RefResolutionError:
-            with spec.resolver.resolving(current_file + url) \
-                    as resolved_spec_dict:
-                spec_dict = copy.deepcopy(resolved_spec_dict)
-        definitions_dict[reference_value] = spec_dict
-        _resolve_refs(
-            spec=spec,
-            val=spec_dict,
-            definitions_dict=definitions_dict,
-            current_file=url.split('#')[0],
-            current_path=current_path,
-        )
-    return reference_value
-
-
-def resolve_ref(spec, url, definitions_dict, current_file):
-    with spec.resolver.resolving(url) as resolved_spec_dict:
-        spec_dict = copy.deepcopy(resolved_spec_dict)
-        return _resolve_refs(spec, spec_dict, definitions_dict, current_file)
-
-
-def _resolve_refs(spec, val, definitions_dict,
-                  current_file='', current_path='/'):
-    if isinstance(val, dict):
-        new_dict = {}
-        for key, subval in val.items():
-            if key == '$ref':
-                # assume $ref is the only key in the dict
-                if "/definitions/" in subval or \
-                        "/definitions/" in current_path or \
-                        _translate_definition_target(
-                            spec, subval, current_file
-                        ) in definitions_dict:
-                    # Update the reference target
-                    val[key] = "#/definitions/{dd}".format(
-                        dd=dereference_definition(
-                            spec, subval, current_file,
-                            definitions_dict, current_path,
-                        ),
-                    )
-                    return val
-                else:
-                    return resolve_ref(spec, subval, definitions_dict,
-                                       current_file=subval.split('#')[0])
+    if target_scheme == 'file':  # targeting a local file
+        if target_url.path == '':
+            target_url = urlparse('{path}#{fragment}'.format(
+                # path=current_url.path,
+                path=current_path,
+                fragment=target_url.fragment,
+            ))
+        if not target_url.path.startswith('/'):  # not an absolute path
+            if target_url.path.startswith('..'):
+                current_dir = os.path.dirname(current_path)
             else:
-                item = _resolve_refs(
-                    spec, subval, definitions_dict,
-                    current_file, current_path + key + '/',
+                current_dir = ''
+
+            target_url = urlparse('{path}#{fragment}'.format(
+                path=os.path.join(
+                    spec_dir,
+                    current_dir,
+                    target_url.path,
+                ),
+                fragment=target_url.fragment,
+            ))
+        return urlparse('file://{path}#{fragment}'.format(
+            path=os.path.abspath(target_url.path),
+            fragment=target_url.fragment,
+        ))
+
+    elif target_scheme in ['http', 'https']:
+        remote_path = os.path.abspath(os.path.join(
+            current_path_url.path if len(current_path_url.path) > 0 else '/',
+            target_url.path
+        ))
+        return urlparse('{scheme}://{hostname}{path}#{fragment}'.format(
+            scheme=target_scheme,
+            hostname=target_url.hostname,
+            path=remote_path,
+            fragment=target_url.fragment,
+        ))
+    else:
+        return urlparse(relative_path)
+
+
+def _relpath(path, start):
+    """Return a relative version of a path
+    NOTE: Code duplicated from Python 2.7.9 implementation because the default
+    implementation available on Python 2.6.9 is bugged.
+    Some lines are removed due to the particular constraints added by the code
+    """
+    # if not path:
+    #     raise ValueError("no path specified")
+
+    start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
+    path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
+
+    # Work out how much of the filepath is shared by start and path.
+    i = len(os.path.commonprefix([start_list, path_list]))
+
+    rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
+    # if not rel_list:
+    #     return os.path.curdir
+    return os.path.join(*rel_list)
+
+
+def _get_target(spec, target, current_path=''):
+    # Note: we assume that swagger.json file is always a server-local file
+
+    if target == '':
+        raise ValueError('Empty target')
+
+    target_url = _get_absolute_link(spec, target, current_path)
+    target_scheme = 'file' if target_url.scheme == '' else target_url.scheme
+
+    if target_scheme == 'file':
+        spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
+        target_url = urlparse('{path}#{fragment}'.format(
+            path=_relpath(target_url.path, spec_dir),
+            fragment=target_url.fragment,
+        ))
+
+    if target_scheme in ['file', 'http', 'https']:
+        return target_url
+    else:
+        raise ValueError(
+            'Invalid target: {target}'.format(target=target)
+        )
+
+
+def _marshal_target(target_url):
+    target_scheme = target_url.scheme
+    if len(target_url.path) > 0 and \
+            target_scheme in ['', 'file', 'http', 'https']:
+        value = _low_level_translate(
+            '{scheme}://{host}{path}#{fragment}'.format(
+                scheme=target_url.scheme if len(target_scheme) > 0 else 'file',
+                host=target_url.hostname if target_url.hostname else '',
+                path=target_url.path,
+                fragment=target_url.fragment,
+            ))
+        return value
+    else:
+        raise ValueError(
+            'Invalid target: {target}'.format(target=urlunparse(target_url))
+        )
+
+
+def _unmarshal_target(marshaled_target):
+    if any(marshaled_target.startswith(x) for x in
+           ('file.', 'http.', 'https.')):
+        result = _low_level_translate(marshaled_target, is_marshaling=False)
+        # Remove the file:// scheme to allow the use of relative paths
+        if not result.startswith('file:///'):
+            result = result.replace('file://', '')
+        return result
+    else:
+        raise ValueError(
+            'Invalid marshaled object: {target}'.format(
+                target=marshaled_target
+            )
+        )
+
+
+def _resolve_references_rec(spec, base_json, file_path,
+                            defs_dict, json_path):
+    """
+    Get self-contained swagger specifications of the base_json dictionary.
+    The resulting swagger specifications are equivalent to the original specs,
+    importing all the (eventual) specs available remotely or on different files
+
+    :param spec: bravado core swagger specification
+    :type spec: bravado_core.spec.Spec
+    :param base_json: object to resolve
+    :type base_json: dict
+    :param file_path: path containing the current base_json
+    :type file_path: str
+    :param defs_dict: known definitions
+    :type defs_dict: dict
+    :param json_path: JSON structure path of base_json
+    :type json_path: str
+    :return: swagger specification targeting definitions in defs_dict
+    """
+
+    def _extract_reference(target):
+        """
+        Extract the target specification object
+        :param target: target reference to be fetched
+        :return: target specification dictionary
+        :rtype: dict
+        """
+        with spec.resolver.resolving(target) as resolved_spec_dict:
+            spec_dict = strip_xscope(resolved_spec_dict)  # remove x-scope info
+            return spec_dict
+
+    if isinstance(base_json, dict):
+        result_dict = {}
+        for key, value in base_json.items():
+            if key == '$ref':  # No assumption on only presence on the object
+                target_url = _get_target(spec, value, file_path)
+                target = urlunparse(target_url)
+                target_name = _marshal_target(target_url)
+                if target_name not in defs_dict:
+                    defs_dict[target_name] = None
+                    resolved = _resolve_references_rec(
+                        spec,
+                        # get the target specification
+                        _extract_reference(target),
+                        target_url.path,
+                        defs_dict,
+                        '{target}/'.format(target=target_url.fragment),
+                    )
+                    defs_dict[target_name] = resolved
+
+                result_dict[key] = '#/definitions/{target}'.format(
+                    target=_marshal_target(target_url),
                 )
-                if key != "definitions":
-                    new_dict[key] = item
-        return new_dict
+            else:
+                result_dict[key] = _resolve_references_rec(
+                    spec,
+                    value,
+                    file_path,
+                    defs_dict,
+                    json_path='{path}{key}/'.format(
+                        path=json_path,
+                        key=key,
+                    ),
+                )
+        return result_dict
+    elif isinstance(base_json, list):
+        result_list = []
+        for index, item in enumerate(base_json):
+            result_list.append(_resolve_references_rec(
+                spec,
+                item,
+                file_path,
+                defs_dict,
+                json_path='{path}[{index}]/'.format(
+                    path=json_path,
+                    index=index,
+                ),
+            ))
+        return result_list
+    else:
+        return base_json
 
-    if isinstance(val, list):
-        for index, subval in enumerate(val):
-            val[index] = _resolve_refs(
-                spec, subval, definitions_dict, current_file, current_path)
-    return val
 
-
-def resolve_refs(spec, val, current_file=''):
+def resolve_references(spec):
     """
-    Resolve all the needed references for a staring object
-    :param spec:
-    :param val: not dereferences swagger object
-    :param current_file: base file for the swagger spec
-    :return: a self-containing swagger specification object
+    Get self-contained swagger specifications.
+    The resulting swagger specifications are equivalent to the original specs,
+    importing all the (eventual) specs available remotely or on different files
 
-    NOTE: internal references are still possible
+    The principal aim of this function is to generate an unique and consistent
+    object which is logically equivalent to the original specs.
+
+    It could be used to provides to the client the complete specs with a single
+    call, avoiding possible issues in deployment environment in which multiple
+    version of the service are available
+
+    :param spec: bravado core swagger specification
+    :type spec: bravado_core.spec.Spec
+    :return: self-contained swagger specification
+    :rtype: dict
     """
 
-    # Create the definitions dictionary and mark the method to join the
-    # definitions on the resulting object
-    definitions_dict = {}
+    defs_dict = {}
+    spec_dict = strip_xscope(spec.client_spec_dict)
 
-    result = _resolve_refs(spec, val, definitions_dict, current_file)
+    # base file name of the swagger specs (no assumption on type and name)
+    base_spec_file = os.path.basename(urlparse(spec.origin_url).path)
 
-    # join definitions and resulting object (NOTE: to be executed only on the
-    # top level object)
-    result['definitions'] = definitions_dict
+    if 'definitions' in spec_dict:
+        for key, value in spec_dict['definitions'].items():
+            target_name = _marshal_target(_get_target(
+                spec,
+                '#/definition/{key}'.format(key=key),
+                base_spec_file,
+            ))
+            defs_dict[target_name] = None  # Set placeholder to avoid recursion
+            resolved = _resolve_references_rec(spec, value, base_spec_file,
+                                               defs_dict, '/')
+            defs_dict[target_name] = resolved
+        # strip out the definitions from the specs
+        del spec_dict['definitions']
 
-    return strip_xscope(result)
+    # fetch the references the swagger model
+    dereferenced_json = _resolve_references_rec(
+        spec,
+        spec_dict,
+        base_spec_file,
+        defs_dict,
+        '/'
+    )
+    dereferenced_json['definitions'] = defs_dict
+
+    return dereferenced_json
 
 
 class NodeWalker(object):
@@ -397,13 +550,12 @@ def _build_dereferenced_swagger_20_schema_views(config):
         resolved_dict = settings.get('pyramid_swagger.schema20_resolved')
         if not resolved_dict:
             spec = settings['pyramid_swagger.schema20']
-            spec_copy = copy.deepcopy(spec.client_spec_dict)
-            resolved_dict = resolve_refs(spec, spec_copy)
+            resolved_dict = resolve_references(spec)
             settings['pyramid_swagger.schema20_resolved'] = resolved_dict
         return resolved_dict
 
     for schema_format in ['yaml', 'json']:
-        route_name = 'pyramid_swagger.swagger20.api_docs.{0}' \
+        route_name = 'pyramid_swagger.swagger20.api_docs.{0}'\
             .format(schema_format)
         yield PyramidEndpoint(
             path='/swagger.{0}'.format(schema_format),
@@ -434,7 +586,7 @@ def _build_swagger_20_schema_views(config):
     for ref_fname in all_files:
         ref_fname_parts = os.path.splitext(ref_fname)
         for schema_format in ['yaml', 'json']:
-            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}' \
+            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}'\
                 .format(ref_fname.replace('/', '.'), schema_format)
             path = '/{0}.{1}'.format(ref_fname_parts[0], schema_format)
             file_map[path] = ref_fname
