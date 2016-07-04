@@ -57,6 +57,7 @@ def build_swagger_12_resource_listing(resource_listing):
     :type resource_listing: dict
     :rtype: :class:`pyramid_swagger.model.PyramidEndpoint`
     """
+
     def view_for_resource_listing(request):
         # Thanks to the magic of closures, this means we gracefully return JSON
         # without file IO at request time.
@@ -92,12 +93,14 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     """Thanks to the magic of closures, this means we gracefully return JSON
     without file IO at request time.
     """
+
     def view_for_api_declaration(request):
         # Note that we rewrite basePath to always point at this server's root.
         return dict(
             api_declaration_json,
             basePath=str(request.application_url),
         )
+
     return view_for_api_declaration
 
 
@@ -150,30 +153,20 @@ def _get_absolute_link(spec, relative_path, current_path=''):
         target_scheme = 'file'
 
     if target_scheme == 'file':  # targeting a local file
-        if target_url.path == '':
-            target_url = urlparse('{path}#{fragment}'.format(
-                # path=current_url.path,
-                path=current_path,
-                fragment=target_url.fragment,
-            ))
-        if not target_url.path.startswith('/'):  # not an absolute path
-            if target_url.path.startswith('..'):
-                current_dir = os.path.dirname(current_path)
-            else:
-                current_dir = ''
-
+        # if not absolute path, make it absolute
+        if not target_url.path.startswith('/'):
+            # if path is empty, then is targeting to the current file
+            filename = target_url.path if len(target_url.path) > 0 \
+                else os.path.basename(current_path_url.path)
             target_url = urlparse('{path}#{fragment}'.format(
                 path=os.path.join(
                     spec_dir,
-                    current_dir,
-                    target_url.path,
+                    os.path.dirname(current_path_url.path),
+                    filename,
                 ),
                 fragment=target_url.fragment,
             ))
-        return urlparse('file://{path}#{fragment}'.format(
-            path=os.path.abspath(target_url.path),
-            fragment=target_url.fragment,
-        ))
+        return target_url
 
     elif target_scheme in ['http', 'https']:
         remote_path = os.path.abspath(os.path.join(
@@ -205,7 +198,7 @@ def _relpath(path, start):
     # Work out how much of the filepath is shared by start and path.
     i = len(os.path.commonprefix([start_list, path_list]))
 
-    rel_list = [os.path.pardir] * (len(start_list)-i) + path_list[i:]
+    rel_list = [os.path.pardir] * (len(start_list) - i) + path_list[i:]
     # if not rel_list:
     #     return os.path.curdir
     return os.path.join(*rel_list)
@@ -269,7 +262,86 @@ def _unmarshal_target(marshaled_target):
         )
 
 
-def _resolve_references_rec(spec, base_json, file_path, defs_dict):
+def _is_model_definition(json_path, target_url):
+    """
+    According to the current json path and the targeted path if the
+    reference resource could be injected into /definitions or have to be
+    dereferenced in the current object
+
+    :param json_path: path of the $ref into the JSON hierarchy
+    :type json_path: list
+    :param target_url: targeted path
+    :type target_url: ParseResult
+    :return: True if the target is a definition, False otherwise
+    :rtype: bool
+    """
+    tag_for_model_def = (
+        'definitions',
+        'parameters',
+        'items',
+        'schema',
+    )
+    return target_url.fragment.startswith('/definitions/') or \
+        any(tag in json_path for tag in tag_for_model_def)
+
+
+def _fetch_reference(spec, target, file_path, defs_dict, json_path):
+    """
+    Fetch the target and update the defs_dict, if a definition is referenced.
+
+    :param spec: bravado core swagger specification
+    :type spec: bravado_core.spec.Spec
+    :param target: target to be fetched
+    :type target: str
+    :param file_path: path containing the current base_json
+    :type file_path: str
+    :param defs_dict: known definitions
+    :type defs_dict: dict
+    :return: {'$ref': target conventional name} if targeting a definition,
+             otherwise dereferenced object
+    :rtype: dict
+    """
+
+    def _extract_reference(target):
+        """
+        Extract the target specification object
+
+        :param target: target reference to be fetched
+        :return: target specification dictionary
+        :rtype: dict
+        """
+        with spec.resolver.resolving(target) as resolved_spec_dict:
+            spec_dict = strip_xscope(resolved_spec_dict)  # remove x-scope info
+            return spec_dict
+
+    target_url = _get_target(spec, target, file_path)
+    target = urlunparse(target_url)
+    target_name = _marshal_target(target_url)
+    if _is_model_definition(json_path, target_url):
+        if target_name not in defs_dict:
+            defs_dict[target_name] = None
+            resolved = _resolve_references_rec(
+                spec,
+                # get the target specification
+                _extract_reference(target),
+                target_url.path,
+                defs_dict,
+                json_path,
+            )
+            defs_dict[target_name] = resolved
+        return {"$ref": '#/definitions/{target}'.format(target=target_name)}
+    else:
+        return _resolve_references_rec(
+            spec,
+            # get the target specification
+            _extract_reference(target),
+            target_url.path,
+            defs_dict,
+        )
+
+
+def _resolve_references_rec(spec, base_json, file_path, defs_dict,
+                            json_path=[]):
     """
     Get self-contained swagger specifications of the base_json dictionary.
     The resulting swagger specifications are equivalent to the original specs,
@@ -286,37 +358,13 @@ def _resolve_references_rec(spec, base_json, file_path, defs_dict):
     :return: swagger specification targeting definitions in defs_dict
     """
 
-    def _extract_reference(target):
-        """
-        Extract the target specification object
-        :param target: target reference to be fetched
-        :return: target specification dictionary
-        :rtype: dict
-        """
-        with spec.resolver.resolving(target) as resolved_spec_dict:
-            spec_dict = strip_xscope(resolved_spec_dict)  # remove x-scope info
-            return spec_dict
-
     if isinstance(base_json, dict):
         result_dict = {}
         for key, value in base_json.items():
             if key == '$ref':  # No assumption on only presence on the object
-                target_url = _get_target(spec, value, file_path)
-                target = urlunparse(target_url)
-                target_name = _marshal_target(target_url)
-                if target_name not in defs_dict:
-                    defs_dict[target_name] = None
-                    resolved = _resolve_references_rec(
-                        spec,
-                        # get the target specification
-                        _extract_reference(target),
-                        target_url.path,
-                        defs_dict,
-                    )
-                    defs_dict[target_name] = resolved
-
-                result_dict[key] = '#/definitions/{target}'.format(
-                    target=target_name,
+                result_dict.update(
+                    _fetch_reference(spec, value, file_path,
+                                     defs_dict, json_path)
                 )
             else:
                 result_dict[key] = _resolve_references_rec(
@@ -324,6 +372,7 @@ def _resolve_references_rec(spec, base_json, file_path, defs_dict):
                     value,
                     file_path,
                     defs_dict,
+                    [x for x in json_path] + [key]
                 )
         return result_dict
     elif isinstance(base_json, list):
@@ -334,6 +383,7 @@ def _resolve_references_rec(spec, base_json, file_path, defs_dict):
                 item,
                 file_path,
                 defs_dict,
+                json_path
             ))
         return result_list
     else:
@@ -369,13 +419,14 @@ def resolve_references(spec):
         for key, value in spec_dict['definitions'].items():
             target_name = _marshal_target(_get_target(
                 spec,
-                '#/definition/{key}'.format(key=key),
+                '#/definitions/{key}'.format(key=key),
                 base_spec_file,
             ))
-            defs_dict[target_name] = None  # Set placeholder to avoid recursion
+            defs_dict[target_name] = None
             resolved = _resolve_references_rec(spec, value, base_spec_file,
-                                               defs_dict)
+                                               defs_dict, ['definitions'])
             defs_dict[target_name] = resolved
+
         # strip out the definitions from the specs
         del spec_dict['definitions']
 
@@ -385,6 +436,7 @@ def resolve_references(spec):
         spec_dict,
         base_spec_file,
         defs_dict,
+        []
     )
     dereferenced_json['definitions'] = defs_dict
 
@@ -542,7 +594,7 @@ def _build_dereferenced_swagger_20_schema_views(config):
         return resolved_dict
 
     for schema_format in ['yaml', 'json']:
-        route_name = 'pyramid_swagger.swagger20.api_docs.{0}'\
+        route_name = 'pyramid_swagger.swagger20.api_docs.{0}' \
             .format(schema_format)
         yield PyramidEndpoint(
             path='/swagger.{0}'.format(schema_format),
@@ -573,7 +625,7 @@ def _build_swagger_20_schema_views(config):
     for ref_fname in all_files:
         ref_fname_parts = os.path.splitext(ref_fname)
         for schema_format in ['yaml', 'json']:
-            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}'\
+            route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}' \
                 .format(ref_fname.replace('/', '.'), schema_format)
             path = '/{0}.{1}'.format(ref_fname_parts[0], schema_format)
             file_map[path] = ref_fname

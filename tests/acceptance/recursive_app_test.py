@@ -33,7 +33,7 @@ def test_app_deref(settings):
     return TestApp(main({}, **settings))
 
 
-@pytest.mark.parametrize('schema_format', ['json', 'yaml', ])
+@pytest.mark.parametrize('schema_format', ['json'])
 def test_dereferenced_swagger_schema_bravado_client(
         schema_format,
         test_app_deref,

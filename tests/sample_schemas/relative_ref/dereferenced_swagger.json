@@ -1,91 +1,98 @@
 {
-    "info": {
-        "title": "Title was not specified",
-        "version": "0.1"
-    },
-    "produces": ["application/json"],
-    "paths": {
-        "/sample/{path_arg}/resource": {
-            "$ref": "#/definitions/file.paths..common.json|..sample_resource"
-        },
-        "/no_models": {
-            "$ref": "#/definitions/file.paths..common.json|..no_models"
-        }
-    },
-    "definitions": {
-        "file.responses..common.json|..200": {
-            "description": "Return a standard_response",
+  "swagger": "2.0",
+  "info": {
+    "title": "Title was not specified",
+    "version": "0.1"
+  },
+  "produces": ["application/json"],
+  "paths": {
+    "/sample/{path_arg}/resource": {
+      "get": {
+        "responses": {
+          "200": {
             "schema": {
-                "additionalProperties": false,
-                "required": [
-                    "raw_response",
-                    "logging_info"
-                ],
-                "type": "object",
-                "properties": {
-                    "logging_info": {
-                        "type": "object"
-                    },
-                    "raw_response": {
-                        "type": "string"
-                    }
+              "properties": {
+                "raw_response": {
+                  "type": "string"
+                },
+                "logging_info": {
+                  "type": "object"
                 }
-            }
+              },
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "raw_response",
+                "logging_info"
+              ]
+            },
+            "description": "Return a standard_response"
+          }
         },
-        "file.parameters..common.json|..definitions..path_arg": {
-            "required": true,
-            "type": "string",
-            "name": "path_arg",
-            "enum": [
-                "path_arg1",
-                "path_arg2"
-            ],
-            "in": "path"
-        },
-        "file.paths..common.json|..no_models": {
-            "get": {
-                "responses": {
-                    "200": {
-                        "$ref": "#/definitions/file.responses..common.json|..200"
-                    }
-                },
-                "description": "",
-                "operationId": "no_models_get"
-            }
-        },
-        "file.paths..common.json|..sample_resource": {
-            "get": {
-                "responses": {
-                    "200": {
-                        "$ref": "#/definitions/file.responses..common.json|..200"
-                    }
-                },
-                "description": "",
-                "parameters": [
-                    {
-                        "$ref": "#/definitions/file.parameters..common.json|..definitions..path_arg"
-                    },
-                    {
-                        "$ref": "#/definitions/file.paths..common.json|..definitions..path_args"
-                    }
-                ],
-                "operationId": "standard"
-            }
-        },
-        "file.paths..common.json|..definitions..path_args": {
-            "required": false,
-            "type": "string",
-            "name": "path_args",
-            "enum": [
-                "path_arg1",
-                "path_arg2"
-            ],
-            "in": "query"
-        }
+        "operationId": "standard",
+        "description": "",
+        "parameters": [
+          {
+            "$ref": "#/definitions/file.parameters..common.json|..definitions..path_arg"
+          },
+          {
+            "$ref": "#/definitions/file.paths..common.json|..definitions..path_args"
+          }
+        ]
+      }
     },
-    "host": "localhost:9999",
-    "schemes": [
-        "http"
-    ],
-    "swagger": "2.0"
+    "/no_models": {
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "properties": {
+                "raw_response": {
+                  "type": "string"
+                },
+                "logging_info": {
+                  "type": "object"
+                }
+              },
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "raw_response",
+                "logging_info"
+              ]
+            },
+            "description": "Return a standard_response"
+          }
+        },
+        "operationId": "no_models_get",
+        "description": ""
+      }
+    }
+  },
+  "definitions": {
+    "file.paths..common.json|..definitions..path_args": {
+      "name": "path_args",
+      "enum": [
+        "path_arg1",
+        "path_arg2"
+      ],
+      "in": "query",
+      "required": false,
+      "type": "string"
+    },
+    "file.parameters..common.json|..definitions..path_arg": {
+      "name": "path_arg",
+      "enum": [
+        "path_arg1",
+        "path_arg2"
+      ],
+      "in": "path",
+      "required": true,
+      "type": "string"
+    }
+  },
+  "host": "localhost:9999",
+  "schemes": [
+    "http"
+  ]
 }
