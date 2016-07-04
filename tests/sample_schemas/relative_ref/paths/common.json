@@ -1,4 +1,13 @@
 {
+    "definitions": {
+        "path_args": {
+            "in": "query",
+            "name": "path_args",
+            "required": false,
+            "type": "string",
+            "enum": ["path_arg1", "path_arg2"]
+        }
+    },
     "no_models": {
         "get": {
             "responses": {
@@ -21,7 +30,10 @@
             "operationId": "standard",
             "parameters": [
                 {
-                    "$ref": "../parameters/common.json#/path_arg"
+                    "$ref": "../parameters/common.json#/definitions/path_arg"
+                },
+                {
+                    "$ref": "#/definitions/path_args"
                 }
             ]
         }
