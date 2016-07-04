@@ -269,8 +269,7 @@ def _unmarshal_target(marshaled_target):
         )
 
 
-def _resolve_references_rec(spec, base_json, file_path,
-                            defs_dict, json_path):
+def _resolve_references_rec(spec, base_json, file_path, defs_dict):
     """
     Get self-contained swagger specifications of the base_json dictionary.
     The resulting swagger specifications are equivalent to the original specs,
@@ -284,8 +283,6 @@ def _resolve_references_rec(spec, base_json, file_path,
     :type file_path: str
     :param defs_dict: known definitions
     :type defs_dict: dict
-    :param json_path: JSON structure path of base_json
-    :type json_path: str
     :return: swagger specification targeting definitions in defs_dict
     """
 
@@ -315,12 +312,11 @@ def _resolve_references_rec(spec, base_json, file_path,
                         _extract_reference(target),
                         target_url.path,
                         defs_dict,
-                        '{target}/'.format(target=target_url.fragment),
                     )
                     defs_dict[target_name] = resolved
 
                 result_dict[key] = '#/definitions/{target}'.format(
-                    target=_marshal_target(target_url),
+                    target=target_name,
                 )
             else:
                 result_dict[key] = _resolve_references_rec(
@@ -328,10 +324,6 @@ def _resolve_references_rec(spec, base_json, file_path,
                     value,
                     file_path,
                     defs_dict,
-                    json_path='{path}{key}/'.format(
-                        path=json_path,
-                        key=key,
-                    ),
                 )
         return result_dict
     elif isinstance(base_json, list):
@@ -342,10 +334,6 @@ def _resolve_references_rec(spec, base_json, file_path,
                 item,
                 file_path,
                 defs_dict,
-                json_path='{path}[{index}]/'.format(
-                    path=json_path,
-                    index=index,
-                ),
             ))
         return result_list
     else:
@@ -386,7 +374,7 @@ def resolve_references(spec):
             ))
             defs_dict[target_name] = None  # Set placeholder to avoid recursion
             resolved = _resolve_references_rec(spec, value, base_spec_file,
-                                               defs_dict, '/')
+                                               defs_dict)
             defs_dict[target_name] = resolved
         # strip out the definitions from the specs
         del spec_dict['definitions']
@@ -397,7 +385,6 @@ def resolve_references(spec):
         spec_dict,
         base_spec_file,
         defs_dict,
-        '/'
     )
     dereferenced_json['definitions'] = defs_dict
 
