@@ -101,26 +101,206 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def resolve_ref(spec, url):
+def _low_level_translate(path, is_marshaling=True):
+    # replacement of the scheme (valid only in un-marshaling phase)
+    scheme_replacements = [  # defined as tuples (un-marshaled, marshaled)
+        ('file://', 'file.'),
+        ('http://', 'http.'),
+        ('https://', 'https.'),
+    ]
+    # replacement over the whole string
+    replacement_patterns = [  # defined as tuples (un-marshaled, marshaled)
+        ('/', '..'),
+        ('#', '|'),
+    ]
+
+    # repl_idx allow to prevent if statements over the code execution
+    # instead of doing:
+    #       if is_marshaling:
+    #           x = x.replace(replacement[0], replacement[1])
+    #       else:
+    #           x = x.replace(replacement[1], replacement[0])
+    # we can achieve the same doing
+    #       x = x.replace(replacement[repl_idx], replacement[1-repl_idx])
+    repl_idx = 0 if is_marshaling else 1
+    replaced_scheme = ''
+    for replacement in scheme_replacements:
+        if path.startswith(replacement[repl_idx]):
+            replaced_scheme = replacement[1 - repl_idx]
+            path = path[len(replacement[repl_idx]):]
+            break
+    for replacement in replacement_patterns:
+        path = path.replace(replacement[repl_idx], replacement[1 - repl_idx])
+    return replaced_scheme + path
+
+
+def _get_absolute_link(spec, relative_path, current_path=''):
+    spec_url = urlparse(spec.origin_url)
+    spec_file = os.path.abspath(spec_url.path)
+    spec_dir = os.path.dirname(spec_file)
+
+    current_path_url = urlparse(current_path)
+
+    target_url = urlparse(relative_path)
+    if len(target_url.scheme) > 0:
+        target_scheme = target_url.scheme
+    elif len(current_path_url.scheme) > 0:
+        target_scheme = current_path_url.scheme
+    else:
+        target_scheme = 'file'
+
+    if target_scheme == 'file':  # targeting a local file
+        # if not absolute path, make it absolute
+        if not target_url.path.startswith('/'):
+            # if path is empty, then is targeting to the current file
+            filename = target_url.path if len(target_url.path) > 0 \
+                else os.path.basename(current_path_url.path)
+            target_url = urlparse('{path}#{fragment}'.format(
+                path=os.path.join(
+                    spec_dir,
+                    os.path.dirname(current_path_url.path),
+                    filename,
+                ),
+                fragment=target_url.fragment,
+            ))
+        return target_url
+
+    elif target_scheme in ['http', 'https']:
+        remote_path = os.path.abspath(os.path.join(
+            current_path_url.path if len(current_path_url.path) > 0 else '/',
+            target_url.path
+        ))
+        return urlparse('{scheme}://{hostname}{path}#{fragment}'.format(
+            scheme=target_scheme,
+            hostname=target_url.hostname,
+            path=remote_path,
+            fragment=target_url.fragment,
+        ))
+    else:
+        return urlparse(relative_path)
+
+
+def _relpath(path, start):
+    """Return a relative version of a path
+    NOTE: Code duplicated from Python 2.7.9 implementation because the
+    default implementation available on Python 2.6.9 is bugged.
+    """
+
+    start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
+    path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
+
+    # Work out how much of the filepath is shared by start and path.
+    i = len(os.path.commonprefix([start_list, path_list]))
+
+    rel_list = [os.path.pardir] * (len(start_list) - i) + path_list[i:]
+
+    return os.path.join(*rel_list)
+
+
+def _get_target(spec, target, current_path=''):
+    # Note: we assume that swagger.json file is always a server-local file
+    if target == '':
+        raise ValueError('Empty target')
+
+    target_url = _get_absolute_link(spec, target, current_path)
+    target_scheme = 'file' if target_url.scheme == '' else target_url.scheme
+
+    if target_scheme == 'file':
+        spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
+        target_url = urlparse('{path}#{fragment}'.format(
+            path=_relpath(target_url.path, spec_dir),
+            fragment=target_url.fragment,
+        ))
+
+    if target_scheme in ['file', 'http', 'https']:
+        return target_url
+    else:
+        raise ValueError(
+            'Invalid target: {target}'.format(target=target)
+        )
+
+
+def _marshal_target(target_url):
+    target_scheme = target_url.scheme
+    if len(target_url.path) > 0 and \
+            target_scheme in ['', 'file', 'http', 'https']:
+        value = _low_level_translate(
+            '{scheme}://{host}{path}#{fragment}'.format(
+                scheme=target_url.scheme if len(target_scheme) > 0 else 'file',
+                host=target_url.hostname if target_url.hostname else '',
+                path=target_url.path,
+                fragment=target_url.fragment,
+            ))
+        return value
+    else:
+        raise ValueError(
+            'Invalid target: {target}'.format(target=urlunparse(target_url))
+        )
+
+
+def _unmarshal_target(marshaled_target):
+    if any(marshaled_target.startswith(x) for x in
+           ('file.', 'http.', 'https.')):
+        result = _low_level_translate(marshaled_target, is_marshaling=False)
+        # Remove the file:// scheme to allow the use of relative paths
+        if not result.startswith('file:///'):
+            result = result.replace('file://', '')
+        return result
+    else:
+        raise ValueError(
+            'Invalid marshaled object: {target}'.format(
+                target=marshaled_target
+            )
+        )
+
+
+def is_a_definition(json_path):
+    # definition is possible if:
+    # json_path = ['definitions']
+    # json_path = [ ..., 'schema']
+    # json_path = [ ..., 'items']
+    # json_path = [ ..., 'allOf']
+    return json_path == ['definitions'] or \
+           json_path[-1] in ['schema', 'items', 'allOf']
+
+
+def resolve_ref(spec, url, json_path, file_path, defs_dict):
     with spec.resolver.resolving(url) as resolved_spec_dict:
         spec_dict = copy.deepcopy(resolved_spec_dict)
-        return resolve_refs(spec, spec_dict)
+        return resolve_refs(spec, spec_dict, json_path, file_path, defs_dict)
 
 
-def resolve_refs(spec, val):
+def resolve_refs(spec, val, json_path, file_path, defs_dict):
     if isinstance(val, dict):
         new_dict = {}
         for key, subval in val.items():
             if key == '$ref':
+                if is_a_definition(json_path):
+                    target_url = _get_target(spec, subval, file_path)
+                    marshaled_target = _marshal_target(target_url)
+                    if marshaled_target not in defs_dict:
+                        defs_dict[marshaled_target] = None
+                        defs_dict[marshaled_target] = resolve_ref(
+                            spec, subval, json_path, file_path, defs_dict
+                        )
+                    return {'$ref': '#/definitions/{target}'.format(
+                        target=marshaled_target,
+                    )}
                 # assume $ref is the only key in the dict
-                return resolve_ref(spec, subval)
+                return resolve_ref(
+                    spec, subval, json_path, file_path, defs_dict
+                )
             else:
-                new_dict[key] = resolve_refs(spec, subval)
+                new_dict[key] = resolve_refs(
+                    spec, subval, json_path + [key], file_path, defs_dict
+                )
         return new_dict
 
     if isinstance(val, list):
         for index, subval in enumerate(val):
-            val[index] = resolve_refs(spec, subval)
+            val[index] = resolve_refs(
+                spec, subval, json_path + [index], file_path, defs_dict
+            )
     return val
 
 
@@ -271,7 +451,12 @@ def _build_dereferenced_swagger_20_schema_views(config):
         if not resolved_dict:
             spec = settings['pyramid_swagger.schema20']
             spec_copy = copy.deepcopy(spec.client_spec_dict)
-            resolved_dict = resolve_refs(spec, spec_copy)
+            spec_file_name = os.path.basename(urlparse(spec.origin_url).path)
+            defs_dict = {}
+            resolved_dict = resolve_refs(spec, spec_copy, ['/'],
+                                         spec_file_name, defs_dict)
+            if len(defs_dict) > 0:
+                resolved_dict.update({'definitions': defs_dict})
             settings['pyramid_swagger.schema20_resolved'] = resolved_dict
         return resolved_dict
 

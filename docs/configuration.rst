@@ -72,8 +72,7 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         pyramid_swagger.generate_resource_listing = false
 
         # Enable/disable serving the entire dereferenced swagger schema in
-        # a single http call. This can be slow for larger schemas and will
-        # not work for infinitely recursive refs
+        # a single http call. This can be slow for larger schemas
         # Default: False
         pyramid_swagger.dereference_served_schema = False
 
