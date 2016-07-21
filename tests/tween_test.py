@@ -266,7 +266,7 @@ def registry():
     config = {
         'pyramid_swagger.schema12': None,
         'pyramid_swagger.schema20': None,
-        }
+    }
     return Mock(settings=config)
 
 

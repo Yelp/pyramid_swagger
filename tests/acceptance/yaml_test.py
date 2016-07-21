@@ -52,14 +52,12 @@ def test_user_format_failure_case(testapp_with_base64):
 
 
 def validate_json_response(response, expected_dict):
-    assert response.headers['content-type'] == \
-           'application/json; charset=UTF-8'
+    assert response.headers['content-type'] == 'application/json; charset=UTF-8'
     assert json.loads(response.body.decode("utf-8")) == expected_dict
 
 
 def validate_yaml_response(response, expected_dict):
-    assert response.headers['content-type'] == \
-           'application/x-yaml; charset=UTF-8'
+    assert response.headers['content-type'] == 'application/x-yaml; charset=UTF-8'
     assert yaml.load(response.body) == expected_dict
 
 
