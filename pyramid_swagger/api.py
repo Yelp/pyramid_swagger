@@ -101,7 +101,25 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
     return view_for_api_declaration
 
 
-def _low_level_translate(path, is_marshaling=True):
+def _low_level_translate(url, is_marshaling=True):
+    """
+    Translate the URL string representation into a new string which could be
+    used as JSON keys.
+    Example: if the url is "#/definitions/data_type" it could not be directly
+    injected into the JSON as a key since many parser could comply with it.
+    To workaround this limitation we can re-write the url representation in a
+    way that the parsers will accept it, for example "#/definitions/data_type"
+    could become "|..definitions..data_type"
+
+    :param url: string representation of an url (the expected format is
+        '[{scheme}://][{host}]{path}[#{fragment}]')
+    :type url: str
+    :param is_marshaling: flag representing the marshaling (to JSON) or the
+        un-marshaling (from JSON) operation
+    :type is_marshaling: bool
+    :return: a string representation of the URL which could be used into the
+        JSON keys
+    """
     # replacement of the scheme (valid only in un-marshaling phase)
     scheme_replacements = [  # defined as tuples (un-marshaled, marshaled)
         ('file://', 'file.'),
@@ -125,23 +143,38 @@ def _low_level_translate(path, is_marshaling=True):
     repl_idx = 0 if is_marshaling else 1
     replaced_scheme = ''
     for replacement in scheme_replacements:
-        if path.startswith(replacement[repl_idx]):
+        if url.startswith(replacement[repl_idx]):
             replaced_scheme = replacement[1 - repl_idx]
-            path = path[len(replacement[repl_idx]):]
+            url = url[len(replacement[repl_idx]):]
             break
     for replacement in replacement_patterns:
-        path = path.replace(replacement[repl_idx], replacement[1 - repl_idx])
-    return replaced_scheme + path
+        url = url.replace(replacement[repl_idx], replacement[1 - repl_idx])
+    return replaced_scheme + url
 
 
-def _get_absolute_link(spec, relative_path, current_path=''):
+def _get_absolute_link(spec, resource_path_fragment, current_path=''):
+    """
+    Generate an absolute link starting form the relative path and the
+    current_path information.
+
+    :param spec: Swagger Spec
+    :type spec: bravado_core.spec.Spec
+    :param resource_path_fragment: path and fragment of the resource
+        (the expected format is '{path}#{fragment}')
+    :type resource_path_fragment: str
+    :param current_path: local or remote base path used for the absolute URL
+        generation. It represent the path of the resource in which is defined
+        the target/reference.
+    :type current_path: str
+    :return: URL containing the absolute path associated to the relative_path
+    """
     spec_url = urlparse(spec.origin_url)
     spec_file = os.path.abspath(spec_url.path)
     spec_dir = os.path.dirname(spec_file)
 
     current_path_url = urlparse(current_path)
 
-    target_url = urlparse(relative_path)
+    target_url = urlparse(resource_path_fragment)
     if len(target_url.scheme) > 0:
         target_scheme = target_url.scheme
     elif len(current_path_url.scheme) > 0:
@@ -177,7 +210,7 @@ def _get_absolute_link(spec, relative_path, current_path=''):
             fragment=target_url.fragment,
         ))
     else:
-        return urlparse(relative_path)
+        return urlparse(resource_path_fragment)
 
 
 def _relpath(path, start):
@@ -185,7 +218,6 @@ def _relpath(path, start):
     NOTE: Code duplicated from Python 2.7.9 implementation because the
     default implementation available on Python 2.6.9 is bugged.
     """
-
     start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
     path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
 
@@ -197,8 +229,35 @@ def _relpath(path, start):
     return os.path.join(*rel_list)
 
 
-def _get_target(spec, target, current_path=''):
-    # Note: we assume that swagger.json file is always a server-local file
+def _get_target_url(spec, target, current_path=''):
+    """
+    Generate a well formatted URL for the required target.
+    NOTE: The method assumes that the base swagger definition file
+    (swagger.{json,yaml}) is a server local file.
+
+    The URL ({schema}://{host}{path}#{fragment}) will be:
+        - fully defined for a remote resources
+          The URL associated to "$ref": "http://link/path.json#/definitions/dt)
+          is "http://link/path.json#/definitions/dt"
+        - not fully defined for local resources. The schema and host components
+          of the URL will be empty and the path will contain only the relative
+          path respect to the base swagger file (swagger.{json,yaml})
+    NOTE: We are not fully referencing the local resources in order to limit as
+    much as possible the amount of information that are made public (ie. the
+    complete server paths containing the swagger files). The limitation, of
+    server related, information will make harder for an intruder to forge or
+    modify the server specifications.
+
+    :param spec: Swagger Spec
+    :type spec: bravado_core.spec.Spec
+    :param target: URL of the target that has to be formatted
+    :type target: str
+    :param current_path: local or remote base path used for the absolute URL
+        generation. It represent the path of the resource in which is defined
+        the target/reference.
+    :type current_path: str
+    :return: url associated to the target resource
+    """
     if target == '':
         raise ValueError('Empty target')
 
@@ -207,6 +266,8 @@ def _get_target(spec, target, current_path=''):
 
     if target_scheme == 'file':
         spec_dir = os.path.dirname(urlparse(spec.origin_url).path)
+        # Hiding of the internal server paths information.
+        # A path relative to the swagger.{json,yaml} is returned
         target_url = urlparse('{path}#{fragment}'.format(
             path=_relpath(target_url.path, spec_dir),
             fragment=target_url.fragment,
@@ -214,7 +275,7 @@ def _get_target(spec, target, current_path=''):
 
     if target_scheme in ['file', 'http', 'https']:
         return target_url
-    else:
+    else:  # Handle the case of an unknown target scheme
         raise ValueError(
             'Invalid target: {target}'.format(target=target)
         )
@@ -224,14 +285,13 @@ def _marshal_target(target_url):
     target_scheme = target_url.scheme
     if len(target_url.path) > 0 and \
             target_scheme in ['', 'file', 'http', 'https']:
-        value = _low_level_translate(
+        return _low_level_translate(
             '{scheme}://{host}{path}#{fragment}'.format(
                 scheme=target_url.scheme if len(target_scheme) > 0 else 'file',
                 host=target_url.hostname if target_url.hostname else '',
                 path=target_url.path,
                 fragment=target_url.fragment,
             ))
-        return value
     else:
         raise ValueError(
             'Invalid target: {target}'.format(target=urlunparse(target_url))
@@ -254,14 +314,23 @@ def _unmarshal_target(marshaled_target):
         )
 
 
-def is_a_definition(json_path):
-    # definition is possible if:
-    # json_path = ['definitions']
-    # json_path = [ ..., 'schema']
-    # json_path = [ ..., 'items']
-    # json_path = [ ..., 'allOf']
+def is_a_swagger_definition(json_path):
+    """
+    The method checks if json_path could have references to Swagger definitions
+    (http://swagger.io/specification/#definitionsObject).
+
+    :param json_path: json path to check
+    :type json_path: list
+    :return: true if json_path could have references toward Swagger definition
+    objects, false otherwise
+    :type: bool
+    """
+    # According to the Swagger specifications only a subset of paths could
+    # target a Swagger definition object.
+    # The paths that could led to a Swagger definition object are:
+    # '/definitions/.*', '.*/schema',  '.*/items' and '.*/allOf'
     return json_path == ['definitions'] or \
-           json_path[-1] in ['schema', 'items', 'allOf']
+        json_path[-1] in ['schema', 'items', 'allOf']
 
 
 def resolve_ref(spec, url, json_path, file_path, defs_dict):
@@ -275,11 +344,13 @@ def resolve_refs(spec, val, json_path, file_path, defs_dict):
         new_dict = {}
         for key, subval in val.items():
             if key == '$ref':
-                if is_a_definition(json_path):
-                    target_url = _get_target(spec, subval, file_path)
+                if is_a_swagger_definition(json_path):
+                    target_url = _get_target_url(spec, subval, file_path)
                     marshaled_target = _marshal_target(target_url)
                     if marshaled_target not in defs_dict:
-                        defs_dict[marshaled_target] = None
+                        defs_dict[marshaled_target] = None  # placeholder
+                        # The placeholder is present to interrupt the recursion
+                        # during the resolve_ref of a recursive data model
                         defs_dict[marshaled_target] = resolve_ref(
                             spec, subval, json_path, file_path, defs_dict
                         )

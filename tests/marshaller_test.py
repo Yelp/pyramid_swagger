@@ -4,7 +4,9 @@ import pytest
 
 from six.moves.urllib.parse import urlparse
 
-from pyramid_swagger.api import _get_target, _marshal_target, _unmarshal_target
+from pyramid_swagger.api import _get_target_url
+from pyramid_swagger.api import _marshal_target
+from pyramid_swagger.api import _unmarshal_target
 
 
 @pytest.fixture
@@ -74,8 +76,8 @@ def test_unmarshaller_raises(target):
     ]
 )
 def test_target(bravado_spec, current_path, target, expected):
-    assert \
-        _get_target(bravado_spec, target, current_path) == urlparse(expected)
+    assert _get_target_url(bravado_spec, target, current_path) \
+           == urlparse(expected)
 
 
 @pytest.mark.parametrize(
@@ -87,4 +89,4 @@ def test_target(bravado_spec, current_path, target, expected):
 )
 def test_target_raises(bravado_spec, target):
     with pytest.raises(ValueError):
-        _get_target(bravado_spec, target)
+        _get_target_url(bravado_spec, target)
