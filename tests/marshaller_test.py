@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from bravado_core.spec import Spec
 import pytest
+import sys
 
 from six.moves.urllib.parse import urlparse
 
@@ -53,25 +54,32 @@ def test_unmarshaller_raises(target):
         _unmarshal_target(target)
 
 
+@pytest.mark.skipif(
+    sys.version_info < (2, 7),
+    reason="There is a knwon Python 2.6 issue on the implementation of "
+           "os.path.relpath (http://bugs.python.org/issue5117). "
+           "Additional information on pyramid_swagger PR 171. "
+           "https://github.com/striglia/pyramid_swagger/pull/171"
+)
 @pytest.mark.parametrize(
     'current_path, target, expected',
     [
         (
-            # with url it should be the same
-            'swagger.json',
-            'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
-            'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
+                # with url it should be the same
+                'swagger.json',
+                'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
+                'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
         ),
         (
-            # relative directory respect to the swagger file
-            '/dir1/another1.json',
-            '../dir2/other2.json#/path/resource',
-            'dir2/other2.json#/path/resource',
+                # relative directory respect to the swagger file
+                '/dir1/another1.json',
+                '../dir2/other2.json#/path/resource',
+                'dir2/other2.json#/path/resource',
         ),
         (
-            'file:///swagger.json',
-            '#/path/resource',
-            'swagger.json#/path/resource',
+                'file:///swagger.json',
+                '#/path/resource',
+                'swagger.json#/path/resource',
         ),
     ]
 )

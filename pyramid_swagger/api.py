@@ -213,22 +213,6 @@ def _get_absolute_link(spec, resource_path_fragment, current_path=''):
         return urlparse(resource_path_fragment)
 
 
-def _relpath(path, start):
-    """Return a relative version of a path
-    NOTE: Code duplicated from Python 2.7.9 implementation because the
-    default implementation available on Python 2.6.9 is bugged.
-    """
-    start_list = [x for x in os.path.abspath(start).split(os.path.sep) if x]
-    path_list = [x for x in os.path.abspath(path).split(os.path.sep) if x]
-
-    # Work out how much of the filepath is shared by start and path.
-    i = len(os.path.commonprefix([start_list, path_list]))
-
-    rel_list = [os.path.pardir] * (len(start_list) - i) + path_list[i:]
-
-    return os.path.join(*rel_list)
-
-
 def _get_target_url(spec, target, current_path=''):
     """
     Generate a well formatted URL for the required target.
@@ -269,7 +253,7 @@ def _get_target_url(spec, target, current_path=''):
         # Hiding of the internal server paths information.
         # A path relative to the swagger.{json,yaml} is returned
         target_url = urlparse('{path}#{fragment}'.format(
-            path=_relpath(target_url.path, spec_dir),
+            path=os.path.relpath(target_url.path, spec_dir),
             fragment=target_url.fragment,
         ))
 
