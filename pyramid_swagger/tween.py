@@ -613,7 +613,7 @@ def get_op_for_request(request, route_info, spec):
     else:
         raise PathNotMatchedError(
             "Could not find a matching route for {0} request {1}. "
-            "Have you registed this endpoint with Pyramid?"
+            "Have you registered this endpoint with Pyramid?"
             .format(request.method, request.url))
 
 
