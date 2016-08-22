@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
-from webtest import TestApp
+from webtest import TestApp as App
 
 from .app import main
 
@@ -20,7 +20,7 @@ def settings():
 def test_app_with_no_prefer_conf(settings):
     """Fixture for setting up a Swagger 2.0 version with no
     `prefer_20_routes` option added to settings."""
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def test_app_with_prefer_conf(settings):
     """Fixture for setting up a Swagger 2.0 version with a particular route
     `standard` added to `prefer_20_routes` option."""
     settings['pyramid_swagger.prefer_20_routes'] = ['standard']
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 def test_failure_with_no_prefer_config_case(test_app_with_no_prefer_conf):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
-from webtest import TestApp
+from webtest import TestApp as App
 
 from .app import main
 
@@ -15,21 +15,21 @@ def settings():
 
 @pytest.fixture
 def default_test_app(settings):
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 @pytest.fixture
 def swagger_20_test_app(settings):
     """Fixture for setting up a Swagger 2.0 version of the test test_app."""
     settings['pyramid_swagger.swagger_versions'] = ['2.0']
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 @pytest.fixture
 def swagger_12_test_app(settings):
     """Fixture for setting up a Swagger 1.2 version of the test test_app."""
     settings['pyramid_swagger.swagger_versions'] = ['1.2']
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def swagger_12_and_20_test_app(settings):
     test test_app.
     """
     settings['pyramid_swagger.swagger_versions'] = ['1.2', '2.0']
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 def test_12_api_docs(swagger_12_test_app):
@@ -80,7 +80,7 @@ def test_default_only_serves_up_swagger_20_schema(default_test_app):
 
 
 def test_recursive_swagger_api_internal_refs():
-    recursive_test_app = TestApp(main({}, **{
+    recursive_test_app = App(main({}, **{
         'pyramid_swagger.schema_directory':
             'tests/sample_schemas/recursive_app/internal/',
     }))
@@ -89,7 +89,7 @@ def test_recursive_swagger_api_internal_refs():
 
 
 def test_recursive_swagger_api_external_refs():
-    recursive_test_app = TestApp(main({}, **{
+    recursive_test_app = App(main({}, **{
         'pyramid_swagger.schema_directory':
             'tests/sample_schemas/recursive_app/external/',
     }))

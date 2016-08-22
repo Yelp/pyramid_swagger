@@ -6,7 +6,7 @@ import re
 import yaml
 
 from six import BytesIO
-from webtest import TestApp
+from webtest import TestApp as App
 from .app import main
 
 
@@ -30,7 +30,7 @@ def settings():
 @pytest.fixture
 def test_app(settings):
     """Fixture for setting up a Swagger 2.0 version of the test test_app."""
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def test_app_deref(settings):
     """Fixture for setting up a Swagger 2.0 version of the test test_app
     test app serves swagger schemas with refs dereferenced."""
     settings['pyramid_swagger.dereference_served_schema'] = True
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 def test_running_query_for_relative_ref(test_app):
