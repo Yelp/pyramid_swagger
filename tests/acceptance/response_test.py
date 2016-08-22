@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from _pytest.python import FixtureRequest
+from _pytest.fixtures import FixtureRequest
 
 import mock
 from mock import Mock

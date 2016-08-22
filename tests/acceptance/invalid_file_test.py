@@ -2,7 +2,7 @@
 import base64
 
 import pytest
-from webtest import TestApp
+from webtest import TestApp as App
 
 from .app import main
 from pyramid_swagger.tween import SwaggerFormat
@@ -34,4 +34,4 @@ def test_invalid_file_extension(settings, yaml_app):
     settings['pyramid_swagger.user_formats'] = [yaml_app]
 
     with pytest.raises(Exception):
-        TestApp(main({}, **settings))
+        App(main({}, **settings))

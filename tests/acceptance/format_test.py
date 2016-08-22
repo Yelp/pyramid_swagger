@@ -2,7 +2,7 @@
 import base64
 
 import pytest
-from webtest import TestApp
+from webtest import TestApp as App
 
 from .app import main
 from pyramid_swagger.tween import SwaggerFormat
@@ -32,7 +32,7 @@ def testapp_with_base64(settings, user_format):
     """Fixture for setting up a Swagger 2.0 version of the test testapp."""
     settings['pyramid_swagger.swagger_versions'] = ['2.0']
     settings['pyramid_swagger.user_formats'] = [user_format]
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 def test_user_format_happy_case(testapp_with_base64):

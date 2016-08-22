@@ -4,7 +4,7 @@
 # Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
 # a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
-from _pytest.python import FixtureRequest
+from _pytest.fixtures import FixtureRequest
 from mock import patch, Mock
 from pyramid.interfaces import IRoutesMapper
 from pyramid.response import Response

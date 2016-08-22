@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from contextlib import contextmanager
-from _pytest.python import FixtureRequest
+from _pytest.fixtures import FixtureRequest
 
 from mock import Mock
 from pyramid.httpexceptions import exception_response
@@ -13,7 +13,7 @@ import simplejson
 def test_app(request, **overrides):
     """Fixture for setting up a test test_app with particular settings."""
     from .app import main
-    from webtest import TestApp
+    from webtest import TestApp as App
     settings = dict({
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_request_validation': True,
@@ -22,7 +22,7 @@ def test_app(request, **overrides):
         'pyramid_swagger.swagger_versions': request.param},
         **overrides
     )
-    return TestApp(main({}, **settings))
+    return App(main({}, **settings))
 
 
 @contextmanager
