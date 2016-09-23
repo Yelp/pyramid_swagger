@@ -1,3 +1,4 @@
+import io
 import os
 
 from setuptools import find_packages
@@ -9,7 +10,7 @@ about = {}
 with open(os.path.join(base_dir, "pyramid_swagger", "__about__.py")) as f:
     exec(f.read(), about)
 
-with open(os.path.join(base_dir, "README.rst")) as f:
+with io.open(os.path.join(base_dir, "README.rst"), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(

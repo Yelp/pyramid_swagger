@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2.3.0 (2016-09-23)
+++++++++++++++++++
+* Fix installation with Python 3 on systems using a POSIX/ASCII locale
+
 2.3.0-rc3 (2016-06-28)
 ++++++++++++++++++++++
 * Adds ``dereference_served_schema`` config flag to force served spec to be a
