@@ -1,9 +1,9 @@
 Changelog
 =========
 
-2.3.0 (2016-09-23)
+2.3.0 (2016-09-27)
 ++++++++++++++++++
-* Fix installation with Python 3 on systems using a POSIX/ASCII locale
+* Fix installation with Python 3 on systems using a POSIX/ASCII locale.
 
 2.3.0-rc3 (2016-06-28)
 ++++++++++++++++++++++
