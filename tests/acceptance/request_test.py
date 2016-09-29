@@ -98,11 +98,11 @@ def test_200_if_request_arg_types_are_not_strings(test_app):
     ).status_code == 200
 
 
-def test_400_if_path_not_in_swagger(test_app):
+def test_404_if_path_not_in_swagger(test_app):
     assert test_app.get(
         '/does_not_exist',
         expect_errors=True,
-    ).status_code == 400
+    ).status_code == 404
 
 
 def test_400_if_request_arg_is_wrong_type_but_not_castable(test_app):
@@ -176,7 +176,7 @@ def test_200_if_required_body_is_primitives(test_app):
 
 def test_400_if_extra_body_args(test_app):
     assert test_app.post_json(
-        '/sample_post',
+        '/sample',
         {'foo': 'test', 'bar': 'test', 'made_up_argument': 1},
         expect_errors=True,
     ).status_code == 400

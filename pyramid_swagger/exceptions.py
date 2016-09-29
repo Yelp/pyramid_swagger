@@ -2,10 +2,16 @@
 import sys
 
 import six
-from pyramid.httpexceptions import HTTPBadRequest, HTTPInternalServerError
+from pyramid.httpexceptions import HTTPBadRequest
+from pyramid.httpexceptions import HTTPInternalServerError
+from pyramid.httpexceptions import HTTPNotFound
 
 
 class RequestValidationError(HTTPBadRequest):
+    pass
+
+
+class ResourceNotFound(HTTPNotFound):
     pass
 
 
