@@ -112,10 +112,14 @@ def test_404_if_path_not_in_swagger(test_app):
         expect_errors=True,
     ).status_code == 404
 
-def test_200_if_path_not_in_swagger_and_path_validation_disabled(test_app_disabled_path_validation):
+
+def test_200_if_path_not_in_swagger_and_path_validation_disabled(
+        test_app_disabled_path_validation
+):
     assert test_app_disabled_path_validation.get(
         '/path_not_defined_by_any_swagger',
     ).status_code == 200
+
 
 def test_400_if_request_arg_is_wrong_type_but_not_castable(test_app):
     assert test_app.get(
