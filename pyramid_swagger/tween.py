@@ -542,7 +542,7 @@ def validate_response(response, validator_map):
 
 
 def prepare_body(response):
-    # content_type and charset must both be set to access response.text
+    # content_type must be set to access response.text
     if not response.content_type:
         raise ResponseValidationError(
             'Response validation error: Content-Type must be set'
