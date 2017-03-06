@@ -1,5 +1,8 @@
 Changelog
 =========
+2.3.1 (2017-XX-XX)
+++++++++++++++++++
+* Fix issue with missing content type when using webob >= 1.7 (see #185)
 
 2.3.0 (2016-09-27)
 ++++++++++++++++++
