@@ -65,27 +65,26 @@ def test_unmarshaller_raises(target):
     'current_path, target, expected',
     [
         (
-                # with url it should be the same
-                'swagger.json',
-                'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
-                'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
+            # with url it should be the same
+            'swagger.json',
+            'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
+            'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
         ),
         (
-                # relative directory respect to the swagger file
-                '/dir1/another1.json',
-                '../dir2/other2.json#/path/resource',
-                'dir2/other2.json#/path/resource',
+            # relative directory respect to the swagger file
+            '/dir1/another1.json',
+            '../dir2/other2.json#/path/resource',
+            'dir2/other2.json#/path/resource',
         ),
         (
-                'file:///swagger.json',
-                '#/path/resource',
-                'swagger.json#/path/resource',
+            'file:///swagger.json',
+            '#/path/resource',
+            'swagger.json#/path/resource',
         ),
     ]
 )
 def test_target(bravado_spec, current_path, target, expected):
-    assert _get_target_url(bravado_spec, target, current_path) \
-           == urlparse(expected)
+    assert _get_target_url(bravado_spec, target, current_path) == urlparse(expected)
 
 
 @pytest.mark.parametrize(
