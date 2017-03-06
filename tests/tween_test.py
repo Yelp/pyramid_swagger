@@ -74,11 +74,14 @@ def test_exclude_path_with_old_setting():
     )
 
 
-def test_response_charset_missing_raises_5xx():
-    with pytest.raises(ResponseValidationError):
+def test_response_content_type_missing_raises_5xx():
+    with pytest.raises(ResponseValidationError) as excinfo:
         prepare_body(
-            Response(content_type='foo')
+            # there is no way to instantiate a Response object with no content type
+            mock.Mock(spec=Response, content_type=None),
         )
+
+    assert 'Content-Type must be set' in str(excinfo.value)
 
 
 @pytest.fixture
@@ -266,7 +269,7 @@ def registry():
     config = {
         'pyramid_swagger.schema12': None,
         'pyramid_swagger.schema20': None,
-        }
+    }
     return Mock(settings=config)
 
 
