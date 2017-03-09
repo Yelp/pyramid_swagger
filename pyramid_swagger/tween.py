@@ -18,6 +18,8 @@ from bravado_core.request import unmarshal_request
 from bravado_core.response import get_response_spec
 from bravado_core.response import OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
+from pyramid.settings import asbool
+from pyramid.settings import aslist
 
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
@@ -352,24 +354,24 @@ def load_settings(registry):
         swagger12_handler=build_swagger12_handler(
             registry.settings.get('pyramid_swagger.schema12')),
         swagger20_handler=build_swagger20_handler(),
-        validate_request=registry.settings.get(
+        validate_request=asbool(registry.settings.get(
             'pyramid_swagger.enable_request_validation',
-            True
-        ),
-        validate_response=registry.settings.get(
+            True,
+        )),
+        validate_response=asbool(registry.settings.get(
             'pyramid_swagger.enable_response_validation',
-            True
-        ),
-        validate_path=registry.settings.get(
+            True,
+        )),
+        validate_path=asbool(registry.settings.get(
             'pyramid_swagger.enable_path_validation',
-            True
-        ),
+            True,
+        )),
         exclude_paths=get_exclude_paths(registry),
-        exclude_routes=set(registry.settings.get(
+        exclude_routes=set(aslist(registry.settings.get(
             'pyramid_swagger.exclude_routes',
-        ) or []),
-        prefer_20_routes=set(registry.settings.get(
-            'pyramid_swagger.prefer_20_routes',) or []),
+        ) or [])),
+        prefer_20_routes=set(aslist(registry.settings.get(
+            'pyramid_swagger.prefer_20_routes') or [])),
     )
 
 
