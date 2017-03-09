@@ -1,21 +1,22 @@
+# -*- coding: utf-8 -*-
 from contextlib import contextmanager
-from _pytest.fixtures import FixtureRequest
 
 import mock
-from mock import Mock
 import pyramid.testing
-from webob.multidict import MultiDict
-import pyramid_swagger
-import pyramid_swagger.tween
 import pytest
 import simplejson
+from _pytest.fixtures import FixtureRequest
+from mock import Mock
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
 from pyramid.response import Response
 from pyramid.urldispatch import RoutesMapper
+from webob.multidict import MultiDict
 from webtest import AppError
 
+import pyramid_swagger
+import pyramid_swagger.tween
 from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import compile_swagger_schema
@@ -32,6 +33,7 @@ class EnhancedDummyRequest(pyramid.testing.DummyRequest):
     pyramid.testing.DummyRequest doesn't support MultiDicts like the real
     pyramid.request.Request so this is the next best thing.
     """
+
     def __init__(self, **kw):
         super(EnhancedDummyRequest, self).__init__(**kw)
         self.GET = MultiDict(self.GET)

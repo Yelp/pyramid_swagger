@@ -22,3 +22,45 @@ This project offers convenient tools for using Swagger to define and validate
 your interfaces in a Pyramid webapp.
 
 Full documentation is available at http://pyramid-swagger.readthedocs.org/.
+
+
+How to contribute
+-----------------
+
+#. Fork this repository on Github: https://help.github.com/articles/fork-a-repo/
+#. Clone your forked repository: https://help.github.com/articles/cloning-a-repository/
+#. Make a feature branch for your changes:
+
+    ::
+
+        git remote add upstream https://github.com/striglia/pyramid_swagger.git
+        git fetch upstream
+        git checkout upstream/master -b my-feature-branch
+
+#. Create and activate the virtual environment, this will provide you with all the
+   libraries and tools necessary for pyramid_swagger development:
+
+    ::
+
+        make
+        source .activate.sh
+
+#. Make sure the test suite works before you start:
+
+    ::
+
+        tox -e py27    # Note: use py35 for Python 3.5, see tox.ini for possible values
+
+#. Commit patches: http://gitref.org/basic/
+#. Push to github: ``git pull && git push origin``
+#. Send a pull request: https://help.github.com/articles/creating-a-pull-request/
+
+
+Running a single test
+*********************
+
+Make sure you have activated the virtual environment (see above).
+
+::
+
+    py.test -vvv tests/tween_test.py::test_response_properties

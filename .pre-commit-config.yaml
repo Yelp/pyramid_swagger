@@ -1,0 +1,19 @@
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: v0.7.1
+    hooks:
+    -   id: autopep8-wrapper
+        args:
+        - -i
+        - --ignore=E501
+    -   id: check-json
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: end-of-file-fixer
+    -   id: fix-encoding-pragma
+    -   id: flake8
+    -   id: name-tests-test
+    -   id: trailing-whitespace
+-   repo: git://github.com/asottile/reorder_python_imports
+    sha: v0.3.2
+    hooks:
+    -   id: reorder-python-imports

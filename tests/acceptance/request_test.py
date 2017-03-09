@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from contextlib import contextmanager
-from _pytest.fixtures import FixtureRequest
 
-from mock import Mock
-from pyramid.httpexceptions import exception_response
 import pytest
 import simplejson
+from _pytest.fixtures import FixtureRequest
+from mock import Mock
+from pyramid.httpexceptions import exception_response
 
 
 # Parameterize pyramid_swagger.swagger_versions

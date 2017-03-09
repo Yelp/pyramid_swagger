@@ -4,13 +4,16 @@ Module to load swagger specs and build efficient data structures for querying
 them during request validation.
 """
 from __future__ import unicode_literals
+
 from collections import namedtuple
 
 import simplejson
+from jsonschema import _validators
 from jsonschema import RefResolver
-from jsonschema import validators, _validators
+from jsonschema import validators
 from jsonschema.exceptions import ValidationError
-from jsonschema.validators import Draft3Validator, Draft4Validator
+from jsonschema.validators import Draft3Validator
+from jsonschema.validators import Draft4Validator
 
 from pyramid_swagger.model import partial_path_match
 

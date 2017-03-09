@@ -5,13 +5,15 @@ import glob
 import os.path
 
 import simplejson
-from bravado_core.spec import Spec, build_http_handlers
+from bravado_core.spec import build_http_handlers
+from bravado_core.spec import Spec
 from six.moves.urllib import parse as urlparse
 
 from .api import build_swagger_12_endpoints
 from .load_schema import load_schema
 from .model import SwaggerSchema
-from .spec import API_DOCS_FILENAME, validate_swagger_schema
+from .spec import API_DOCS_FILENAME
+from .spec import validate_swagger_schema
 
 
 class ResourceListingNotFoundError(Exception):

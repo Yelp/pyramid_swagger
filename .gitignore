@@ -1,3 +1,5 @@
+.cache/
+.idea/
 *pyc
 *swp
 docs/_build
@@ -9,3 +11,4 @@ dist/
 .ropeproject
 pyramid_swagger.egg-info
 tests/__pycache__
+venv/

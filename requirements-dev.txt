@@ -1,0 +1,9 @@
+-e .
+bravado
+coverage
+mock
+ordereddict
+pre-commit
+pytest>=3
+tox
+webtest

@@ -4,12 +4,13 @@ Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
 import os.path
+
 import simplejson
 import yaml
-
-
 from bravado_core.spec import strip_xscope
-from six.moves.urllib.parse import urlparse, urlunparse
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlunparse
+
 from pyramid_swagger.model import PyramidEndpoint
 
 
