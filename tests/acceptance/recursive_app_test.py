@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
+
 import pytest
 import yaml
-
 from six import BytesIO
 from webtest import TestApp as App
+
 from .app import main
 
 

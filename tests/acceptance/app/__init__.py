@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
+import webob
 from pyramid.config import Configurator
 from pyramid.view import view_config
-
-import webob
 
 
 @view_config(route_name='throw_400', renderer='json')

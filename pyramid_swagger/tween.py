@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from collections import namedtuple
-from contextlib import contextmanager
+
 import functools
 import logging
 import re
 import sys
+from collections import namedtuple
+from contextlib import contextmanager
 
 import bravado_core
-from bravado_core.exception import SwaggerMappingError
-from bravado_core.formatter import SwaggerFormat  # noqa
-from bravado_core.request import IncomingRequest, unmarshal_request
-from bravado_core.response import get_response_spec, OutgoingResponse
-from pyramid.interfaces import IRoutesMapper
 import jsonschema.exceptions
 import simplejson
+from bravado_core.exception import SwaggerMappingError
+from bravado_core.formatter import SwaggerFormat  # noqa
+from bravado_core.request import IncomingRequest
+from bravado_core.request import unmarshal_request
+from bravado_core.response import get_response_spec
+from bravado_core.response import OutgoingResponse
+from pyramid.interfaces import IRoutesMapper
 
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
@@ -269,6 +272,7 @@ class PyramidSwaggerResponse(OutgoingResponse):
         text: the response body as a string
         headers: a dictionary of response headers
     """
+
     def __init__(self, response):
         """
         :type response: :class:`pyramid.response.Response`
