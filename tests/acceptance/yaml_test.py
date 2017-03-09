@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
-import yaml
 
 import pytest
+import yaml
 from webtest import TestApp as App
 
 from .app import main

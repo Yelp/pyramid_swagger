@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
-import pytest
 
+import pytest
 import simplejson
 from jsonschema.exceptions import ValidationError
 
-from pyramid_swagger.spec import API_DOCS_FILENAME, validate_swagger_schema
+from pyramid_swagger.spec import API_DOCS_FILENAME
+from pyramid_swagger.spec import validate_swagger_schema
 
 
 def test_success_for_good_app():

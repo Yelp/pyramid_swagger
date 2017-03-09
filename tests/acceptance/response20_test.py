@@ -1,24 +1,27 @@
+# -*- coding: utf-8 -*-
 #
 # Swagger 2.0 response acceptance tests
 #
 # Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
 # a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
-from _pytest.fixtures import FixtureRequest
-from mock import patch, Mock
-from pyramid.interfaces import IRoutesMapper
-from pyramid.response import Response
 import pytest
 import simplejson
+from _pytest.fixtures import FixtureRequest
+from mock import Mock
+from mock import patch
+from pyramid.interfaces import IRoutesMapper
+from pyramid.response import Response
 from webtest.app import AppError
 
 from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import get_swagger_spec
 from pyramid_swagger.tween import validation_tween_factory
-from tests.acceptance.response_test import validation_ctx_path, \
-    EnhancedDummyRequest, get_registry
 from tests.acceptance.response_test import CustomResponseValidationException
+from tests.acceptance.response_test import EnhancedDummyRequest
+from tests.acceptance.response_test import get_registry
+from tests.acceptance.response_test import validation_ctx_path
 
 
 def _validate_against_tween(request, response=None, path_pattern='/',

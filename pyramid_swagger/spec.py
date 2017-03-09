@@ -4,8 +4,8 @@ Methods to help validate a given JSON document against the Swagger Spec.
 """
 import os
 
-from jsonschema.exceptions import ValidationError
 import swagger_spec_validator
+from jsonschema.exceptions import ValidationError
 
 from .exceptions import wrap_exception
 

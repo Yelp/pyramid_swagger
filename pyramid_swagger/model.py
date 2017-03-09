@@ -3,8 +3,8 @@
 The core model we use to represent the entire ingested swagger schema for this
 service.
 """
-from collections import namedtuple
 import re
+from collections import namedtuple
 
 
 PyramidEndpoint = namedtuple(

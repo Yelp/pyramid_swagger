@@ -1,8 +1,9 @@
-from bravado_core.spec import Spec
+# -*- coding: utf-8 -*-
 import mock
+import pytest
+from bravado_core.spec import Spec
 from pyramid.config import Configurator
 from pyramid.registry import Registry
-import pytest
 from swagger_spec_validator.common import SwaggerValidationError
 
 import pyramid_swagger

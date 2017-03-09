@@ -2,7 +2,8 @@
 import sys
 
 import six
-from pyramid.httpexceptions import HTTPBadRequest, HTTPInternalServerError
+from pyramid.httpexceptions import HTTPBadRequest
+from pyramid.httpexceptions import HTTPInternalServerError
 
 
 class RequestValidationError(HTTPBadRequest):

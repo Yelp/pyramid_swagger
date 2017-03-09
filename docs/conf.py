@@ -10,15 +10,13 @@
 #
 # All configuration values have a default; values that are commented out
 # serve to show the default.
-
 import os
-import sys
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.append(os.path.abspath('.'))
+# sys.path.append(os.path.abspath('.'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -174,8 +172,8 @@ htmlhelp_basename = 'pyramid_swaggerdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'pyramid_swagger.tex', u'pyramid\\_swagger Documentation',
-   u'Scott Triglia', 'manual'),
+    ('index', 'pyramid_swagger.tex', u'pyramid\\_swagger Documentation',
+     u'Scott Triglia', 'manual'),
 ]
 latex_elements = {
     # Additional stuff for the LaTeX preamble. See

@@ -2,36 +2,39 @@
 """Unit tests for tweens.py"""
 import re
 
+import mock
+import pytest
+import simplejson
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
-import mock
 from mock import Mock
 from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.urldispatch import Route
-import pytest
-import simplejson
 
-from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.exceptions import RequestValidationError
-from pyramid_swagger.load_schema import ValidatorMap, SchemaValidator
+from pyramid_swagger.exceptions import ResponseValidationError
+from pyramid_swagger.load_schema import SchemaValidator
+from pyramid_swagger.load_schema import ValidatorMap
 from pyramid_swagger.model import PathNotMatchedError
-from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS, get_op_for_request, \
-    validation_error
-from pyramid_swagger.tween import PyramidSwaggerRequest
-from pyramid_swagger.tween import PyramidSwaggerResponse
+from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
 from pyramid_swagger.tween import get_exclude_paths
+from pyramid_swagger.tween import get_op_for_request
 from pyramid_swagger.tween import get_swagger_objects
 from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import handle_request
 from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
+from pyramid_swagger.tween import PyramidSwaggerRequest
+from pyramid_swagger.tween import PyramidSwaggerResponse
 from pyramid_swagger.tween import Settings
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
-from pyramid_swagger.tween import SWAGGER_12, SWAGGER_20
+from pyramid_swagger.tween import SWAGGER_12
+from pyramid_swagger.tween import SWAGGER_20
 from pyramid_swagger.tween import validate_response
+from pyramid_swagger.tween import validation_error
 
 
 def assert_eq_regex_lists(left, right):

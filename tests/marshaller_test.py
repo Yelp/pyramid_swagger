@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from bravado_core.spec import Spec
-import pytest
 import sys
 
+import pytest
+from bravado_core.spec import Spec
 from six.moves.urllib.parse import urlparse
 
 from pyramid_swagger.api import _get_target_url

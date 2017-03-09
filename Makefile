@@ -1,7 +1,16 @@
-.PHONY: docs
+.PHONY: clean docs install-hooks test
 
-test:
+all: venv install-hooks
+
+test: install-hooks
 	tox
+
+install-hooks: venv
+	venv/bin/pre-commit install -f --install-hooks
+
+venv: setup.py requirements-dev.txt
+	virtualenv venv
+	venv/bin/pip install -r requirements-dev.txt
 
 docs:
 	tox -e docs
@@ -12,3 +21,4 @@ clean:
 	find . -type f -iname "*.py[co]" -delete
 	rm -fr *.egg-info/
 	rm -fr .tox/
+	rm -fr venv/

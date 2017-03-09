@@ -5,15 +5,15 @@ import mock
 import pytest
 import simplejson
 
-from pyramid_swagger.ingest import API_DOCS_FILENAME
-from pyramid_swagger.ingest import create_bravado_core_config
 from pyramid_swagger.ingest import _load_resource_listing
+from pyramid_swagger.ingest import API_DOCS_FILENAME
+from pyramid_swagger.ingest import ApiDeclarationNotFoundError
+from pyramid_swagger.ingest import create_bravado_core_config
 from pyramid_swagger.ingest import generate_resource_listing
+from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.ingest import get_swagger_schema
 from pyramid_swagger.ingest import get_swagger_spec
-from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.ingest import ingest_resources
-from pyramid_swagger.ingest import ApiDeclarationNotFoundError
 from pyramid_swagger.ingest import ResourceListingGenerationError
 from pyramid_swagger.ingest import ResourceListingNotFoundError
 from pyramid_swagger.tween import SwaggerFormat

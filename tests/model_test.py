@@ -7,8 +7,8 @@ import pytest
 
 from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.ingest import get_resource_listing
-from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.model import partial_path_match
+from pyramid_swagger.model import PathNotMatchedError
 
 
 @pytest.fixture
