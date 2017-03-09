@@ -19,7 +19,7 @@ from bravado_core.response import get_response_spec
 from bravado_core.response import OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
 
-from pyramid_swagger.exceptions import RequestValidationError
+from pyramid_swagger.exceptions import RequestValidationError, ResourceNotFound
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.model import PathNotMatchedError
 
@@ -165,7 +165,7 @@ def validation_tween_factory(handler, registry):
         except PathNotMatchedError as exc:
             if settings.validate_path:
                 with validation_context(request):
-                    raise RequestValidationError(str(exc))
+                    raise ResourceNotFound(str(exc))
             else:
                 return handler(request)
 

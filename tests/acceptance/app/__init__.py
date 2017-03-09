@@ -11,6 +11,7 @@ def throw_error(request):
 
 
 @view_config(route_name='standard', renderer='json')
+@view_config(route_name='path_not_defined_by_any_swagger', renderer='json')
 def standard(request, path_arg):
     return {
         'raw_response': 'foo',
@@ -52,6 +53,10 @@ def main(global_config, **settings):
     config.add_route('sample_post', '/sample')
     config.include(include_samples, route_prefix='/sample')
     config.add_route('throw_400', '/throw_400')
+    config.add_route(
+        'path_not_defined_by_any_swagger',
+        '/path_not_defined_by_any_swagger'
+    )
 
     config.scan()
     return config.make_wsgi_app()
