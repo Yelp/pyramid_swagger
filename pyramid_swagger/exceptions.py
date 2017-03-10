@@ -4,9 +4,14 @@ import sys
 import six
 from pyramid.httpexceptions import HTTPBadRequest
 from pyramid.httpexceptions import HTTPInternalServerError
+from pyramid.httpexceptions import HTTPNotFound
 
 
 class RequestValidationError(HTTPBadRequest):
+    pass
+
+
+class PathNotFoundError(HTTPNotFound):
     pass
 
 
