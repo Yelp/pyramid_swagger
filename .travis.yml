@@ -2,7 +2,7 @@ sudo: false
 language: python
 env:
 - TOXENV=py27
-- TOXENV=py34
+- TOXENV=py35
 - TOXENV=py27-pyramid15
 - TOXENV=docs
 install: pip install tox==1.9.2 coveralls
