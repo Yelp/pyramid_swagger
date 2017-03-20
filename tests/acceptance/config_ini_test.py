@@ -23,5 +23,5 @@ def test_load_ini_settings(ini_app):
     assert settings.validate_request is True
     assert settings.validate_response is False
     assert settings.validate_path is True
-    assert settings.exclude_routes == set(['/undefined/first', '/undefined/second'])
-    assert settings.prefer_20_routes == set(['/sample'])
+    assert settings.exclude_routes == {'/undefined/first', '/undefined/second'}
+    assert settings.prefer_20_routes == {'/sample'}
