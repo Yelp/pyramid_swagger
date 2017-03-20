@@ -175,7 +175,7 @@ def validation_tween_factory(handler, registry):
                 request_data = swagger_handler.handle_request(
                     PyramidSwaggerRequest(request, route_info),
                     op_or_validators_map,
-                    validation_context=validation_context)
+                )
 
             def swagger_data(_):
                 return request_data
@@ -310,7 +310,7 @@ class PyramidSwaggerResponse(OutgoingResponse):
         return getattr(self.response, 'json_body', {})
 
 
-def handle_request(request, validator_map, validation_context, **kwargs):
+def handle_request(request, validator_map, **kwargs):
     """Validate the request against the swagger spec and return a dict with
     all parameter values available in the request, casted to the expected
     python type.
@@ -318,8 +318,6 @@ def handle_request(request, validator_map, validation_context, **kwargs):
     :param request: a :class:`PyramidSwaggerRequest` to validate
     :param validator_map: a :class:`pyramid_swagger.load_schema.ValidatorMap`
         used to validate the request
-    :param validation_context: a context manager for wrapping validation
-        errors
     :returns: a :class:`dict` of request data for each parameter in the swagger
         spec
     """
@@ -343,8 +341,7 @@ def handle_request(request, validator_map, validation_context, **kwargs):
         validation_pairs.append((validator_map.body, request.body))
         request_data[param_name] = request.body
 
-    with validation_context(request):
-        validate_request(validation_pairs)
+    validate_request(validation_pairs)
 
     return request_data
 

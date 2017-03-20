@@ -24,7 +24,6 @@ from pyramid_swagger.tween import get_op_for_request
 from pyramid_swagger.tween import get_swagger_objects
 from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import handle_request
-from pyramid_swagger.tween import noop_context
 from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import PyramidSwaggerResponse
@@ -202,7 +201,7 @@ def test_handle_request_returns_request_data():
         'bar': {'more': 'foo'},
     }
 
-    request_data = handle_request(mock_request, validator_map, noop_context,)
+    request_data = handle_request(mock_request, validator_map)
     assert request_data == expected
 
 
