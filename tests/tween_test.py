@@ -267,6 +267,19 @@ def test_validaton_error_decorator_transforms_SwaggerMappingError():
     assert 'kaboom' in str(excinfo.value)
 
 
+def test_validation_error_includes_child():
+
+    @validation_error(RequestValidationError)
+    def foo():
+        raise SwaggerMappingError('kaboom')
+
+    try:
+        foo()
+    except RequestValidationError as e:
+        assert isinstance(e.child, SwaggerMappingError)
+        assert 'kaboom' in str(e)
+
+
 @pytest.fixture
 def registry():
     config = {

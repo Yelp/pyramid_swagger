@@ -8,15 +8,21 @@ from pyramid.httpexceptions import HTTPNotFound
 
 
 class RequestValidationError(HTTPBadRequest):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.child = kwargs.pop('child', None)
+        super(RequestValidationError, self).__init__(*args, **kwargs)
 
 
 class PathNotFoundError(HTTPNotFound):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.child = kwargs.pop('child', None)
+        super(PathNotFoundError, self).__init__(*args, **kwargs)
 
 
 class ResponseValidationError(HTTPInternalServerError):
-    pass
+    def __init__(self, *args, **kwargs):
+        self.child = kwargs.pop('child', None)
+        super(ResponseValidationError, self).__init__(*args, **kwargs)
 
 
 def wrap_exception(exception_class):

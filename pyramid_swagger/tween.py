@@ -166,15 +166,16 @@ def validation_tween_factory(handler, registry):
         except PathNotMatchedError as exc:
             if settings.validate_path:
                 with validation_context(request):
-                    raise PathNotFoundError(str(exc))
+                    raise PathNotFoundError(str(exc), child=exc)
             else:
                 return handler(request)
 
         if settings.validate_request:
-            request_data = swagger_handler.handle_request(
-                PyramidSwaggerRequest(request, route_info),
-                op_or_validators_map,
-                validation_context=validation_context)
+            with validation_context(request, response=None):
+                request_data = swagger_handler.handle_request(
+                    PyramidSwaggerRequest(request, route_info),
+                    op_or_validators_map,
+                    validation_context=validation_context)
 
             def swagger_data(_):
                 return request_data
@@ -467,7 +468,7 @@ def validation_error(exc_class):
                 # This will alter our stack trace slightly, but Pyramid knows
                 # how to render it. And the real value is in the message
                 # anyway.
-                e = exc_class(str(exc))
+                e = exc_class(str(exc), child=exc)
                 e._traceback = sys.exc_info()[2]
                 raise e
 
@@ -568,11 +569,8 @@ def swaggerize_request(request, op, **kwargs):
 
     :type request: :class:`pyramid.request.Request`
     :type op: :class:`bravado_core.operation.Operation`
-    :type validation_context: context manager
     """
-    validation_context = kwargs['validation_context']
-    with validation_context(request):
-        request_data = unmarshal_request(request, op)
+    request_data = unmarshal_request(request, op)
     return request_data
 
 

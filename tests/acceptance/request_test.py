@@ -7,6 +7,8 @@ from _pytest.fixtures import FixtureRequest
 from mock import Mock
 from pyramid.httpexceptions import exception_response
 
+from pyramid_swagger import exceptions
+
 
 # Parameterize pyramid_swagger.swagger_versions
 @pytest.fixture(params=[['1.2'], ['2.0'], ['1.2', '2.0']])
@@ -29,8 +31,14 @@ def test_app(request, **overrides):
 def validation_context(request, response=None):
     try:
         yield
-    except Exception:
+    except (
+        exceptions.RequestValidationError,
+        exceptions.ResponseValidationError,
+        exceptions.PathNotFoundError,
+    ):
         raise exception_response(206)
+    except Exception:
+        raise exception_response(400)
 
 
 validation_ctx_path = 'tests.acceptance.request_test.validation_context'
