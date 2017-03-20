@@ -5,6 +5,6 @@ env:
 - TOXENV=py34
 - TOXENV=py27-pyramid15
 - TOXENV=docs
-install: pip install tox==1.9.2 coveralls
+install: pip install tox coveralls
 script: tox
 after_success: coveralls
