@@ -320,6 +320,8 @@ def handle_request(request, validator_map, **kwargs):
         used to validate the request
     :returns: a :class:`dict` of request data for each parameter in the swagger
         spec
+    :raises: RequestValidationError when the request is not valid for the
+        swagger spec
     """
     request_data = {}
     validation_pairs = []

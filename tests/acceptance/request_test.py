@@ -35,8 +35,9 @@ def validation_context(request, response=None):
         exceptions.RequestValidationError,
         exceptions.ResponseValidationError,
         exceptions.PathNotFoundError,
-    ):
+    ) as e:
         raise exception_response(206)
+        assert e.child is not None
     except Exception:
         raise exception_response(400)
 
