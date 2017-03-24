@@ -66,6 +66,12 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # schemas (true by default)
         pyramid_swagger.enable_api_doc_views = true
 
+        # Base path for api docs (empty by default)
+        # Example:
+        #   - leave empty and get api doc with GET /swagger.yaml
+        #   - set to 'help' and get api doc with GET /help/swagger.yaml
+        pyramid_swagger.base_path_api_docs = ''
+
         # Enable/disable generating the /api-doc endpoint from a resource
         # listing template (false by default). See `generate_resource_listing`
         # below for more details

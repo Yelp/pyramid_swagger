@@ -536,9 +536,20 @@ def _build_swagger_20_schema_views(config):
     file_map = {}
 
     def view_for_swagger_schema(request):
-        path, ext = os.path.splitext(request.path)
+        _, ext = os.path.splitext(request.path)
         ext = ext.lstrip('.')
-        actual_fname = file_map[request.path]
+
+        base_path = config.registry.settings\
+            .get('pyramid_swagger.base_path_api_docs', '').rstrip('/')
+
+        if request.path.startswith(base_path):
+            key_path = request.path[len(base_path):]
+        elif request.path.startswith('/' + base_path):
+            key_path = request.path[len(base_path) + 1:]
+        else:
+            key_path = request.path
+
+        actual_fname = file_map[key_path]
         with spec.resolver.resolving(actual_fname) as spec_dict:
             clean_response = strip_xscope(spec_dict)
             ref_walker = NodeWalkerForCleaningRefs()
