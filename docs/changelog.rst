@@ -1,13 +1,11 @@
 Changelog
 =========
-2.3.2 (2017-03-27)
+
+2.3.1 (2017-03-27)
 ++++++++++++++++++
 * Fix validation context for swagger 2.0 requests
 * Added docs for validation context
-* Original exception is accessible to validation context exceptions
-
-2.3.1 (2017-XX-XX)
-++++++++++++++++++
+* Preserved original exception when reraising for validation context exceptions
 * Remove support for Python 2.6, newer Pyramid versions don't support it either
 * Fix issue with missing content type when using webob >= 1.7 (see #185)
 
