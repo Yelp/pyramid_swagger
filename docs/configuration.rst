@@ -156,6 +156,43 @@ After defining this format, it can be used in the Swagger Spec definition like s
 
 .. _Data Types: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#user-content-data-types
 
+validation_context_path
+-----------------------
+
+Formatting validation errors for API requests/responses to fit every possible
+swagger spec and response type is very complicated and will never cover every
+scenario. The ``validation_context_path`` option provides a way to change or
+format the response returned when :mod:`pyramid_swagger` validation fails.
+
+Sample usage:
+
+.. code-block:: python
+
+        from pyramid_swagger import exceptions
+
+        class UserDefinedResponseError(Exception):
+            pass
+
+        def validation_context(request, response=None):
+            try:
+                yield
+            except exceptions.RequestValidationError as e:
+                # Content type will be application/json instead of plain/text
+                raise exceptions.RequestValidationError(json=[str(e)])
+
+            except exceptions.ResponseValidationError as e:
+                # Reraise as non-pyramid exception
+                raise UserDefinedResponseError(str(e))
+
+
+
+The errors that are raised from the validation_context are defined in
+:mod:`pyramid_swagger.exceptions`.
+
+.. note::
+
+    By default :mod:`pyramid_swagger` validation errors return content type plain/text
+
 generate_resource_listing (Swagger 1.2 only)
 --------------------------------------------
 
