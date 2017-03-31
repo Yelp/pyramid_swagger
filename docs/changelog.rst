@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2.3.2 (2017-XX-XX)
+++++++++++++++++++
+* Fix reading configuration values from INI files (see #182, #200)
+
 2.3.1 (2017-03-27)
 ++++++++++++++++++
 * Fix validation context for swagger 2.0 requests
