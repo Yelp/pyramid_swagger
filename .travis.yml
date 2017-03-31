@@ -1,12 +1,12 @@
 sudo: false
 language: python
-env:
-- TOX_ENV=py27
-- TOX_ENV=py34
-- TOX_ENV=py27-pyramid15
-- TOX_ENV=docs
-install:
-- pip install --use-mirrors tox==1.9.2 coveralls
-script:
-- tox -e $TOX_ENV
+matrix:
+    include:
+    - env: TOXENV=py27
+    - python: "3.5"
+      env: TOXENV=py35
+    - env: TOXENV=py27-pyramid15
+    - env: TOXENV=docs
+install: pip install tox coveralls
+script: tox
 after_success: coveralls

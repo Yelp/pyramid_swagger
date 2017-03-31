@@ -7,6 +7,8 @@ from _pytest.fixtures import FixtureRequest
 from mock import Mock
 from pyramid.httpexceptions import exception_response
 
+from pyramid_swagger import exceptions
+
 
 # Parameterize pyramid_swagger.swagger_versions
 @pytest.fixture(params=[['1.2'], ['2.0'], ['1.2', '2.0']])
@@ -29,8 +31,15 @@ def test_app(request, **overrides):
 def validation_context(request, response=None):
     try:
         yield
-    except Exception:
+    except (
+        exceptions.RequestValidationError,
+        exceptions.ResponseValidationError,
+        exceptions.PathNotFoundError,
+    ) as e:
         raise exception_response(206)
+        assert e.child is not None
+    except Exception:
+        raise exception_response(400)
 
 
 validation_ctx_path = 'tests.acceptance.request_test.validation_context'
@@ -98,11 +107,11 @@ def test_200_if_request_arg_types_are_not_strings(test_app):
     ).status_code == 200
 
 
-def test_400_if_path_not_in_swagger(test_app):
+def test_404_if_path_not_in_swagger(test_app):
     assert test_app.get(
         '/does_not_exist',
         expect_errors=True,
-    ).status_code == 400
+    ).status_code == 404
 
 
 def test_400_if_request_arg_is_wrong_type_but_not_castable(test_app):
@@ -176,7 +185,7 @@ def test_200_if_required_body_is_primitives(test_app):
 
 def test_400_if_extra_body_args(test_app):
     assert test_app.post_json(
-        '/sample_post',
+        '/sample',
         {'foo': 'test', 'bar': 'test', 'made_up_argument': 1},
         expect_errors=True,
     ).status_code == 400
