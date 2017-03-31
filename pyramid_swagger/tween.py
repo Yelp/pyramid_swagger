@@ -632,8 +632,8 @@ def get_swagger_versions(settings):
     :return: list of strings. eg ['1.2', '2.0']
     :raises: ValueError when an unsupported Swagger version is encountered.
     """
-    swagger_versions = settings.get(
-        'pyramid_swagger.swagger_versions', DEFAULT_SWAGGER_VERSIONS)
+    swagger_versions = set(aslist(settings.get(
+        'pyramid_swagger.swagger_versions', DEFAULT_SWAGGER_VERSIONS)))
 
     if len(swagger_versions) == 0:
         raise ValueError('pyramid_swagger.swagger_versions is empty')

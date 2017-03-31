@@ -6,6 +6,7 @@ from pyramid.paster import get_appsettings
 from webtest import TestApp as App
 
 from .app import main
+from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import load_settings
 
 
@@ -25,3 +26,9 @@ def test_load_ini_settings(ini_app):
     assert settings.validate_path is True
     assert settings.exclude_routes == {'/undefined/first', '/undefined/second'}
     assert settings.prefer_20_routes == {'/sample'}
+
+
+def test_get_swagger_versions(ini_app):
+    settings = ini_app.app.registry.settings
+    swagger_versions = get_swagger_versions(settings)
+    assert swagger_versions == {'1.2', '2.0'}
