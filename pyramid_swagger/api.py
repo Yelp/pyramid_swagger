@@ -536,9 +536,9 @@ def _build_swagger_20_schema_views(config):
     file_map = {}
 
     def view_for_swagger_schema(request):
-        path, ext = os.path.splitext(request.path)
+        path, ext = os.path.splitext(request.path_info)
         ext = ext.lstrip('.')
-        actual_fname = file_map[request.path]
+        actual_fname = file_map[request.path_info]
         with spec.resolver.resolving(actual_fname) as spec_dict:
             clean_response = strip_xscope(spec_dict)
             ref_walker = NodeWalkerForCleaningRefs()

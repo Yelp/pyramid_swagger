@@ -27,7 +27,7 @@ def test_swagger_schema_for_request_different_methods(schema):
     # either and have them pass validation.
     value = schema.validators_for_request(
         request=mock.Mock(
-            path="/sample",
+            path_info="/sample",
             method="GET"
         ),
     )
@@ -35,7 +35,7 @@ def test_swagger_schema_for_request_different_methods(schema):
 
     value = schema.validators_for_request(
         request=mock.Mock(
-            path="/sample",
+            path_info="/sample",
             method="POST",
             body={'foo': 1, 'bar': 2},
         ),
@@ -57,7 +57,7 @@ def test_swagger_schema_for_request_not_found(schema):
     with pytest.raises(PathNotMatchedError) as excinfo:
         schema.validators_for_request(
             request=mock.Mock(
-                path="/does_not_exist",
+                path_info="/does_not_exist",
                 method="GET"
             ),
         )
