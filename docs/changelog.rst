@@ -1,7 +1,7 @@
 Changelog
 =========
 
-2.3.2 (2017-XX-XX)
+2.3.2 (2017-04-10)
 ++++++++++++++++++
 * Fix reading configuration values from INI files (see #182, #200)
 
