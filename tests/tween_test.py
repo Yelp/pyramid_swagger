@@ -238,7 +238,7 @@ def test_get_op_for_request_not_found_when_no_match_in_swagger_spec():
 def test_get_swagger_versions_success():
     for versions in (['1.2'], ['2.0'], ['1.2', '2.0']):
         settings = {'pyramid_swagger.swagger_versions': versions}
-        assert versions == get_swagger_versions(settings)
+        assert set(versions) == get_swagger_versions(settings)
 
 
 def test_get_swagger_versions_empty():
