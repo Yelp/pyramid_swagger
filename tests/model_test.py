@@ -78,3 +78,18 @@ def test_partial_path_match():
         '/v1/google/forward_unstructured',
         '/v1/bing/forward_unstructured'
     )
+
+
+def test_swagger_schema_for_request_virtual_subpath(schema):
+
+    # There exists a GET and POST for this endpoint. We should be able to call
+    # either and have them pass validation.
+    value = schema.validators_for_request(
+        request=mock.Mock(
+            path="/subpath/sample",
+            script_name="/subpath",
+            path_info="/sample",
+            method="GET"
+        ),
+    )
+    assert value.body.schema is None

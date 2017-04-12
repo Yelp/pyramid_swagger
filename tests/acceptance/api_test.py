@@ -96,3 +96,8 @@ def test_recursive_swagger_api_external_refs():
 
     recursive_test_app.get('/swagger.json', status=200)
     recursive_test_app.get('/external.json', status=200)
+
+
+def test_virtual_subpath(settings):
+    test_app = App(main({}, **settings), {'SCRIPT_NAME': '/subpath'})
+    test_app.get('/subpath/swagger.json', status=200)
