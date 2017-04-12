@@ -17,6 +17,13 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: api_docs/
         pyramid_swagger.schema_directory = schemas/live/here
 
+        # For Swagger 2.0, defines the relative file path (from
+        # `schema_directory`) to get to the base swagger spec.
+        # Supports JSON or YAML.
+        #
+        # Default: swagger.json
+        pyramid_swagger.schema_file = swagger.json
+
         # Versions of Swagger to support. When both Swagger 1.2 and 2.0 are
         # supported, it is required for both schemas to define identical APIs.
         # In this dual-support mode, requests are validated against the Swagger
