@@ -440,7 +440,7 @@ def should_exclude_request(settings, request, route_info):
     ))
     return (
         disable_all_validation or
-        should_exclude_path(settings.exclude_paths, request.path) or
+        should_exclude_path(settings.exclude_paths, request.path_info) or
         should_exclude_route(settings.exclude_routes, route_info) or
         is_swagger_documentation_route(route_info)
     )

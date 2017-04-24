@@ -51,7 +51,7 @@ class SwaggerSchema(object):
 
         raise PathNotMatchedError(
             'Could not find the relevant path ({0}) in the Swagger schema. '
-            'Perhaps you forgot to add it?'.format(request.path)
+            'Perhaps you forgot to add it?'.format(request.path_info)
         )
 
     def get_api_doc_endpoints(self):

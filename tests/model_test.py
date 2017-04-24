@@ -27,7 +27,7 @@ def test_swagger_schema_for_request_different_methods(schema):
     # either and have them pass validation.
     value = schema.validators_for_request(
         request=mock.Mock(
-            path="/sample",
+            path_info="/sample",
             method="GET"
         ),
     )
@@ -35,7 +35,7 @@ def test_swagger_schema_for_request_different_methods(schema):
 
     value = schema.validators_for_request(
         request=mock.Mock(
-            path="/sample",
+            path_info="/sample",
             method="POST",
             body={'foo': 1, 'bar': 2},
         ),
@@ -57,7 +57,7 @@ def test_swagger_schema_for_request_not_found(schema):
     with pytest.raises(PathNotMatchedError) as excinfo:
         schema.validators_for_request(
             request=mock.Mock(
-                path="/does_not_exist",
+                path_info="/does_not_exist",
                 method="GET"
             ),
         )
@@ -78,3 +78,18 @@ def test_partial_path_match():
         '/v1/google/forward_unstructured',
         '/v1/bing/forward_unstructured'
     )
+
+
+def test_swagger_schema_for_request_virtual_subpath(schema):
+
+    # There exists a GET and POST for this endpoint. We should be able to call
+    # either and have them pass validation.
+    value = schema.validators_for_request(
+        request=mock.Mock(
+            path="/subpath/sample",
+            script_name="/subpath",
+            path_info="/sample",
+            method="GET"
+        ),
+    )
+    assert value.body.schema is None
