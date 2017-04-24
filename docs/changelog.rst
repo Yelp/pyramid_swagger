@@ -2,7 +2,7 @@ Changelog
 =========
 
 Development version (?)
-++++++++++++++++++
+++++++++++++++++++++++++++
 * Support virtual hosting via SCRIPT_NAME (see #201 and https://www.python.org/dev/peps/pep-0333/)
 
 2.3.2 (2017-04-10)
