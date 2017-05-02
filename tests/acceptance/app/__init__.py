@@ -31,6 +31,11 @@ def sample(request):
     return {}
 
 
+@view_config(route_name='swagger_undefined', renderer='json')
+def swagger_undefined(request):
+    return {}
+
+
 def main(global_config, **settings):
     """ Very basic pyramid app """
     config = Configurator(settings=settings)
@@ -52,6 +57,7 @@ def main(global_config, **settings):
     config.add_route('sample_post', '/sample')
     config.include(include_samples, route_prefix='/sample')
     config.add_route('throw_400', '/throw_400')
+    config.add_route('swagger_undefined', '/undefined/path')
 
     config.scan()
     return config.make_wsgi_app()

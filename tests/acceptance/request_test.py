@@ -7,6 +7,8 @@ from _pytest.fixtures import FixtureRequest
 from mock import Mock
 from pyramid.httpexceptions import exception_response
 
+from pyramid_swagger import exceptions
+
 
 # Parameterize pyramid_swagger.swagger_versions
 @pytest.fixture(params=[['1.2'], ['2.0'], ['1.2', '2.0']])
@@ -29,8 +31,15 @@ def test_app(request, **overrides):
 def validation_context(request, response=None):
     try:
         yield
-    except Exception:
+    except (
+        exceptions.RequestValidationError,
+        exceptions.ResponseValidationError,
+        exceptions.PathNotFoundError,
+    ) as e:
         raise exception_response(206)
+        assert e.child is not None
+    except Exception:
+        raise exception_response(400)
 
 
 validation_ctx_path = 'tests.acceptance.request_test.validation_context'
@@ -100,9 +109,17 @@ def test_200_if_request_arg_types_are_not_strings(test_app):
 
 def test_404_if_path_not_in_swagger(test_app):
     assert test_app.get(
-        '/does_not_exist',
+        '/undefined/path',
         expect_errors=True,
     ).status_code == 404
+
+
+def test_200_skip_validation_with_excluded_path():
+    app = test_app(
+        request=Mock(spec=FixtureRequest, param=['2.0']),
+        **{'pyramid_swagger.exclude_paths': [r'^/undefined/path']}
+    )
+    assert app.get('/undefined/path').status_code == 200
 
 
 def test_400_if_request_arg_is_wrong_type_but_not_castable(test_app):
@@ -203,14 +220,6 @@ def test_200_with_required_header(test_app):
         expect_errors=True,
     )
     assert response.status_code == 200
-
-
-def test_200_skip_validation_with_excluded_path():
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['2.0']),
-        **{'pyramid_swagger.exclude_paths': [r'^/sample/?']}
-    )
-    assert app.get('/sample/test_request/resource').status_code == 200
 
 
 def test_200_skip_validation_when_disabled():

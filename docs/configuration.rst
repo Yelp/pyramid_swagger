@@ -14,16 +14,23 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
 
         # `api_docs.json` for Swagger 1.2 and/or `swagger.json` for Swagger 2.0
         # directory location.
-        # Default: 'api_docs/'
-        pyramid_swagger.schema_directory = "schemas/live/here"
+        # Default: api_docs/
+        pyramid_swagger.schema_directory = schemas/live/here
+
+        # For Swagger 2.0, defines the relative file path (from
+        # `schema_directory`) to get to the base swagger spec.
+        # Supports JSON or YAML.
+        #
+        # Default: swagger.json
+        pyramid_swagger.schema_file = swagger.json
 
         # Versions of Swagger to support. When both Swagger 1.2 and 2.0 are
         # supported, it is required for both schemas to define identical APIs.
         # In this dual-support mode, requests are validated against the Swagger
         # 2.0 schema only.
-        # Default: ['2.0']
-        # Supported versions: '1.2', '2.0'
-        pyramid_swagger.swagger_versions = ['2.0']
+        # Default: 2.0
+        # Supported versions: 1.2, 2.0
+        pyramid_swagger.swagger_versions = 2.0
 
         # Check the correctness of Swagger spec files.
         # Default: True
@@ -41,26 +48,26 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # If disabled and an appropriate Swagger schema cannot be
         # found, then request and response validation is skipped.
         # Default: True
-        pyramid_swagger.enable_path_validation = True
+        pyramid_swagger.enable_path_validation = true
 
         # Use Python classes instead of dicts to represent models in incoming
         # requests.
         # Default: False
-        pyramid_swagger.use_models = False
+        pyramid_swagger.use_models = false
 
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
-        # Default: [r'^/static/?', r'^/api-docs/?, r'^/swagger.json']
-        pyramid_swagger.exclude_paths = [r'^/static/?', r'^/api-docs/?', r'^/swagger.json']
+        # Default: ^/static/? ^/api-docs/? ^/swagger.json
+        pyramid_swagger.exclude_paths = ^/static/? ^/api-docs/? ^/swagger.json
 
         # Exclude pyramid routes from validation. Accepts a list of strings
-        pyramid_swagger.exclude_routes = ['catchall', 'no-validation']
+        pyramid_swagger.exclude_routes = catchall no-validation
 
         # Path to contextmanager to handle request/response validation
         # exceptions. This should be a dotted python name as per
         # http://docs.pylonsproject.org/projects/pyramid/en/latest/glossary.html#term-dotted-python-name
         # Default: None
-        pyramid_swagger.validation_context_path = 'path.to.user.defined.contextmanager'
+        pyramid_swagger.validation_context_path = path.to.user.defined.contextmanager
 
         # Enable/disable automatic /api-doc endpoints to serve the swagger
         # schemas (true by default)
@@ -82,7 +89,7 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Note: It is not suggested to use it with Python 2.6. Known issues with
         #       os.path.relpath could affect the proper behaviour.
         # Default: False
-        pyramid_swagger.dereference_served_schema = False
+        pyramid_swagger.dereference_served_schema = false
 
 
 Note that, equivalently, you can add these settings during webapp configuration:
@@ -161,6 +168,43 @@ After defining this format, it can be used in the Swagger Spec definition like s
     the ``to_wire``/``to_python`` behavior registered with that user-format, respectively.
 
 .. _Data Types: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#user-content-data-types
+
+validation_context_path
+-----------------------
+
+Formatting validation errors for API requests/responses to fit every possible
+swagger spec and response type is very complicated and will never cover every
+scenario. The ``validation_context_path`` option provides a way to change or
+format the response returned when :mod:`pyramid_swagger` validation fails.
+
+Sample usage:
+
+.. code-block:: python
+
+        from pyramid_swagger import exceptions
+
+        class UserDefinedResponseError(Exception):
+            pass
+
+        def validation_context(request, response=None):
+            try:
+                yield
+            except exceptions.RequestValidationError as e:
+                # Content type will be application/json instead of plain/text
+                raise exceptions.RequestValidationError(json=[str(e)])
+
+            except exceptions.ResponseValidationError as e:
+                # Reraise as non-pyramid exception
+                raise UserDefinedResponseError(str(e))
+
+
+
+The errors that are raised from the validation_context are defined in
+:mod:`pyramid_swagger.exceptions`.
+
+.. note::
+
+    By default :mod:`pyramid_swagger` validation errors return content type plain/text
 
 generate_resource_listing (Swagger 1.2 only)
 --------------------------------------------

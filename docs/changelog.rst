@@ -1,7 +1,19 @@
 Changelog
 =========
-2.3.1 (2017-XX-XX)
+
+Development version (?)
+++++++++++++++++++++++++++
+* Support virtual hosting via SCRIPT_NAME (see #201 and https://www.python.org/dev/peps/pep-0333/)
+
+2.3.2 (2017-04-10)
 ++++++++++++++++++
+* Fix reading configuration values from INI files (see #182, #200)
+
+2.3.1 (2017-03-27)
+++++++++++++++++++
+* Fix validation context for swagger 2.0 requests
+* Added docs for validation context
+* Preserved original exception when reraising for validation context exceptions
 * Remove support for Python 2.6, newer Pyramid versions don't support it either
 * Fix issue with missing content type when using webob >= 1.7 (see #185)
 

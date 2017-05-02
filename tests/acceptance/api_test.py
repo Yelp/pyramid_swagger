@@ -125,3 +125,8 @@ def test_base_path_api_docs_on_recursive_app_schema():
     recursive_test_app.get('/swagger.json', status=404)
     recursive_test_app.get(base_path + '/external.json', status=200)
     recursive_test_app.get('/external.json', status=404)
+
+
+def test_virtual_subpath(settings):
+    test_app = App(main({}, **settings), {'SCRIPT_NAME': '/subpath'})
+    test_app.get('/subpath/swagger.json', status=200)

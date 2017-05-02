@@ -229,7 +229,7 @@ class RequestMatcher(object):
         :returns: True if this matcher matches the request, False otherwise
         """
         return (
-            partial_path_match(request.path, self.path) and
+            partial_path_match(request.path_info, self.path) and
             request.method == self.method
         )
 

@@ -18,6 +18,8 @@ from bravado_core.request import unmarshal_request
 from bravado_core.response import get_response_spec
 from bravado_core.response import OutgoingResponse
 from pyramid.interfaces import IRoutesMapper
+from pyramid.settings import asbool
+from pyramid.settings import aslist
 
 from pyramid_swagger.exceptions import PathNotFoundError
 from pyramid_swagger.exceptions import RequestValidationError
@@ -166,15 +168,16 @@ def validation_tween_factory(handler, registry):
         except PathNotMatchedError as exc:
             if settings.validate_path:
                 with validation_context(request):
-                    raise PathNotFoundError(str(exc))
+                    raise PathNotFoundError(str(exc), child=exc)
             else:
                 return handler(request)
 
         if settings.validate_request:
-            request_data = swagger_handler.handle_request(
-                PyramidSwaggerRequest(request, route_info),
-                op_or_validators_map,
-                validation_context=validation_context)
+            with validation_context(request, response=None):
+                request_data = swagger_handler.handle_request(
+                    PyramidSwaggerRequest(request, route_info),
+                    op_or_validators_map,
+                )
 
             def swagger_data(_):
                 return request_data
@@ -309,7 +312,7 @@ class PyramidSwaggerResponse(OutgoingResponse):
         return getattr(self.response, 'json_body', {})
 
 
-def handle_request(request, validator_map, validation_context, **kwargs):
+def handle_request(request, validator_map, **kwargs):
     """Validate the request against the swagger spec and return a dict with
     all parameter values available in the request, casted to the expected
     python type.
@@ -317,10 +320,10 @@ def handle_request(request, validator_map, validation_context, **kwargs):
     :param request: a :class:`PyramidSwaggerRequest` to validate
     :param validator_map: a :class:`pyramid_swagger.load_schema.ValidatorMap`
         used to validate the request
-    :param validation_context: a context manager for wrapping validation
-        errors
     :returns: a :class:`dict` of request data for each parameter in the swagger
         spec
+    :raises: RequestValidationError when the request is not valid for the
+        swagger spec
     """
     request_data = {}
     validation_pairs = []
@@ -342,8 +345,7 @@ def handle_request(request, validator_map, validation_context, **kwargs):
         validation_pairs.append((validator_map.body, request.body))
         request_data[param_name] = request.body
 
-    with validation_context(request):
-        validate_request(validation_pairs)
+    validate_request(validation_pairs)
 
     return request_data
 
@@ -353,24 +355,24 @@ def load_settings(registry):
         swagger12_handler=build_swagger12_handler(
             registry.settings.get('pyramid_swagger.schema12')),
         swagger20_handler=build_swagger20_handler(),
-        validate_request=registry.settings.get(
+        validate_request=asbool(registry.settings.get(
             'pyramid_swagger.enable_request_validation',
-            True
-        ),
-        validate_response=registry.settings.get(
+            True,
+        )),
+        validate_response=asbool(registry.settings.get(
             'pyramid_swagger.enable_response_validation',
-            True
-        ),
-        validate_path=registry.settings.get(
+            True,
+        )),
+        validate_path=asbool(registry.settings.get(
             'pyramid_swagger.enable_path_validation',
-            True
-        ),
+            True,
+        )),
         exclude_paths=get_exclude_paths(registry),
-        exclude_routes=set(registry.settings.get(
+        exclude_routes=set(aslist(registry.settings.get(
             'pyramid_swagger.exclude_routes',
-        ) or []),
-        prefer_20_routes=set(registry.settings.get(
-            'pyramid_swagger.prefer_20_routes',) or []),
+        ) or [])),
+        prefer_20_routes=set(aslist(registry.settings.get(
+            'pyramid_swagger.prefer_20_routes') or [])),
     )
 
 
@@ -438,7 +440,7 @@ def should_exclude_request(settings, request, route_info):
     ))
     return (
         disable_all_validation or
-        should_exclude_path(settings.exclude_paths, request.path) or
+        should_exclude_path(settings.exclude_paths, request.path_info) or
         should_exclude_route(settings.exclude_routes, route_info) or
         is_swagger_documentation_route(route_info)
     )
@@ -467,7 +469,7 @@ def validation_error(exc_class):
                 # This will alter our stack trace slightly, but Pyramid knows
                 # how to render it. And the real value is in the message
                 # anyway.
-                e = exc_class(str(exc))
+                e = exc_class(str(exc), child=exc)
                 e._traceback = sys.exc_info()[2]
                 raise e
 
@@ -568,11 +570,8 @@ def swaggerize_request(request, op, **kwargs):
 
     :type request: :class:`pyramid.request.Request`
     :type op: :class:`bravado_core.operation.Operation`
-    :type validation_context: context manager
     """
-    validation_context = kwargs['validation_context']
-    with validation_context(request):
-        request_data = unmarshal_request(request, op)
+    request_data = unmarshal_request(request, op)
     return request_data
 
 
@@ -631,8 +630,8 @@ def get_swagger_versions(settings):
     :return: list of strings. eg ['1.2', '2.0']
     :raises: ValueError when an unsupported Swagger version is encountered.
     """
-    swagger_versions = settings.get(
-        'pyramid_swagger.swagger_versions', DEFAULT_SWAGGER_VERSIONS)
+    swagger_versions = set(aslist(settings.get(
+        'pyramid_swagger.swagger_versions', DEFAULT_SWAGGER_VERSIONS)))
 
     if len(swagger_versions) == 0:
         raise ValueError('pyramid_swagger.swagger_versions is empty')
