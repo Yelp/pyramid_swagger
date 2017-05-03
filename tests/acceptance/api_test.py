@@ -127,6 +127,23 @@ def test_base_path_api_docs_on_recursive_app_schema():
     recursive_test_app.get('/external.json', status=404)
 
 
+def test_base_path_api_docs_with_script_name_on_recursive_app_schema():
+    base_path = '/some/path'
+    script_name = '/scriptname'
+    test_app = App(main({}, **{
+        'pyramid_swagger.schema_directory':
+            'tests/sample_schemas/recursive_app/external/',
+        'pyramid_swagger.base_path_api_docs':
+            base_path}),
+        {'SCRIPT_NAME': script_name})
+
+    test_app.get(script_name + base_path + '/swagger.json', status=200)
+    test_app.get('/swagger.json', status=404)
+
+    test_app.get(script_name + base_path + '/external.json', status=200)
+    test_app.get('/external.json', status=404)
+
+
 def test_virtual_subpath(settings):
     test_app = App(main({}, **settings), {'SCRIPT_NAME': '/subpath'})
     test_app.get('/subpath/swagger.json', status=200)
