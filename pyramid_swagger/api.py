@@ -542,8 +542,7 @@ def _build_swagger_20_schema_views(config):
         base_path = config.registry.settings\
             .get('pyramid_swagger.base_path_api_docs', '').rstrip('/')
 
-        length_to_key = len(request.environ['SCRIPT_NAME']) + len(base_path)
-        key_path = request.path[length_to_key:]
+        key_path = request.path_info[len(base_path):]
 
         actual_fname = file_map[key_path]
 
