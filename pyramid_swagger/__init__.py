@@ -43,8 +43,6 @@ def includeme(config):
     )
 
     if settings.get('pyramid_swagger.enable_api_doc_views', True):
-        # TODO: add a new setting to pyramid_swagger that allows setting a
-        #       different base_path for api_docs, and pass it in here
         if SWAGGER_12 in swagger_versions:
             register_api_doc_endpoints(
                 config,
@@ -54,4 +52,4 @@ def includeme(config):
             register_api_doc_endpoints(
                 config,
                 build_swagger_20_swagger_schema_views(config),
-                base_path='')
+                base_path=settings.get('pyramid_swagger.base_path_api_docs', ''))
