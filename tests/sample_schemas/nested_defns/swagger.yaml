@@ -1,0 +1,27 @@
+basePath: /
+
+definitions:
+    A:
+        type: object
+    B:
+        allOf:
+        -   properties:
+                items:
+                    $ref: '#/definitions/A'
+    C:
+        properties:
+            foobar:
+                $ref: '#/definitions/B'
+info:
+    title: A pointless spec
+    version: 42.42.42
+
+paths: {}
+
+produces:
+- application/json
+
+schemes:
+- https
+
+swagger: '2.0'

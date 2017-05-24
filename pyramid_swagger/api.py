@@ -324,6 +324,12 @@ def resolve_ref(spec, url, json_path, file_path, defs_dict):
         return resolve_refs(spec, spec_dict, json_path, file_path, defs_dict)
 
 
+def make_resolved_ref(marshaled_target):
+    return {'$ref': '#/definitions/{target}'.format(
+        target=marshaled_target,
+    )}
+
+
 def resolve_refs(spec, val, json_path, file_path, defs_dict):
     if isinstance(val, dict):
         new_dict = {}
@@ -332,6 +338,10 @@ def resolve_refs(spec, val, json_path, file_path, defs_dict):
                 if is_a_swagger_definition(json_path):
                     target_url = _get_target_url(spec, subval, file_path)
                     marshaled_target = _marshal_target(target_url)
+                    # Check to see if we've resolved this reference before
+                    simple_ref = target_url.fragment.split('/')[-1]
+                    if simple_ref in defs_dict.keys():
+                        return make_resolved_ref(simple_ref)
                     if marshaled_target not in defs_dict:
                         defs_dict[marshaled_target] = None  # placeholder
                         # The placeholder is present to interrupt the recursion
@@ -339,9 +349,7 @@ def resolve_refs(spec, val, json_path, file_path, defs_dict):
                         defs_dict[marshaled_target] = resolve_ref(
                             spec, subval, json_path, file_path, defs_dict
                         )
-                    return {'$ref': '#/definitions/{target}'.format(
-                        target=marshaled_target,
-                    )}
+                    return make_resolved_ref(marshaled_target)
                 # assume $ref is the only key in the dict
                 return resolve_ref(
                     spec, subval, json_path, file_path, defs_dict
