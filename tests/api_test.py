@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
+import os
+
 import mock
 import pytest
+import yaml
+from bravado_core.spec import Spec
 from pyramid.testing import DummyRequest
 
 from pyramid_swagger.api import build_swagger_12_api_declaration_view
+from pyramid_swagger.api import get_path_if_relative
 from pyramid_swagger.api import register_api_doc_endpoints
+from pyramid_swagger.api import resolve_refs
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
 from pyramid_swagger.ingest import ResourceListingNotFoundError
@@ -57,7 +63,6 @@ def test_ignore_absolute_paths():
     we don't have the ability to automagically translate these external
     resources from yaml to json and vice versa, so ignore them altogether.
     """
-    from pyramid_swagger.api import get_path_if_relative
     assert get_path_if_relative(
         'http://www.google.com/some/special/schema.json',
     ) is None
@@ -76,14 +81,9 @@ def test_resolve_nested_refs():
     Make sure we resolve nested refs gracefully and not get lost in
     the recursion. Also make sure we don't rely on dictionary order
     """
-    import os
-    import yaml
-    from bravado_core.spec import Spec
-    from random import randint
-    from pyramid_swagger.api import resolve_refs
-    seed = randint(0, 4294967295)
-    os.environ["PYTHONHASHSEED"] = str(seed)
     with open('tests/sample_schemas/nested_defns/swagger.yaml') as swagger_spec:
         spec_dict = yaml.load(swagger_spec)
     spec = Spec.from_dict(spec_dict, '')
-    resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
+    for i in range(1, 50):
+        os.environ["PYTHONHASHSEED"] = str(i)
+        resolve_refs(spec, spec_dict, ['/'], 'swagger', {})

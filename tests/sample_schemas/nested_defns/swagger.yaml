@@ -12,6 +12,22 @@ definitions:
         properties:
             foobar:
                 $ref: '#/definitions/B'
+    D:
+        properties:
+            foobar:
+                $ref: '#/definitions/C'
+    E:
+        properties:
+            foobar:
+                $ref: '#/definitions/D'
+    F:
+        properties:
+            foobar:
+                $ref: '#/definitions/E'
+    G:
+        properties:
+            foobar:
+                $ref: '#/definitions/F'
 info:
     title: A pointless spec
     version: 42.42.42

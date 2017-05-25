@@ -268,14 +268,20 @@ def _get_target_url(spec, target, current_path=''):
 
 def _marshal_target(target_url):
     target_scheme = target_url.scheme
+    target_fragment = target_url.fragment
     if len(target_url.path) > 0 and \
             target_scheme in ['', 'file', 'http', 'https']:
+        # Don't have nested refferences to the same file
+        # see tests/sample_specs/nested_defns/swagger.yaml
+        # for an example spec that this addresses.
+        if target_scheme == '':
+            return target_fragment.split('/')[-1]
         return _low_level_translate(
             '{scheme}://{host}{path}#{fragment}'.format(
-                scheme=target_url.scheme if len(target_scheme) > 0 else 'file',
+                scheme=target_url.scheme,
                 host=target_url.hostname if target_url.hostname else '',
                 path=target_url.path,
-                fragment=target_url.fragment,
+                fragment=target_fragment,
             ))
     else:
         raise ValueError(
@@ -338,10 +344,6 @@ def resolve_refs(spec, val, json_path, file_path, defs_dict):
                 if is_a_swagger_definition(json_path):
                     target_url = _get_target_url(spec, subval, file_path)
                     marshaled_target = _marshal_target(target_url)
-                    # Check to see if we've resolved this reference before
-                    simple_ref = target_url.fragment.split('/')[-1]
-                    if simple_ref in defs_dict.keys():
-                        return make_resolved_ref(simple_ref)
                     if marshaled_target not in defs_dict:
                         defs_dict[marshaled_target] = None  # placeholder
                         # The placeholder is present to interrupt the recursion
