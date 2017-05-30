@@ -22,7 +22,6 @@ def bravado_spec():
     'target',
     [
         'file:///dir1/dir2/file.json#/path1/path2/resource',
-        'dir1/dir2/file.json#/path1/path2/resource',
         'http://hostname/dir1/dir2/file.json#/path1/path2/resource',
         'https://hostname/dir1/dir2/file.json#/path1/path2/resource',
     ]

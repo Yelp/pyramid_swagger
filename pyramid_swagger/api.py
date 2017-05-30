@@ -268,14 +268,20 @@ def _get_target_url(spec, target, current_path=''):
 
 def _marshal_target(target_url):
     target_scheme = target_url.scheme
+    target_fragment = target_url.fragment
     if len(target_url.path) > 0 and \
             target_scheme in ['', 'file', 'http', 'https']:
+        # Don't have nested refferences to the same file
+        # see tests/sample_specs/nested_defns/swagger.yaml
+        # for an example spec that this addresses.
+        if target_scheme == '':
+            return target_fragment.split('/')[-1]
         return _low_level_translate(
             '{scheme}://{host}{path}#{fragment}'.format(
-                scheme=target_url.scheme if len(target_scheme) > 0 else 'file',
+                scheme=target_url.scheme,
                 host=target_url.hostname if target_url.hostname else '',
                 path=target_url.path,
-                fragment=target_url.fragment,
+                fragment=target_fragment,
             ))
     else:
         raise ValueError(
@@ -324,6 +330,12 @@ def resolve_ref(spec, url, json_path, file_path, defs_dict):
         return resolve_refs(spec, spec_dict, json_path, file_path, defs_dict)
 
 
+def make_resolved_ref(marshaled_target):
+    return {'$ref': '#/definitions/{target}'.format(
+        target=marshaled_target,
+    )}
+
+
 def resolve_refs(spec, val, json_path, file_path, defs_dict):
     if isinstance(val, dict):
         new_dict = {}
@@ -339,9 +351,7 @@ def resolve_refs(spec, val, json_path, file_path, defs_dict):
                         defs_dict[marshaled_target] = resolve_ref(
                             spec, subval, json_path, file_path, defs_dict
                         )
-                    return {'$ref': '#/definitions/{target}'.format(
-                        target=marshaled_target,
-                    )}
+                    return make_resolved_ref(marshaled_target)
                 # assume $ref is the only key in the dict
                 return resolve_ref(
                     spec, subval, json_path, file_path, defs_dict
