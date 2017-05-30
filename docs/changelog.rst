@@ -1,9 +1,10 @@
 Changelog
 =========
 
-Development version (?)
+2.4.0 (2017-05-30)
 ++++++++++++++++++++++++++
-* Bugfix: prevent resolve_refs from making strange keys when flattening specs (see #204)
+* Bugfix: prevent resolve_refs from resolution failures when flattening specs with recursive $refs (see #204)
+* Allow serving of api_docs from paths besides /api_docs (see #187)
 * Support virtual hosting via SCRIPT_NAME (see #201 and https://www.python.org/dev/peps/pep-0333/)
 
 2.3.2 (2017-04-10)
