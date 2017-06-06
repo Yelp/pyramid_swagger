@@ -81,9 +81,8 @@ def test_resolve_nested_refs():
     Make sure we resolve nested refs gracefully and not get lost in
     the recursion. Also make sure we don't rely on dictionary order
     """
+    os.environ["PYTHONHASHSEED"] = str(1)
     with open('tests/sample_schemas/nested_defns/swagger.yaml') as swagger_spec:
         spec_dict = yaml.load(swagger_spec)
     spec = Spec.from_dict(spec_dict, '')
-    for i in range(1, 50):
-        os.environ["PYTHONHASHSEED"] = str(i)
-        resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
+    resolve_refs(spec, spec_dict, ['/'], 'swagger', {})

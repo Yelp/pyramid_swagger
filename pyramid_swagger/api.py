@@ -266,23 +266,47 @@ def _get_target_url(spec, target, current_path=''):
         )
 
 
+def _ensure_sane_key(fragment, mar_target):
+    '''
+    This function patches a nasty bug with the
+    which was corrupting out keys
+
+    explanation:
+        sometimes the fragment becomes:
+        '/definitions/:........swagger|..definitions..A'
+        and which makes the marshaled_target:
+        ':........swagger|..definitions..:........swagger|..definitions..A'
+        this is bad, it only comes about in a very specific case
+        this function esentially checks for that.
+    In the above example we want to return: ':........swagger|..definitions..A'
+
+    see tests/sample_specs/nested_defns/swagger.yaml
+    for an example spec that causes this issue.
+
+    '''
+    simple_fragment = fragment.split('/')[-1]
+    path_to_key = simple_fragment.split('..')
+    path = path_to_key[:-1]
+    key = path_to_key[-1]
+    bad_path = '..'.join(path + path + [key])
+    if bad_path == mar_target:
+        return '..'.join(path + [key])
+    return mar_target
+
+
 def _marshal_target(target_url):
     target_scheme = target_url.scheme
     target_fragment = target_url.fragment
     if len(target_url.path) > 0 and \
             target_scheme in ['', 'file', 'http', 'https']:
-        # Don't have nested refferences to the same file
-        # see tests/sample_specs/nested_defns/swagger.yaml
-        # for an example spec that this addresses.
-        if target_scheme == '':
-            return target_fragment.split('/')[-1]
-        return _low_level_translate(
+        marshaled_target = _low_level_translate(
             '{scheme}://{host}{path}#{fragment}'.format(
                 scheme=target_url.scheme,
                 host=target_url.hostname if target_url.hostname else '',
                 path=target_url.path,
                 fragment=target_fragment,
             ))
+        return _ensure_sane_key(target_fragment, marshaled_target)
     else:
         raise ValueError(
             'Invalid target: {target}'.format(target=urlunparse(target_url))
