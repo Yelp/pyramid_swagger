@@ -86,3 +86,29 @@ def test_resolve_nested_refs():
         spec_dict = yaml.load(swagger_spec)
     spec = Spec.from_dict(spec_dict, '')
     resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
+
+
+def traverse_spec(swagger_spec):
+    for k, v in swagger_spec.items():
+        if k == "":
+            raise Exception('Empty key detected in the swagger spec.')
+        elif isinstance(v, dict):
+            return traverse_spec(v)
+        elif isinstance(v, list):
+            for item in v:
+                if isinstance(item, dict):
+                    return traverse_spec(item)
+    return
+
+
+def test_extenal_refs_no_empty_keys():
+    """
+    This test ensures that we never use empty strings as
+    keys swagger specs.
+    """
+    with open('tests/sample_schemas/external_refs/swagger.json') as swagger_spec:
+        spec_dict = yaml.load(swagger_spec)
+    path = 'file:' + os.getcwd() + '/tests/sample_schemas/external_refs/swagger.json'
+    spec = Spec.from_dict(spec_dict, path)
+    flattened_spec = resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
+    traverse_spec(flattened_spec)
