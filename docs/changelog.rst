@@ -3,6 +3,7 @@ Changelog
 
 Development version (?)
 ++++++++++++++++++++++++++
+* Bugfix: add a quick fix to prevent resolve_refs from making empty json keys on external refs (see #206)
 * Bugfix: prevent resolve_refs from making strange keys when flattening specs (see #204)
 * Support virtual hosting via SCRIPT_NAME (see #201 and https://www.python.org/dev/peps/pep-0333/)
 
