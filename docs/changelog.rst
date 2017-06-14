@@ -1,5 +1,9 @@
 Changelog
 =========
+
+
+2.4.1 (2017-06-14)
+++++++++++++++++++++++++++
 * Bugfix: add a quick fix to prevent resolve_refs from making empty json keys on external refs (see #206)
 
 2.4.0 (2017-05-30)
