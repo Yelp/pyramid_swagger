@@ -1,0 +1,21 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "dumb spec"
+  },
+  "paths": {
+    "/blah": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "blah",
+            "schema": {
+              "$ref": "A.json"
+            }
+          }
+        }
+      }
+    }
+  }
+}
