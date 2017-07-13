@@ -1,6 +1,6 @@
 Changelog
 =========
-
+* Bugfix: update name of file when following a json reference in resolve_refs (see #208)
 
 2.4.1 (2017-06-14)
 ++++++++++++++++++++++++++

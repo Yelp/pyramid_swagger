@@ -1,0 +1,10 @@
+{
+    "common": {
+        "$ref": "#definitions/common"
+    },
+    "definitions": {
+        "common": {
+            "type": "integer"
+        }
+    }
+}

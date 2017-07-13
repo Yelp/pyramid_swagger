@@ -112,3 +112,18 @@ def test_extenal_refs_no_empty_keys():
     spec = Spec.from_dict(spec_dict, path)
     flattened_spec = resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
     traverse_spec(flattened_spec)
+
+
+def test_extenal_conflicting_namespaces():
+    """
+    This test ensures that we dont overwrite
+    keys in defs_dict if multiple files have
+    an object with the same name.
+    """
+    with open('tests/sample_schemas/external_refs/conflicting_namespaces.json') as swagger_spec:
+        spec_dict = yaml.load(swagger_spec)
+    path = 'file:' + os.getcwd() + '/tests/sample_schemas/external_refs/swagger.json'
+    spec = Spec.from_dict(spec_dict, path)
+    defs_dict = {}
+    resolve_refs(spec, spec_dict, ['/'], 'swagger', defs_dict)
+    assert len(defs_dict) == 4
