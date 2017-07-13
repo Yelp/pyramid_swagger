@@ -269,7 +269,7 @@ def _get_target_url(spec, target, current_path=''):
 def _ensure_sane_key(fragment, mar_target):
     '''
     This function patches a nasty bug with the
-    which was corrupting out keys
+    recursion which was corrupting our keys
 
     explanation:
         sometimes the fragment becomes:
@@ -365,6 +365,9 @@ def resolve_refs(spec, val, json_path, file_path, defs_dict):
         new_dict = {}
         for key, subval in val.items():
             if key == '$ref':
+                new_file_path = subval.split('#')[0]
+                if new_file_path != '':
+                    file_path = os.path.basename(new_file_path)
                 if is_a_swagger_definition(json_path):
                     target_url = _get_target_url(spec, subval, file_path)
                     marshaled_target = _marshal_target(target_url)
