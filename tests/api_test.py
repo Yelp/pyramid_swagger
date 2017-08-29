@@ -10,7 +10,6 @@ from pyramid.testing import DummyRequest
 from pyramid_swagger.api import build_swagger_12_api_declaration_view
 from pyramid_swagger.api import get_path_if_relative
 from pyramid_swagger.api import register_api_doc_endpoints
-from pyramid_swagger.api import resolve_refs
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
 from pyramid_swagger.ingest import ResourceListingNotFoundError
@@ -85,7 +84,7 @@ def test_resolve_nested_refs():
     with open('tests/sample_schemas/nested_defns/swagger.yaml') as swagger_spec:
         spec_dict = yaml.load(swagger_spec)
     spec = Spec.from_dict(spec_dict, '')
-    resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
+    assert spec.flattened_spec
 
 
 def traverse_spec(swagger_spec):
@@ -110,5 +109,5 @@ def test_extenal_refs_no_empty_keys():
         spec_dict = yaml.load(swagger_spec)
     path = 'file:' + os.getcwd() + '/tests/sample_schemas/external_refs/swagger.json'
     spec = Spec.from_dict(spec_dict, path)
-    flattened_spec = resolve_refs(spec, spec_dict, ['/'], 'swagger', {})
+    flattened_spec = spec.flattened_spec
     traverse_spec(flattened_spec)
