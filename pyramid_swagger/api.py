@@ -7,11 +7,14 @@ import os.path
 
 import simplejson
 import yaml
+from bravado_core.spec import Spec
 from bravado_core.spec import strip_xscope
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 
 from pyramid_swagger.model import PyramidEndpoint
+from pyramid_swagger.tween import get_swagger_objects
+from pyramid_swagger.tween import load_settings
 
 
 # TODO: document that this is now a public interface
@@ -100,6 +103,47 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
             basePath=str(request.application_url),
         )
     return view_for_api_declaration
+
+
+def extract_operation_from_request(request):
+    """
+    Extract bravado_core.operation.Operation of the input request.
+
+    NOTE: This method should be executed withing a pyramid view in order to
+    guarantee that a route has been matched and registered into request.matched_route
+
+    :param request: pyramid request
+    :type request: pyramid.request.Request
+
+    :returns: bravado-core Operation object related to input request
+    :rtype: bravado_core.operation.Operation
+    """
+
+    route_info = {'route': request.matched_route}
+    swagger_handler, spec = get_swagger_objects(
+        settings=load_settings(request.registry),
+        registry=request.registry,
+        route_info=route_info,
+    )
+
+    assert isinstance(spec, Spec), 'Swagger operation extraction is possible for Swagger2.0 endpoints only'
+
+    return swagger_handler.op_for_request(request=request, route_info=route_info, spec=spec)
+
+
+def extract_parameter_spec_from_request(request, parameter_name):
+    """
+    Extract bravado_core.param.Param from input request for a given parameter name
+
+    :param request: pyramid request
+    :type request: pyramid.request.Request
+    :param parameter_name: parameter name
+    :type parameter_name: str
+
+    :return: bravado-core Param object related to input request and parameter name
+    :rtype: bravado_core.param.Param
+    """
+    return extract_operation_from_request(request).params[parameter_name].param_spec
 
 
 def _low_level_translate(url, is_marshaling=True):
