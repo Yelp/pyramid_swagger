@@ -12,6 +12,10 @@
         {
             "path": "/other_sample",
             "description": "Two heads are better than one."
+        },
+        {
+            "path": "/echo_date",
+            "description": "Echoes the input body in the response. Endpoint used for verifying PyramidSwaggerRendererFactory"
         }
     ]
 }
