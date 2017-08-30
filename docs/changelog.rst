@@ -1,6 +1,9 @@
 Changelog
 =========
 
+In Development
+++++++++++++++++++++++++++
+* Outsource flattening logic to bravado-core library.
 
 2.4.1 (2017-06-14)
 ++++++++++++++++++++++++++

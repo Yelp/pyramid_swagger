@@ -1,77 +1,76 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "title": "Title was not specified",
-        "version": "0.1"
-    },
-    "produces": ["application/json"],
-    "paths": {
-        "/no_models": {
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Return a standard_response",
-                        "schema": {
-                            "type": "object",
-                            "required": [
-                                "raw_response",
-                                "logging_info"
-                            ],
-                            "additionalProperties": false,
-                            "properties": {
-                                "raw_response": {
-                                    "type": "string"
-                                },
-                                "logging_info": {
-                                    "type": "object"
-                                }
-                            }
-                        }
+    "definitions": {
+        "lfile:responses..common.json|..200": {
+            "description": "Return a standard_response",
+            "schema": {
+                "additionalProperties": false,
+                "properties": {
+                    "logging_info": {
+                        "type": "object"
+                    },
+                    "raw_response": {
+                        "type": "string"
                     }
                 },
-                "description": "",
-                "operationId": "no_models_get"
-            }
-        },
-        "/sample/{path_arg}/resource": {
-            "get": {
-                "responses": {
-                    "200": {
-                        "description": "Return a standard_response",
-                        "schema": {
-                            "type": "object",
-                            "required": [
-                                "raw_response",
-                                "logging_info"
-                            ],
-                            "additionalProperties": false,
-                            "properties": {
-                                "raw_response": {
-                                    "type": "string"
-                                },
-                                "logging_info": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "description": "",
-                "operationId": "standard",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "path_arg",
-                        "required": true,
-                        "type": "string",
-                        "enum": ["path_arg1", "path_arg2"]
-                    }
-                ]
+                "required": [
+                    "raw_response",
+                    "logging_info"
+                ],
+                "type": "object"
             }
         }
     },
     "host": "localhost:9999",
+    "info": {
+        "title": "Title was not specified",
+        "version": "0.1"
+    },
+    "parameters": {
+        "lfile:parameters..common.json|..path_arg": {
+            "enum": [
+                "path_arg1",
+                "path_arg2"
+            ],
+            "in": "path",
+            "name": "path_arg",
+            "required": true,
+            "type": "string"
+        }
+    },
+    "paths": {
+        "/no_models": {
+            "get": {
+                "description": "",
+                "operationId": "no_models_get",
+                "responses": {
+                    "200": {
+                        "$ref": "#/definitions/lfile:responses..common.json|..200"
+                    }
+                }
+            }
+        },
+        "/sample/{path_arg}/resource": {
+            "get": {
+                "description": "",
+                "operationId": "standard",
+                "parameters": [
+                    {
+                        "$ref": "#/parameters/lfile:parameters..common.json|..path_arg"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "$ref": "#/definitions/lfile:responses..common.json|..200"
+                    }
+                }
+            }
+        }
+    },
+    "produces": [
+        "application/json"
+    ],
     "schemes": [
         "http"
-    ]
+    ],
+    "swagger": "2.0"
 }
