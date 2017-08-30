@@ -150,6 +150,8 @@ def validation_tween_factory(handler, registry):
     settings = load_settings(registry)
     route_mapper = registry.queryUtility(IRoutesMapper)
 
+    validation_context = _get_validation_context(registry)
+
     def validator_tween(request):
         # We don't have access to this yet but let's go ahead and build the
         # matchdict so we can validate it and use it to exclude routes from
@@ -160,8 +162,6 @@ def validation_tween_factory(handler, registry):
 
         if should_exclude_request(settings, request, route_info):
             return handler(request)
-
-        validation_context = _get_validation_context(registry)
 
         try:
             op_or_validators_map = swagger_handler.op_for_request(
