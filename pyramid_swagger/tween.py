@@ -13,6 +13,7 @@ import jsonschema.exceptions
 import simplejson
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
+from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 from bravado_core.response import get_response_spec
@@ -171,6 +172,11 @@ def validation_tween_factory(handler, registry):
                     raise PathNotFoundError(str(exc), child=exc)
             else:
                 return handler(request)
+
+        def operation(_):
+            return op_or_validators_map if isinstance(op_or_validators_map, Operation) else None
+
+        request.set_property(operation)
 
         if settings.validate_request:
             with validation_context(request, response=None):
