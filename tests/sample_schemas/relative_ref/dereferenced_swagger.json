@@ -1,25 +1,4 @@
 {
-    "definitions": {
-        "lfile:responses..common.json|..200": {
-            "description": "Return a standard_response",
-            "schema": {
-                "additionalProperties": false,
-                "properties": {
-                    "logging_info": {
-                        "type": "object"
-                    },
-                    "raw_response": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "raw_response",
-                    "logging_info"
-                ],
-                "type": "object"
-            }
-        }
-    },
     "host": "localhost:9999",
     "info": {
         "title": "Title was not specified",
@@ -44,7 +23,7 @@
                 "operationId": "no_models_get",
                 "responses": {
                     "200": {
-                        "$ref": "#/definitions/lfile:responses..common.json|..200"
+                        "$ref": "#/responses/lfile:responses..common.json|..200"
                     }
                 }
             }
@@ -60,7 +39,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "$ref": "#/definitions/lfile:responses..common.json|..200"
+                        "$ref": "#/responses/lfile:responses..common.json|..200"
                     }
                 }
             }
@@ -69,6 +48,27 @@
     "produces": [
         "application/json"
     ],
+    "responses": {
+        "lfile:responses..common.json|..200": {
+            "description": "Return a standard_response",
+            "schema": {
+                "additionalProperties": false,
+                "properties": {
+                    "logging_info": {
+                        "type": "object"
+                    },
+                    "raw_response": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "raw_response",
+                    "logging_info"
+                ],
+                "type": "object"
+            }
+        }
+    },
     "schemes": [
         "http"
     ],
