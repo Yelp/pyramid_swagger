@@ -144,3 +144,140 @@ Otherwise, models are represented as dicts.
 
     Values in ``request.swagger_data`` are only available if
     ``pyramid_swawgger.enable_request_validation`` is enabled.
+
+Accessing Swagger Operation
+---------------------------
+
+During the implementation of an endpoint you could eventually have need of accessing the Swagger Specs that defined that specific view.
+``pyramid_swagger`` will inject in the request object a new property (that will be evaluated only if accessed) called ``operation``.
+
+``request.operation`` will be set to ``None`` for Swagger 1.2 defined endpoints, while it will be an `Operation <https://github.com/Yelp/bravado-core/blob/v4.8.4/bravado_core/operation.py#L12>`_ object if the endpoint is defined by Swagger 2.0 specs.
+
+Set pyramid view renderer
+-------------------------
+
+Using :mod:`pyramid_swagger` you will get automatic conversions between input JSON objects to easy to handle python objects.
+An example could be a swagger object property marked to use date property, the library will take care of converting the ISO 8601 date representation to an easy to handle python ``datetime.date`` object.
+
+Usually, while building the views that returns object that needs special handling (like ``datetime.date``) you are *forced* to perform manual operations to convert the python object on objects that could be serialized with the default ``pyramid`` renderers (ie. ``pyramid.`renderers.JSON``).
+Using ``pyramid_swagger.renderer.PyramidSwaggerRendererFactory`` as base renderer for your pyramid view will remove this *human intervention*, so you can focus more on defining the internal logic respect dealing with formatting.
+
+Here is an example:
+
+Let's assume that you have the following specs
+
+.. code-block:: json
+
+    {
+      "definitions": {
+        "json_object": {
+          "maxProperties": 1,
+          "minProperties": 1,
+          "properties": {
+            "date": {
+              "type": "string",
+              "format": "date"
+            },
+            "date-time": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "paths": {
+        "/echo_date": {
+          "post": {
+            "description": "Echoes the input date into response body",
+            "parameters": [
+              {
+                "format": "date",
+                "in": "formData",
+                "name": "date",
+                "type": "string"
+              }
+            ],
+            "operationId": "echo_date",
+            "responses": {
+              "200": {
+                "$ref": "#/responses/200_ok"
+              }
+            }
+          }
+        },
+        "/echo_date_time": {
+          "post": {
+            "description": "Echoes the input date-time into response body",
+            "operationId": "echo_date_time",
+            "parameters": [
+              {
+                "format": "date-time",
+                "in": "formData",
+                "name": "date_time",
+                "type": "string"
+              }
+            ],
+            "responses": {
+              "200": {
+                "$ref": "#/responses/200_ok"
+              }
+            }
+          }
+        }
+      },
+      "responses": {
+          "200_ok": {
+            "description": "HTTP/200 OK",
+            "schema": {
+            "$ref": "#/definitions/json_object"
+          }
+      },
+      "swagger": "2.0"
+    }
+
+and that your views are defined as
+
+.. code-block:: python
+
+    @view_config(route_name='echo_date', renderer='pyramid_swagger')
+    def echo_date(request):
+        input_date = request.swagger_data['date']
+        assert isinstance(input_date, datetime.date)
+        return {'date': input_date}
+
+    @view_config(route_name='echo_date_time', renderer='json')
+    def echo_date(request):
+        input_date_time = request.swagger_data['date_time']
+        assert isinstance(input_date_time, datetime.datetime)
+        return {'date-time': input_date_time}
+
+Calling the ``/echo_date`` endpoint you will receive, as expected, a response that will look like ``{"date": "2017-09-06"}``, while calling ``/echo_date_time`` endpoint you will receive an unexpected HTTP/500 as response.
+
+This happens because ``pyramid_swagger`` renderer performs the proper object unmarshalling (transforming the ``datetime.date`` object to an ISO 8601 string representation) before calling the base JSON renderer; while the default ``json`` renderer, which is not capable to transform to JSON a ``datetime.datetime`` object, will raise an exception.
+
+To workaround the limitation introduced by ``json`` formatter the developer has to *manually*  convert the ``datetime.datetime`` object to the desired string representation or adding `adapters <https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/renderers.html#using-the-add-adapter-method-of-a-custom-json-renderer>`_ for the types not handled by ``json`` renderer.
+Either approaches are introducing an additional complexity on the service developer since he/she has to care about response formatting and could not be compliant with the service specification.
+
+In order to increase the flexibility of the new rendering feature, it is exposed ``PyramidSwaggerRendererFactory`` class which will allow you to define your own custom renderer.
+The defined renderer will operate on the marshaled, according to the Swagger Specification, response.
+
+Example of definition of a custom renderer
+
+.. code-block:: python
+
+    class MyPersonalRendererFactory(object):
+        def __init__(self, info):
+            # Initialize your factory
+            pass
+
+        def __call__(self, value, system):
+            # perform your personal rendering operations
+            # you can assume that value is a marshaled response, so already JSON serializable object
+            return rendered_value
+
+Once you have defined your own renderer you have to wrap the new renderer in ``PyramidSwaggerRendererFactory`` and register it to the pyramid framework as described by `Adding and Changing Renderers pyramid documentation <https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/renderers.html#adding-and-changing-renderers>`_.
+
+.. code-block:: python
+
+    config.add_renderer(name='custom_renderer', factory=PyramidSwaggerRendererFactory(MyPersonalRendererFactory))
