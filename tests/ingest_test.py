@@ -127,13 +127,15 @@ def test_create_bravado_core_config_non_empty():
         'pyramid_swagger.enable_swagger_spec_validation': True,
         'pyramid_swagger.use_models': True,
         'pyramid_swagger.user_formats': [some_format],
+        'pyramid_swagger.include_missing_properties': False,
     }
     expected_bravado_core_config = {
         'validate_requests': True,
         'validate_responses': False,
         'validate_swagger_spec': True,
         'use_models': True,
-        'formats': [some_format]
+        'formats': [some_format],
+        'include_missing_properties': False
     }
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
     assert expected_bravado_core_config == bravado_core_config
