@@ -42,7 +42,8 @@ def includeme(config):
         under=pyramid.tweens.EXCVIEW
     )
 
-    if settings.get('pyramid_swagger.enable_api_doc_views', True):
+    if pyramid.settings.asbool(
+            settings.get('pyramid_swagger.enable_api_doc_views', True)):
         if SWAGGER_12 in swagger_versions:
             register_api_doc_endpoints(
                 config,
