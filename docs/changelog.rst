@@ -3,6 +3,7 @@ Changelog
 
 In Development
 ++++++++++++++++++++++++++
+* Support `include_missing_properties` bravado-core flag in pyramid configuration
 * Outsource flattening logic to bravado-core library.
 
 2.4.1 (2017-06-14)
