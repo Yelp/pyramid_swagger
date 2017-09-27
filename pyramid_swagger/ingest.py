@@ -204,6 +204,7 @@ def create_bravado_core_config(settings):
             'validate_swagger_spec',
         'pyramid_swagger.use_models': 'use_models',
         'pyramid_swagger.user_formats': 'formats',
+        'pyramid_swagger.include_missing_properties': 'include_missing_properties',
     }
 
     bravado_core_config_defaults = {

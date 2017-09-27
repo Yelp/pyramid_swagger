@@ -55,6 +55,11 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: False
         pyramid_swagger.use_models = false
 
+        # Set value for property defined in swagger schema to None if value was not provided.
+        # Skip property if value is missed and include_missing_properties is False.
+        # Default: True
+        pyramid_swagger.include_missing_properties = true
+
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
         # Default: ^/static/? ^/api-docs/? ^/swagger.json
