@@ -8,6 +8,7 @@ from .api import build_swagger_20_swagger_schema_views
 from .api import register_api_doc_endpoints
 from .ingest import get_swagger_schema
 from .ingest import get_swagger_spec
+from .renderer import PyramidSwaggerRendererFactory
 from .tween import get_swagger_versions
 from .tween import SWAGGER_12
 from .tween import SWAGGER_20
@@ -41,6 +42,8 @@ def includeme(config):
         "pyramid_swagger.tween.validation_tween_factory",
         under=pyramid.tweens.EXCVIEW
     )
+
+    config.add_renderer('pyramid_swagger', PyramidSwaggerRendererFactory())
 
     if settings.get('pyramid_swagger.enable_api_doc_views', True):
         if SWAGGER_12 in swagger_versions:

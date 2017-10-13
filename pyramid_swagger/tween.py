@@ -13,6 +13,7 @@ import jsonschema.exceptions
 import simplejson
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
+from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 from bravado_core.response import get_response_spec
@@ -149,6 +150,8 @@ def validation_tween_factory(handler, registry):
     settings = load_settings(registry)
     route_mapper = registry.queryUtility(IRoutesMapper)
 
+    validation_context = _get_validation_context(registry)
+
     def validator_tween(request):
         # We don't have access to this yet but let's go ahead and build the
         # matchdict so we can validate it and use it to exclude routes from
@@ -160,8 +163,6 @@ def validation_tween_factory(handler, registry):
         if should_exclude_request(settings, request, route_info):
             return handler(request)
 
-        validation_context = _get_validation_context(registry)
-
         try:
             op_or_validators_map = swagger_handler.op_for_request(
                 request, route_info=route_info, spec=spec)
@@ -171,6 +172,11 @@ def validation_tween_factory(handler, registry):
                     raise PathNotFoundError(str(exc), child=exc)
             else:
                 return handler(request)
+
+        def operation(_):
+            return op_or_validators_map if isinstance(op_or_validators_map, Operation) else None
+
+        request.set_property(operation)
 
         if settings.validate_request:
             with validation_context(request, response=None):

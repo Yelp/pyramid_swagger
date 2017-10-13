@@ -1,0 +1,56 @@
+{
+  "apiVersion": "0.1",
+  "swaggerVersion": "1.2",
+  "basePath": "http://localhost:9999/echo_date",
+  "apis": [
+    {
+      "path": "/echo_date",
+      "operations": [
+        {
+          "method": "POST",
+          "nickname": "echo_date",
+          "type": "string",
+          "parameters": [
+            {
+              "name": "body",
+              "paramType": "body",
+              "type": "object_with_formats"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "/echo_date_json_renderer",
+      "operations": [
+        {
+          "description": "This endpoint is used in tests/acceptance/request_test.py and requires to be identical to /echo_date endpoint",
+          "method": "POST",
+          "nickname": "echo_date",
+          "parameters": [
+            {
+              "name": "body",
+              "paramType": "body",
+              "type": "object_with_formats"
+            }
+          ],
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "models": {
+    "object_with_formats": {
+      "id": "object_with_formats",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "date"
+      ]
+    }
+  }
+}

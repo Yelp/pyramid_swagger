@@ -17,6 +17,51 @@
         "operationId": "no_models_get"
       }
     },
+    "/echo_date": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/object_with_formats"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP/200 OK",
+            "schema": {
+              "$ref": "#/definitions/object_with_formats"
+            }
+          }
+        },
+        "operationId": "echo_date"
+      }
+    },
+    "/echo_date_json_renderer": {
+      "post": {
+        "description": "This endpoint is used in tests/acceptance/request_test.py and requires to be identical to /echo_date endpoint",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/object_with_formats"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP/200 OK",
+            "schema": {
+              "$ref": "#/definitions/object_with_formats"
+            }
+          }
+        },
+        "operationId": "echo_date_json_renderer"
+      }
+    },
     "/sample/{path_arg}/resource": {
       "get": {
         "responses": {
@@ -254,6 +299,18 @@
     "http"
   ],
   "definitions": {
+    "object_with_formats": {
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "date"
+      ],
+      "type": "object"
+    },
     "standard_response": {
       "type": "object",
       "required": [
