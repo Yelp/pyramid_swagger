@@ -97,6 +97,12 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         pyramid_swagger.dereference_served_schema = false
 
 
+.. note::
+
+    ``pyramid_swawgger`` uses a ``bravado_core.spec.Spec`` instance for handling swagger related details.
+    You can set `bravado-core config values <http://bravado-core.readthedocs.io/en/stable/config.html>`_ by adding a ``bravado-core.`` prefix to them.
+
+
 Note that, equivalently, you can add these settings during webapp configuration:
 
 .. code-block:: python
