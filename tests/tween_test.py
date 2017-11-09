@@ -381,7 +381,7 @@ def test_request_properties():
 def test_response_properties():
     root_response = Response(
         headers={"X-Some-Special-Header": "foobar"},
-        body='{"myKey": 42}'
+        body=b'{"myKey": 42}'
     )
     # these must be set for the "text" attribute of webob.Response to be
     # readable, and setting them in the constructor gets into a conflict
@@ -390,6 +390,7 @@ def test_response_properties():
     root_response.charset = 'utf8'
     response = PyramidSwaggerResponse(root_response)
     assert '{"myKey": 42}' == response.text
+    assert b'{"myKey": 42}' == response.raw_bytes
     assert "foobar" == response.headers["X-Some-Special-Header"]
     assert 'application/json' == response.content_type
 

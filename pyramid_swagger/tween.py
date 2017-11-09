@@ -298,6 +298,10 @@ class PyramidSwaggerResponse(OutgoingResponse):
         return self.response.headers
 
     @property
+    def raw_bytes(self):
+        return self.response.body
+
+    @property
     def text(self):
 
         # Treating webob.Response carefully: first check if there's a
