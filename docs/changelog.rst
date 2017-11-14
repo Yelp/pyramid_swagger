@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.6.0 (2017-11-14)
+++++++++++++++++++++++++++
+* Support setting bravado-core config values by prefixing them with ``bravado_core.`` in the pyramid_swagger config (see #221)
+* Support raw_bytes response attribute, required for msgpack wire format support in outgoing responses (see #222)
+
 2.5.0 (2017-10-26)
 ++++++++++++++++++++++++++
 * Support `include_missing_properties` bravado-core flag in pyramid configuration
