@@ -62,7 +62,7 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
 
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
-        # Default: ^/static/? ^/api-docs/? ^/swagger.json
+        # Default: ^/static/? ^/pyramid_swagger/static/? ^/api-docs/? ^/api-explorer? /swagger.(json|yaml)
         pyramid_swagger.exclude_paths = ^/static/? ^/api-docs/? ^/swagger.json
 
         # Exclude pyramid routes from validation. Accepts a list of strings
@@ -96,10 +96,26 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: False
         pyramid_swagger.dereference_served_schema = false
 
+        # Path for Swagger UI static resource serving:
+        # Default: pyramid_swagger/static
+        pyramid_swagger.swagger_ui_static = pyramid_swagger/static
+
+        # Path for Swagger UI index view serving
+        # Default: /api-explorer
+        pyramid_swagger.swagger_ui_path= /api-explorer
+
+        # Disable Swagger UI serving
+        # Default: False
+        pyramid_swagger.swagger_ui_disable = true
+
+        # Swagger UI <script> generator function that allows you to manipulate
+        # the default bootstrap process
+        # Default: pyramid_swagger.api:swagger_ui_script_template
+        pyramid_swagger.swagger_ui_script_generator = your_package.foo:callable_name
 
 .. note::
 
-    ``pyramid_swawgger`` uses a ``bravado_core.spec.Spec`` instance for handling swagger related details.
+    ``pyramid_swagger`` uses a ``bravado_core.spec.Spec`` instance for handling swagger related details.
     You can set `bravado-core config values <http://bravado-core.readthedocs.io/en/stable/config.html>`_ by adding a ``bravado-core.`` prefix to them.
 
 

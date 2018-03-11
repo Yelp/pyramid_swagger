@@ -3,11 +3,15 @@
 Module for automatically serving /api-docs* via Pyramid.
 """
 import copy
+import importlib
 import os.path
+from string import Template
 
+import pkg_resources
 import simplejson
 import yaml
 from bravado_core.spec import strip_xscope
+from pyramid.response import Response
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
 
@@ -100,6 +104,69 @@ def build_swagger_12_api_declaration_view(api_declaration_json):
             basePath=str(request.application_url),
         )
     return view_for_api_declaration
+
+
+def build_swagger_ui_view(settings, config, endpoints, **kwargs):
+    """
+    Create view that will serve template for swagger UI with proper
+    urls substituted
+
+    :param settings:
+    :param config:
+    :param swagger_json_route:
+    :return:
+    """
+    # sniff out json route from endpoint list
+    swagger_json_route = None
+    for endpoint in endpoints:
+        if endpoint.route_name.endswith('.json'):
+            swagger_json_route = endpoint.route_name
+    if not swagger_json_route:
+        return
+
+    static_name = settings.get('pyramid_swagger.swagger_ui_static',
+                               'pyramid_swagger/static')
+
+    swagger_ui_path = settings.get('pyramid_swagger.swagger_ui_path',
+                                   '/api-explorer').rstrip('/')
+    config.add_route('pyramid_swagger.swagger_ui_path', swagger_ui_path)
+    template = pkg_resources.resource_string(
+        'pyramid_swagger', 'static/index.html').decode('utf8')
+    script_generator = settings.get(
+        'pyramid_swagger.swagger_ui_script_generator',
+        'pyramid_swagger.api:swagger_ui_script_template')
+    package, callable = script_generator.split(':')
+    imported_package = importlib.import_module(package)
+
+    def swagger_ui_template_view(request):
+        script_callable = getattr(imported_package, callable)
+        html = Template(template).safe_substitute(
+            ui_css_url=request.static_url('pyramid_swagger:static/swagger-ui.css'),
+            ui_js_bundle_url=request.static_url('pyramid_swagger:static/swagger-ui-bundle.js'),
+            ui_js_standalone_url=request.static_url('pyramid_swagger:static/swagger-ui-standalone-preset.js'),
+            swagger_ui_script=script_callable(request, swagger_json_route),
+        )
+        return Response(html)
+
+    config.add_view(swagger_ui_template_view,
+                    route_name='pyramid_swagger.swagger_ui_path')
+    config.add_static_view(name=static_name,
+                           path='pyramid_swagger:static')
+
+
+def swagger_ui_script_template(request, swagger_json_route, **kwargs):
+    """
+    Generates the <script> code that bootstraps Swagger UI, it will be injected
+    into index template
+    :param request:
+    :param swagger_json_route:
+    :return:
+    """
+    template = pkg_resources.resource_string(
+        'pyramid_swagger', 'static/index_script_template.html').decode('utf8')
+    return Template(template).safe_substitute(
+        swagger_spec_url=request.route_url(swagger_json_route),
+    )
 
 
 class NodeWalker(object):
