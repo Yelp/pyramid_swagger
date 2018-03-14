@@ -17,7 +17,7 @@ class PyramidSwaggerRendererFactory(object):
 
     def _marshal_object(self, request, response_object):
         # operation attribute is injected by validator_tween in case the endpoint is served by Swagger 2.0 specs
-        operation = getattr(request, 'operation')
+        operation = getattr(request, 'operation', None)
 
         if not operation:
             # If the request is not served by Swagger2.0 endpoint _marshal_object is NO_OP
