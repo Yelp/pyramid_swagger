@@ -143,7 +143,7 @@ Otherwise, models are represented as dicts.
 .. note::
 
     Values in ``request.swagger_data`` are only available if
-    ``pyramid_swawgger.enable_request_validation`` is enabled.
+    ``pyramid_swagger.enable_request_validation`` is enabled.
 
 Accessing Swagger Operation
 ---------------------------
