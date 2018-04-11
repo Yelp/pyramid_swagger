@@ -250,3 +250,37 @@ Once you have defined your own renderer you have to wrap the new renderer in ``P
 .. code-block:: python
 
     config.add_renderer(name='custom_renderer', factory=PyramidSwaggerRendererFactory(MyPersonalRendererFactory))
+
+
+---------------------------------------
+How to handle swagger responses as JSON
+---------------------------------------
+
+You might often want to serve validation errors as JSON responses in your
+application, here is an example implementation.
+
+.. code-block:: python
+
+    def exc_view(exc, request):
+        """
+        Handle swagger errors and respond with JSON
+        :param exc:
+        :param request:
+        :return:
+        """
+        error_info = exc.child
+        for_json = {
+            'message': getattr(error_info, 'message', u'{}'.format(error_info)),
+            'validator': getattr(error_info, 'validator', None),
+            'relative_schema_path': list(
+                getattr(error_info, 'relative_schema_path', []))[:-1],
+            'schema': getattr(error_info, 'schema', None),
+            'relative_path': list(getattr(error_info, 'relative_path', [])),
+            'instance': getattr(error_info, 'instance', None)
+        }
+
+        return for_json
+
+    config.add_exception_view(
+        context='pyramid_swagger.exceptions.RequestValidationError',
+        view=exc_view, renderer='json')
