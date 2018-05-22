@@ -20,7 +20,8 @@
             "$ref":"#/definitions/widget"
           }
         }
-      }
+      },
+      "type": "object"
     }
   },
   "paths": {
