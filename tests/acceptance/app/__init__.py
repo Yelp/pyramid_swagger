@@ -47,6 +47,11 @@ def date_view(request):
     return request.swagger_data['body']
 
 
+@view_config(route_name='post_endpoint_with_optional_body', request_method='POST', renderer='pyramid_swagger')
+def post_endpoint_with_optional_body(request):
+    return request.content_length
+
+
 @view_config(route_name='swagger_undefined', renderer='json')
 def swagger_undefined(request):
     return {}
@@ -77,6 +82,7 @@ def main(global_config, **settings):
 
     config.add_route('echo_date', '/echo_date')
     config.add_route('echo_date_json_renderer', '/echo_date_json_renderer')
+    config.add_route('post_endpoint_with_optional_body', '/post_endpoint_with_optional_body')
 
     config.scan()
     return config.make_wsgi_app()

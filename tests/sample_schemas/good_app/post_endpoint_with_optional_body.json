@@ -1,0 +1,32 @@
+{
+  "apiVersion": "0.1",
+  "swaggerVersion": "1.2",
+  "basePath": "http://localhost:9999/post_endpoint_with_optional_body",
+  "apis": [
+    {
+      "path": "/post_endpoint_with_optional_body",
+      "operations": [
+        {
+          "method": "POST",
+          "nickname": "post_endpoint_with_optional_body",
+          "type": "integer",
+          "parameters": [
+            {
+              "name": "body",
+              "paramType": "body",
+              "required": false,
+              "type": "object"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": {
+    "object": {
+      "id": "object",
+      "properties": {
+      }
+    }
+  }
+}

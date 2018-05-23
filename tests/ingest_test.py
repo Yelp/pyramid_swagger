@@ -57,7 +57,7 @@ def test_get_swagger_schema_default():
     }
 
     swagger_schema = get_swagger_schema(settings)
-    assert len(swagger_schema.pyramid_endpoints) == 5
+    assert len(swagger_schema.pyramid_endpoints) == 6
     assert swagger_schema.resource_validators
 
 
@@ -84,6 +84,7 @@ def test_generate_resource_listing():
             {'path': '/echo_date'},
             {'path': '/no_models'},
             {'path': '/other_sample'},
+            {'path': '/post_endpoint_with_optional_body'},
             {'path': '/sample'},
         ]
     }
