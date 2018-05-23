@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 import datetime
 from contextlib import contextmanager
+from json import dumps
 
 import pytest
 import simplejson
 from _pytest.fixtures import FixtureRequest
 from mock import Mock
 from pyramid.httpexceptions import exception_response
+from webtest.utils import NoDefault
 
 from pyramid_swagger import exceptions
 
 
 # Parameterize pyramid_swagger.swagger_versions
-@pytest.fixture(params=[['1.2'], ['2.0'], ['1.2', '2.0']])
+@pytest.fixture(
+    params=[['1.2'], ['2.0'], ['1.2', '2.0']],
+    ids=['1.2', '2.0', '1.2-2.0'],
+)
 def test_app(request, **overrides):
     """Fixture for setting up a test test_app with particular settings."""
     from .app import main
@@ -77,6 +82,13 @@ def test_echo_date_with_json_renderer(test_app):
         # If the request is served via Swagger1.2 there are no implicit type conversions performed by pyramid_swagger
         assert response.status_code == 200
         assert response.json == input_object
+
+
+@pytest.mark.parametrize('body', [NoDefault, {}])
+def test_post_endpoint_with_optional_body(test_app, body):
+    expected_length = len(dumps(body)) if body is not NoDefault else 0
+    # This is brutal for now ... it will be used to at first for debugging the issue
+    assert test_app.post_json('/post_endpoint_with_optional_body', body).json == expected_length
 
 
 def test_200_with_form_params(test_app):
