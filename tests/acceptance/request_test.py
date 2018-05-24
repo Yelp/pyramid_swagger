@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 from contextlib import contextmanager
-from json import dumps
 
 import pytest
 import simplejson
@@ -84,10 +83,14 @@ def test_echo_date_with_json_renderer(test_app):
         assert response.json == input_object
 
 
-@pytest.mark.parametrize('body', [NoDefault, {}])
-def test_post_endpoint_with_optional_body(test_app, body):
-    expected_length = len(dumps(body)) if body is not NoDefault else 0
-    # This is brutal for now ... it will be used to at first for debugging the issue
+@pytest.mark.parametrize(
+    'body, expected_length',
+    [
+        [NoDefault, 0],
+        [{}, 2],
+    ],
+)
+def test_post_endpoint_with_optional_body(test_app, body, expected_length):
     assert test_app.post_json('/post_endpoint_with_optional_body', body).json == expected_length
 
 
