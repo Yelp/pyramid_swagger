@@ -195,7 +195,7 @@ class SchemaValidator(object):
         """Validate a :class:`dict` of values. If `self.schema` is falsy this
         is a noop.
         """
-        if not self.schema:
+        if not self.schema or (values is None and not self.schema.get('required', False)):
             return
         self.validator.validate(values)
 

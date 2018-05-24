@@ -268,7 +268,10 @@ class PyramidSwaggerRequest(IncomingRequest):
         return result
 
     def json(self, **kwargs):
-        return getattr(self.request, 'json_body', {})
+        if self.request.is_body_readable:
+            return getattr(self.request, 'json_body', {})
+        else:
+            return None
 
 
 class PyramidSwaggerResponse(OutgoingResponse):

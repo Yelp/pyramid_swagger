@@ -23,6 +23,7 @@
           {
             "in": "body",
             "name": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/object_with_formats"
             }
@@ -39,6 +40,30 @@
         "operationId": "echo_date"
       }
     },
+    "/post_endpoint_with_optional_body": {
+      "post": {
+        "description": "Returns the request body length. Used to verify that optional body parameters are well handled",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP/200 OK. Return request body length",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
+        "operationId": "post_endpoint_with_optional_body"
+      }
+    },
     "/echo_date_json_renderer": {
       "post": {
         "description": "This endpoint is used in tests/acceptance/request_test.py and requires to be identical to /echo_date endpoint",
@@ -46,6 +71,7 @@
           {
             "in": "body",
             "name": "body",
+            "required": true,
             "schema": {
               "$ref": "#/definitions/object_with_formats"
             }
