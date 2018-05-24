@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.6.1 (2018-05-24)
+++++++++++++++++++++++++++
+* Fix operation extraction in `PyramidSwaggerRendererFactory` in case of Swagger1.2 endpoint (see #230)
+* Fix request body extraction if body is not set. (see #231)
+
 2.6.0 (2017-11-14)
 ++++++++++++++++++++++++++
 * Support setting bravado-core config values by prefixing them with ``bravado_core.`` in the pyramid_swagger config (see #221)
