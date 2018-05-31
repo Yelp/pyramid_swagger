@@ -106,27 +106,22 @@ def _recursively_rewrite_refs(schema_item, schema_format):
             _recursively_rewrite_refs(item, schema_format)
 
 
-def test_swagger_json_api_doc_route(testapp_with_base64):
-    test_files = [
-        'swagger',
-        'defs',
-    ]
+@pytest.mark.parametrize('schema_format', ['json', 'yaml'])
+@pytest.mark.parametrize('test_file', ['swagger', 'defs'])
+def test_swagger_json_api_doc_route(testapp_with_base64, test_file, schema_format):
+    validation_method = {
+        'yaml': validate_yaml_response,
+        'json': validate_json_response,
+    }
 
-    test_formats = [
-        ('yaml', validate_yaml_response),
-        ('json', validate_json_response),
-    ]
+    url = '/%s.%s' % (test_file, schema_format)
+    response = testapp_with_base64.get(url)
+    assert response.status_code == 200
 
-    for test_file in test_files:
-        for schema_format, validate_schema in test_formats:
-            url = '/%s.%s' % (test_file, schema_format)
-            response = testapp_with_base64.get(url)
-            assert response.status_code == 200
+    fname = 'tests/sample_schemas/yaml_app/%s.yaml' % test_file
+    with open(fname, 'r') as f:
+        expected_schema = yaml.load(f)
 
-            fname = 'tests/sample_schemas/yaml_app/%s.yaml' % test_file
-            with open(fname, 'r') as f:
-                expected_schema = yaml.load(f)
+    _recursively_rewrite_refs(expected_schema, schema_format)
 
-            _recursively_rewrite_refs(expected_schema, schema_format)
-
-            validate_schema(response, expected_schema)
+    validation_method[schema_format](response, expected_schema)
