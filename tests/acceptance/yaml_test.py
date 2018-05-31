@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import base64
+import copy
 import json
 
 import pytest
 import yaml
+from bravado_core.schema import is_dict_like
+from bravado_core.schema import is_list_like
+from six import iterkeys
 from webtest import TestApp as App
 
 from .app import main
@@ -51,17 +55,37 @@ def test_user_format_failure_case(testapp_with_base64):
                                 params={'required_arg': 'MQ'},)
 
 
+def _strip_xmodel(spec_dict):
+    """
+    :param spec_dict: Swagger spec in dict form. This is treated as read-only.
+    :return: deep copy of spec_dict with the x-model vendor extension stripped out.
+    """
+    result = copy.deepcopy(spec_dict)
+
+    def descend(fragment):
+        if is_dict_like(fragment):
+            fragment.pop('x-model', None)  # Removes 'x-model' key if present
+            for key in iterkeys(fragment):
+                descend(fragment[key])
+        elif is_list_like(fragment):
+            for element in fragment:
+                descend(element)
+
+    descend(result)
+    return result
+
+
 def validate_json_response(response, expected_dict):
     # webob < 1.7 returns the charset, webob >= 1.7 does not
     # see https://github.com/striglia/pyramid_swagger/issues/185
     assert response.headers['content-type'] in \
         ('application/json', 'application/json; charset=UTF-8')
-    assert json.loads(response.body.decode("utf-8")) == expected_dict
+    assert _strip_xmodel(json.loads(response.body.decode("utf-8"))) == expected_dict
 
 
 def validate_yaml_response(response, expected_dict):
     assert response.headers['content-type'] == 'application/x-yaml; charset=UTF-8'
-    assert yaml.load(response.body) == expected_dict
+    assert _strip_xmodel(yaml.load(response.body)) == expected_dict
 
 
 def _rewrite_ref(ref, schema_format):
