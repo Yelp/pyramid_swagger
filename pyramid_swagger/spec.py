@@ -6,6 +6,8 @@ import os
 
 import swagger_spec_validator
 from jsonschema.exceptions import ValidationError
+from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import pathname2url
 
 from .exceptions import wrap_exception
 
@@ -31,4 +33,5 @@ def validate_swagger_schema(schema_dir, resource_listing):
     schema_filepath = os.path.join(schema_dir, API_DOCS_FILENAME)
     swagger_spec_validator.validator12.validate_spec(
         resource_listing,
-        "file://{0}".format(os.path.abspath(schema_filepath)))
+        urlparse.urljoin('file:', pathname2url(os.path.abspath(schema_filepath))),
+    )

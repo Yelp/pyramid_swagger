@@ -10,6 +10,7 @@ from bravado_core.spec import build_http_handlers
 from bravado_core.spec import Spec
 from six import iteritems
 from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import pathname2url
 
 from .api import build_swagger_12_endpoints
 from .load_schema import load_schema
@@ -117,7 +118,7 @@ def get_resource_listing(schema_dir, should_generate_resource_listing):
     :param should_generate_resource_listing: when True a resource listing will
         be generated from the list of *.json files in the schema_dir. Otherwise
         return the contents of the resource listing file
-    :type should_enerate_resource_listing: boolean
+    :type should_generate_resource_listing: boolean
     :returns: the contents of a resource listing document
     """
     listing_filename = os.path.join(schema_dir, API_DOCS_FILENAME)
@@ -152,7 +153,7 @@ def get_swagger_schema(settings):
     :type settings: dict
     :returns: a :class:`pyramid_swagger.model.SwaggerSchema`
     """
-    schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
+    schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs')
     resource_listing = get_resource_listing(
         schema_dir,
         settings.get('pyramid_swagger.generate_resource_listing', False)
@@ -179,7 +180,7 @@ def get_swagger_spec(settings):
     schema_filename = settings.get('pyramid_swagger.schema_file',
                                    'swagger.json')
     schema_path = os.path.join(schema_dir, schema_filename)
-    schema_url = urlparse.urljoin('file:', os.path.abspath(schema_path))
+    schema_url = urlparse.urljoin('file:', pathname2url(os.path.abspath(schema_path)))
 
     handlers = build_http_handlers(None)  # don't need http_client for file:
     file_handler = handlers['file']
