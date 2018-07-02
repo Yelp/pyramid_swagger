@@ -10,6 +10,7 @@ import yaml
 from bravado_core.spec import strip_xscope
 from six.moves.urllib.parse import urlparse
 from six.moves.urllib.parse import urlunparse
+from six.moves.urllib.request import pathname2url
 
 from pyramid_swagger.model import PyramidEndpoint
 
@@ -288,7 +289,7 @@ def _build_swagger_20_schema_views(config):
             return fixed_spec
 
     for ref_fname in all_files:
-        ref_fname_parts = os.path.splitext(ref_fname)
+        ref_fname_parts = os.path.splitext(pathname2url(ref_fname))
         for schema_format in ['yaml', 'json']:
             route_name = 'pyramid_swagger.swagger20.api_docs.{0}.{1}'\
                 .format(ref_fname.replace('/', '.'), schema_format)
