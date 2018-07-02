@@ -1,6 +1,10 @@
 Changelog
 =========
 
+2.6.2 (2018-07-02)
+++++++++++++++++++++++++++
+* Fix bug that prevents library usage on Windows Platform (see #234)
+
 2.6.1 (2018-05-24)
 ++++++++++++++++++++++++++
 * Fix operation extraction in `PyramidSwaggerRendererFactory` in case of Swagger1.2 endpoint (see #230)
