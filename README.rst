@@ -6,6 +6,9 @@
     .. image:: https://travis-ci.org/striglia/pyramid_swagger.png?branch=master
         :target: https://travis-ci.org/striglia/pyramid_swagger?branch=master
         :alt: Travis CI
+    .. image:: https://ci.appveyor.com/api/projects/status/ufmlmpwy1vj3yjgk/branch/master?svg=true
+        :target: https://ci.appveyor.com/project/striglia/pyramid-swagger
+        :alt: Appveyor (Windows CI)
 :Current coverage on master:
     .. image:: https://coveralls.io/repos/striglia/pyramid_swagger/badge.png
         :target: https://coveralls.io/r/striglia/pyramid_swagger

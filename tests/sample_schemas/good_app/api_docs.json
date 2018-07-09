@@ -12,6 +12,14 @@
         {
             "path": "/other_sample",
             "description": "Two heads are better than one."
+        },
+        {
+            "path": "/echo_date",
+            "description": "Echoes the input body in the response. Endpoint used for verifying PyramidSwaggerRendererFactory"
+        },
+        {
+            "path": "/post_endpoint_with_optional_body",
+            "description": "Returns the request body length. Used to verify that optional body parameters are well handled"
         }
     ]
 }

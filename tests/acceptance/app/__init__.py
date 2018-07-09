@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import datetime
+
+import six
 import webob
 from pyramid.config import Configurator
 from pyramid.view import view_config
@@ -31,6 +34,24 @@ def sample(request):
     return {}
 
 
+@view_config(route_name='echo_date_json_renderer', request_method='POST', renderer='json')
+@view_config(route_name='echo_date', request_method='POST', renderer='pyramid_swagger')
+def date_view(request):
+
+    if '2.0' in request.registry.settings['pyramid_swagger.swagger_versions']:
+        # Swagger 2.0 endpoint handling
+        assert isinstance(request.swagger_data['body']['date'], datetime.date)
+    else:
+        assert isinstance(request.swagger_data['body']['date'], six.string_types)
+
+    return request.swagger_data['body']
+
+
+@view_config(route_name='post_endpoint_with_optional_body', request_method='POST', renderer='pyramid_swagger')
+def post_endpoint_with_optional_body(request):
+    return request.content_length
+
+
 @view_config(route_name='swagger_undefined', renderer='json')
 def swagger_undefined(request):
     return {}
@@ -58,6 +79,10 @@ def main(global_config, **settings):
     config.include(include_samples, route_prefix='/sample')
     config.add_route('throw_400', '/throw_400')
     config.add_route('swagger_undefined', '/undefined/path')
+
+    config.add_route('echo_date', '/echo_date')
+    config.add_route('echo_date_json_renderer', '/echo_date_json_renderer')
+    config.add_route('post_endpoint_with_optional_body', '/post_endpoint_with_optional_body')
 
     config.scan()
     return config.make_wsgi_app()

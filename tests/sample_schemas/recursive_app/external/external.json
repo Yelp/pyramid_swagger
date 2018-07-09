@@ -13,6 +13,7 @@
           "$ref":"#/widget"
         }
       }
-    }
+    },
+    "type": "object"
   }
 }

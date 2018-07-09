@@ -3,17 +3,24 @@ from __future__ import unicode_literals
 
 import glob
 import os.path
+import warnings
 
 import simplejson
 from bravado_core.spec import build_http_handlers
 from bravado_core.spec import Spec
+from six import iteritems
 from six.moves.urllib import parse as urlparse
+from six.moves.urllib.request import pathname2url
 
 from .api import build_swagger_12_endpoints
 from .load_schema import load_schema
 from .model import SwaggerSchema
 from .spec import API_DOCS_FILENAME
 from .spec import validate_swagger_schema
+
+
+# Prefix of configs that will be passed to the underlying bravado-core instance
+BRAVADO_CORE_CONFIG_PREFIX = 'bravado_core.'
 
 
 class ResourceListingNotFoundError(Exception):
@@ -111,7 +118,7 @@ def get_resource_listing(schema_dir, should_generate_resource_listing):
     :param should_generate_resource_listing: when True a resource listing will
         be generated from the list of *.json files in the schema_dir. Otherwise
         return the contents of the resource listing file
-    :type should_enerate_resource_listing: boolean
+    :type should_generate_resource_listing: boolean
     :returns: the contents of a resource listing document
     """
     listing_filename = os.path.join(schema_dir, API_DOCS_FILENAME)
@@ -146,7 +153,7 @@ def get_swagger_schema(settings):
     :type settings: dict
     :returns: a :class:`pyramid_swagger.model.SwaggerSchema`
     """
-    schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs/')
+    schema_dir = settings.get('pyramid_swagger.schema_directory', 'api_docs')
     resource_listing = get_resource_listing(
         schema_dir,
         settings.get('pyramid_swagger.generate_resource_listing', False)
@@ -173,7 +180,7 @@ def get_swagger_spec(settings):
     schema_filename = settings.get('pyramid_swagger.schema_file',
                                    'swagger.json')
     schema_path = os.path.join(schema_dir, schema_filename)
-    schema_url = urlparse.urljoin('file:', os.path.abspath(schema_path))
+    schema_url = urlparse.urljoin('file:', pathname2url(os.path.abspath(schema_path)))
 
     handlers = build_http_handlers(None)  # don't need http_client for file:
     file_handler = handlers['file']
@@ -200,20 +207,41 @@ def create_bravado_core_config(settings):
     config_keys = {
         'pyramid_swagger.enable_request_validation': 'validate_requests',
         'pyramid_swagger.enable_response_validation': 'validate_responses',
-        'pyramid_swagger.enable_swagger_spec_validation':
-            'validate_swagger_spec',
+        'pyramid_swagger.enable_swagger_spec_validation': 'validate_swagger_spec',
         'pyramid_swagger.use_models': 'use_models',
         'pyramid_swagger.user_formats': 'formats',
+        'pyramid_swagger.include_missing_properties': 'include_missing_properties',
     }
 
-    bravado_core_config_defaults = {
+    configs = {
         'use_models': False
     }
 
-    return dict(bravado_core_config_defaults, **dict(
-        (bravado_core_key, settings[pyramid_swagger_key])
-        for pyramid_swagger_key, bravado_core_key in config_keys.items()
-        if pyramid_swagger_key in settings))
+    bravado_core_configs_from_pyramid_swagger_configs = {
+        bravado_core_key: settings[pyramid_swagger_key]
+        for pyramid_swagger_key, bravado_core_key in iteritems(config_keys)
+        if pyramid_swagger_key in settings
+    }
+    if bravado_core_configs_from_pyramid_swagger_configs:
+        warnings.warn(
+            message='Configs {old_configs} are deprecated, please use {new_configs} instead.'.format(
+                old_configs=', '.join(k for k, v in sorted(iteritems(config_keys))),
+                new_configs=', '.join(
+                    '{}{}'.format(BRAVADO_CORE_CONFIG_PREFIX, v)
+                    for k, v in sorted(iteritems(config_keys))
+                ),
+            ),
+            category=DeprecationWarning,
+        )
+        configs.update(bravado_core_configs_from_pyramid_swagger_configs)
+
+    configs.update({
+        key.replace(BRAVADO_CORE_CONFIG_PREFIX, ''): value
+        for key, value in iteritems(settings)
+        if key.startswith(BRAVADO_CORE_CONFIG_PREFIX)
+    })
+
+    return configs
 
 
 def ingest_resources(mapping, schema_dir):
@@ -227,7 +255,7 @@ def ingest_resources(mapping, schema_dir):
         :class:`ValidatorMap`
     """
     ingested_resources = []
-    for name, filepath in mapping.items():
+    for name, filepath in iteritems(mapping):
         try:
             ingested_resources.append(load_schema(filepath))
         # If we have trouble reading any files, raise a more user-friendly

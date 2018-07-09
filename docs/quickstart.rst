@@ -143,4 +143,110 @@ Otherwise, models are represented as dicts.
 .. note::
 
     Values in ``request.swagger_data`` are only available if
-    ``pyramid_swawgger.enable_request_validation`` is enabled.
+    ``pyramid_swagger.enable_request_validation`` is enabled.
+
+Accessing Swagger Operation
+---------------------------
+
+During the implementation of an endpoint you could eventually have need of accessing the Swagger Specs that defined that specific view.
+``pyramid_swagger`` will inject in the request object a new property (that will be evaluated only if accessed) called ``operation``.
+
+``request.operation`` will be set to ``None`` for Swagger 1.2 defined endpoints, while it will be an `Operation <https://github.com/Yelp/bravado-core/blob/v4.8.4/bravado_core/operation.py#L12>`_ object if the endpoint is defined by Swagger 2.0 specs.
+
+pyramid_swagger renderer
+------------------------
+
+Using :mod:`pyramid_swagger` you will get automatic conversions of the input JSON objects to easy to handle python objects.
+An example could be a swagger object string property using the ``date`` format , the library will take care of converting the
+ISO 8601 date representation to an easy to handle python ``datetime.date`` object.
+
+While defining the :mod:`pyramid` view that will handle the endpoint you have to make sure that the chosen renderer will be able to
+properly render your response. In the case of an endpoint that returns *objects* that requires a special handling
+(like ``datetime.date``) the developer is *forced* to:
+
+* manually convert the python object to an object that could be handled by the renderer
+* add an `adapter <https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/renderers.html#using-the-add-adapter-method-of-a-custom-json-renderer>`_ for instructing pyramid to handle your object
+* define a custom renderer that is able to properly serialize the object
+
+:mod:`pyramid_swagger` provides:
+
+* a new renderer, called ``pyramid_swagger``
+* a new renderer renderer factory, called ``pyramid_swagger.renderer.PyramidSwaggerRendererFactory``
+
+----------------------------------
+How pyramid_swagger renderer works
+----------------------------------
+
+The new :mod:`pyramid_swagger` renderer is a wrapper around the default ``pyramid.renderers.JSON`` renderer.
+
+:mod:`pyramid_swagger` will receive, from your pyramid view, the object that has to be rendered, perform the marshaling operations and then call the default JSON renderer.
+
+.. note::
+    The usage of this renderer allows to get full support of `custom formats <configuration.html#user-formats-swagger-2-0-only>`_
+
+
+Let's assume that your view returns ``{'date': datetime.date.today()}`` and that your response spec is similar to
+
+.. code-block:: json
+
+    {
+        "200": {
+            "description": "HTTP/200",
+            "schema": {
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date"
+                    }
+                }
+            }
+        }
+    }
+
+
+If your view is configured to use ``json`` renderer then your endpoint will surprisingly return HTTP/500 errors.
+The errors are caused by the fact that ``pyramid.renderers.JSON`` is not aware on how to convert a ``datetime.date`` object.
+
+If your view is configured to use ``pyramid_swagger`` renderer then your endpoint will provide HTTP/200 responses similar
+to ``{"date": "2017-09-16"}``.
+
+This is possible because the marsharling of the view return value converts the ``datetime.date`` object to its ISO 8601
+string representation that could be handled by the default JSON renderer.
+
+.. note::
+
+    The marshaling operation will be performed according to the specific response schema defined for the particular endpoint.
+    It means that if your response doesn't specify a field it will be transparently passed to the wrapped renderer.
+
+
+---------------------------------------
+How PyramidSwaggerRendererFactory works
+---------------------------------------
+
+``PyramidSwaggerRendererFactory`` allows you to create a custom renderer that operates on the marshaled result from your view.
+
+The defined renderer will operate on the marshaled, according to the Swagger Specification, response.
+
+Example of definition of a custom renderer
+
+.. code-block:: python
+
+    class MyPersonalRendererFactory(object):
+        def __init__(self, info):
+            # Initialize your factory (refer to standard documentation for more information)
+            pass
+
+        def __call__(self, value, system):
+            # ``value`` contain the marshaled representation of the object returned by your view.
+            # If your view is returning a ``datetime.date`` object for a field with date format
+            # you can assume that the field has already been converted to its ISO 8601 representation
+
+            # perform your personal rendering operations
+            # you can assume that value is a marshaled response, so already JSON serializable object
+            return rendered_value
+
+Once you have defined your own renderer you have to wrap the new renderer in ``PyramidSwaggerRendererFactory`` and register it to the pyramid framework as described by `Adding and Changing Renderers pyramid documentation <https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/renderers.html#adding-and-changing-renderers>`_.
+
+.. code-block:: python
+
+    config.add_renderer(name='custom_renderer', factory=PyramidSwaggerRendererFactory(MyPersonalRendererFactory))

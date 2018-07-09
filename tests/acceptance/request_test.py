@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 from contextlib import contextmanager
 
 import pytest
@@ -6,12 +7,16 @@ import simplejson
 from _pytest.fixtures import FixtureRequest
 from mock import Mock
 from pyramid.httpexceptions import exception_response
+from webtest.utils import NoDefault
 
 from pyramid_swagger import exceptions
 
 
 # Parameterize pyramid_swagger.swagger_versions
-@pytest.fixture(params=[['1.2'], ['2.0'], ['1.2', '2.0']])
+@pytest.fixture(
+    params=[['1.2'], ['2.0'], ['1.2', '2.0']],
+    ids=['1.2', '2.0', '1.2-2.0'],
+)
 def test_app(request, **overrides):
     """Fixture for setting up a test test_app with particular settings."""
     from .app import main
@@ -24,6 +29,7 @@ def test_app(request, **overrides):
         'pyramid_swagger.swagger_versions': request.param},
         **overrides
     )
+
     return App(main({}, **settings))
 
 
@@ -35,14 +41,57 @@ def validation_context(request, response=None):
         exceptions.RequestValidationError,
         exceptions.ResponseValidationError,
         exceptions.PathNotFoundError,
-    ) as e:
+    ):
         raise exception_response(206)
-        assert e.child is not None
     except Exception:
         raise exception_response(400)
 
 
 validation_ctx_path = 'tests.acceptance.request_test.validation_context'
+
+
+def test_echo_date_with_pyramid_swagger_renderer(test_app):
+    input_object = {'date': datetime.date.today().isoformat()}
+
+    response = test_app.post_json('/echo_date', input_object)
+
+    # If the request is served via Swagger1.2
+    assert response.status_code == 200
+    assert response.json == input_object
+
+
+def test_echo_date_with_json_renderer(test_app):
+    today = datetime.date.today()
+    input_object = {'date': today.isoformat()}
+
+    exc = None
+    response = None
+    try:
+        response = test_app.post_json('/echo_date_json_renderer', input_object)
+    except TypeError as exception:
+        exc = exception
+
+    served_swagger_versions = test_app.app.registry.settings['pyramid_swagger.swagger_versions']
+
+    if '2.0' in served_swagger_versions:
+        # If the request is served via Swagger2.0, pyramid_swagger will perform types
+        # conversions providing a datetime.date object in the pyramid view
+        assert exc.args == ('{!r} is not JSON serializable'.format(today), )
+    else:
+        # If the request is served via Swagger1.2 there are no implicit type conversions performed by pyramid_swagger
+        assert response.status_code == 200
+        assert response.json == input_object
+
+
+@pytest.mark.parametrize(
+    'body, expected_length',
+    [
+        [NoDefault, 0],
+        [{}, 2],
+    ],
+)
+def test_post_endpoint_with_optional_body(test_app, body, expected_length):
+    assert test_app.post_json('/post_endpoint_with_optional_body', body).json == expected_length
 
 
 def test_200_with_form_params(test_app):

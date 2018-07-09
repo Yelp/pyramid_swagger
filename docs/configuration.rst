@@ -55,6 +55,11 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         # Default: False
         pyramid_swagger.use_models = false
 
+        # Set value for property defined in swagger schema to None if value was not provided.
+        # Skip property if value is missed and include_missing_properties is False.
+        # Default: True
+        pyramid_swagger.include_missing_properties = true
+
         # Exclude certain endpoints from validation. Takes a list of regular
         # expressions.
         # Default: ^/static/? ^/api-docs/? ^/swagger.json
@@ -90,6 +95,12 @@ A few relevant settings for your `Pyramid .ini file <http://docs.pylonsproject.o
         #       os.path.relpath could affect the proper behaviour.
         # Default: False
         pyramid_swagger.dereference_served_schema = false
+
+
+.. note::
+
+    ``pyramid_swawgger`` uses a ``bravado_core.spec.Spec`` instance for handling swagger related details.
+    You can set `bravado-core config values <http://bravado-core.readthedocs.io/en/stable/config.html>`_ by adding a ``bravado-core.`` prefix to them.
 
 
 Note that, equivalently, you can add these settings during webapp configuration:

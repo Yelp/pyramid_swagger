@@ -1,9 +1,26 @@
 Changelog
 =========
 
-In Development
+2.6.2 (2018-07-02)
 ++++++++++++++++++++++++++
+* Fix bug that prevents library usage on Windows Platform (see #234)
+
+2.6.1 (2018-05-24)
+++++++++++++++++++++++++++
+* Fix operation extraction in `PyramidSwaggerRendererFactory` in case of Swagger1.2 endpoint (see #230)
+* Fix request body extraction if body is not set. (see #231)
+
+2.6.0 (2017-11-14)
+++++++++++++++++++++++++++
+* Support setting bravado-core config values by prefixing them with ``bravado_core.`` in the pyramid_swagger config (see #221)
+* Support raw_bytes response attribute, required for msgpack wire format support in outgoing responses (see #222)
+
+2.5.0 (2017-10-26)
+++++++++++++++++++++++++++
+* Support `include_missing_properties` bravado-core flag in pyramid configuration
 * Outsource flattening logic to bravado-core library.
+* Expose bravado-core ``operation`` in request object
+* Add ``pyramid_renderer`` and ``PyramidSwaggerRendererFactory``
 
 2.4.1 (2017-06-14)
 ++++++++++++++++++++++++++

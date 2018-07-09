@@ -8,6 +8,7 @@ import simplejson
 from pyramid_swagger.ingest import _load_resource_listing
 from pyramid_swagger.ingest import API_DOCS_FILENAME
 from pyramid_swagger.ingest import ApiDeclarationNotFoundError
+from pyramid_swagger.ingest import BRAVADO_CORE_CONFIG_PREFIX
 from pyramid_swagger.ingest import create_bravado_core_config
 from pyramid_swagger.ingest import generate_resource_listing
 from pyramid_swagger.ingest import get_resource_listing
@@ -56,7 +57,7 @@ def test_get_swagger_schema_default():
     }
 
     swagger_schema = get_swagger_schema(settings)
-    assert len(swagger_schema.pyramid_endpoints) == 4
+    assert len(swagger_schema.pyramid_endpoints) == 6
     assert swagger_schema.resource_validators
 
 
@@ -80,8 +81,10 @@ def test_generate_resource_listing():
     expected = {
         'swaggerVersion': 1.2,
         'apis': [
+            {'path': '/echo_date'},
             {'path': '/no_models'},
             {'path': '/other_sample'},
+            {'path': '/post_endpoint_with_optional_body'},
             {'path': '/sample'},
         ]
     }
@@ -119,21 +122,65 @@ def test_create_bravado_core_config_with_defaults():
     assert {'use_models': False} == create_bravado_core_config({})
 
 
-def test_create_bravado_core_config_non_empty():
-    some_format = mock.Mock(spec=SwaggerFormat)
+@pytest.fixture
+def bravado_core_formats():
+    return [mock.Mock(spec=SwaggerFormat)]
+
+
+@pytest.fixture
+def bravado_core_configs(bravado_core_formats):
+    return {
+        'validate_requests': True,
+        'validate_responses': False,
+        'validate_swagger_spec': True,
+        'use_models': True,
+        'formats': bravado_core_formats,
+        'include_missing_properties': False
+    }
+
+
+@mock.patch('pyramid_swagger.ingest.warnings')
+def test_create_bravado_core_config_non_empty_deprecated_configs(mock_warnings, bravado_core_formats, bravado_core_configs):
     pyramid_swagger_config = {
         'pyramid_swagger.enable_request_validation': True,
         'pyramid_swagger.enable_response_validation': False,
         'pyramid_swagger.enable_swagger_spec_validation': True,
         'pyramid_swagger.use_models': True,
-        'pyramid_swagger.user_formats': [some_format],
+        'pyramid_swagger.user_formats': bravado_core_formats,
+        'pyramid_swagger.include_missing_properties': False,
     }
-    expected_bravado_core_config = {
-        'validate_requests': True,
-        'validate_responses': False,
-        'validate_swagger_spec': True,
-        'use_models': True,
-        'formats': [some_format]
-    }
+
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
-    assert expected_bravado_core_config == bravado_core_config
+
+    assert bravado_core_configs == bravado_core_config
+    # NOTE: the assertion is detailed and not defined by a constant because PYRAMID_SWAGGER_TO_BRAVADO_CORE_CONFIGS_MAPPING
+    # usage is deprecated and will eventually be removed in future versions
+    mock_warnings.warn.assert_called_once_with(
+        message='Configs '
+                'pyramid_swagger.enable_request_validation, pyramid_swagger.enable_response_validation, '
+                'pyramid_swagger.enable_swagger_spec_validation, pyramid_swagger.include_missing_properties, '
+                'pyramid_swagger.use_models, pyramid_swagger.user_formats '
+                'are deprecated, please use '
+                'bravado_core.validate_requests, bravado_core.validate_responses, '
+                'bravado_core.validate_swagger_spec, bravado_core.include_missing_properties, '
+                'bravado_core.use_models, bravado_core.formats '
+                'instead.',
+        category=DeprecationWarning,
+    )
+
+
+@mock.patch('pyramid_swagger.ingest.warnings')
+def test_create_bravado_core_config_with_passthrough_configs(mock_warnings, bravado_core_formats, bravado_core_configs):
+    pyramid_swagger_config = {
+        '{}validate_requests'.format(BRAVADO_CORE_CONFIG_PREFIX): True,
+        '{}validate_responses'.format(BRAVADO_CORE_CONFIG_PREFIX): False,
+        '{}validate_swagger_spec'.format(BRAVADO_CORE_CONFIG_PREFIX): True,
+        '{}use_models'.format(BRAVADO_CORE_CONFIG_PREFIX): True,
+        '{}formats'.format(BRAVADO_CORE_CONFIG_PREFIX): bravado_core_formats,
+        '{}include_missing_properties'.format(BRAVADO_CORE_CONFIG_PREFIX): False
+    }
+
+    bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
+
+    assert bravado_core_configs == bravado_core_config
+    assert not mock_warnings.warn.called
