@@ -5,6 +5,7 @@ Import this module to add the validation tween to your pyramid app.
 import pyramid
 
 from .api import build_swagger_20_swagger_schema_views
+from .api import build_swagger_ui_view
 from .api import register_api_doc_endpoints
 from .ingest import get_swagger_schema
 from .ingest import get_swagger_spec
@@ -50,9 +51,11 @@ def includeme(config):
             register_api_doc_endpoints(
                 config,
                 settings['pyramid_swagger.schema12'].get_api_doc_endpoints())
-
         if SWAGGER_20 in swagger_versions:
+            endpoints_20 = list(build_swagger_20_swagger_schema_views(config))
             register_api_doc_endpoints(
                 config,
-                build_swagger_20_swagger_schema_views(config),
+                endpoints_20,
                 base_path=settings.get('pyramid_swagger.base_path_api_docs', ''))
+            if not settings.get('pyramid_swagger.swagger_ui_disable', False):
+                build_swagger_ui_view(settings, config, endpoints_20)

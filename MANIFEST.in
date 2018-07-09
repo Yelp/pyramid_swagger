@@ -1,3 +1,4 @@
 include README.rst
 # Required by python 2.6 even though we include these in our setup.py
 include pyramid_swagger/swagger_spec_schemas/v1.2/*
+include pyramid_swagger/static/*
