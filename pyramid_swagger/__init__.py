@@ -2,16 +2,18 @@
 """
 Import this module to add the validation tween to your pyramid app.
 """
+from __future__ import absolute_import
+
 import pyramid
 
-from .api import build_swagger_20_swagger_schema_views
-from .api import register_api_doc_endpoints
-from .ingest import get_swagger_schema
-from .ingest import get_swagger_spec
-from .renderer import PyramidSwaggerRendererFactory
-from .tween import get_swagger_versions
-from .tween import SWAGGER_12
-from .tween import SWAGGER_20
+from pyramid_swagger.api import build_swagger_20_swagger_schema_views
+from pyramid_swagger.api import register_api_doc_endpoints
+from pyramid_swagger.ingest import get_swagger_schema
+from pyramid_swagger.ingest import get_swagger_spec
+from pyramid_swagger.renderer import PyramidSwaggerRendererFactory
+from pyramid_swagger.tween import get_swagger_versions
+from pyramid_swagger.tween import SWAGGER_12
+from pyramid_swagger.tween import SWAGGER_20
 
 
 def includeme(config):

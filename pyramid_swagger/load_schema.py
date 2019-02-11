@@ -3,6 +3,7 @@
 Module to load swagger specs and build efficient data structures for querying
 them during request validation.
 """
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from collections import namedtuple

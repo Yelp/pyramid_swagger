@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Unit tests for tweens.py"""
+from __future__ import absolute_import
+
 import re
 
 import mock

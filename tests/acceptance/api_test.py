@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import pytest
 from webtest import TestApp as App
 
-from .app import main
+from tests.acceptance.app import main
 
 
 @pytest.fixture

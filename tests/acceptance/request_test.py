@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import datetime
 from contextlib import contextmanager
 
@@ -19,7 +21,7 @@ from pyramid_swagger import exceptions
 )
 def test_app(request, **overrides):
     """Fixture for setting up a test test_app with particular settings."""
-    from .app import main
+    from tests.acceptance.app import main
     from webtest import TestApp as App
     settings = dict({
         'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import json
 import os.path
 import re
@@ -9,7 +11,7 @@ import yaml
 from six import BytesIO
 from webtest import TestApp as App
 
-from .app import main
+from tests.acceptance.app import main
 
 
 DESERIALIZERS = {

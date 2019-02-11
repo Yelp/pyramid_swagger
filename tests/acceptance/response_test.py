@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 from contextlib import contextmanager
 
 import mock
@@ -16,11 +18,11 @@ from webob.multidict import MultiDict
 from webtest import AppError
 
 import pyramid_swagger.tween
-from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.tween import validation_tween_factory
+from tests.acceptance.request_test import test_app
 
 
 class CustomResponseValidationException(Exception):

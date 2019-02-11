@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import glob
@@ -12,11 +13,11 @@ from six import iteritems
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
 
-from .api import build_swagger_12_endpoints
-from .load_schema import load_schema
-from .model import SwaggerSchema
-from .spec import API_DOCS_FILENAME
-from .spec import validate_swagger_schema
+from pyramid_swagger.api import build_swagger_12_endpoints
+from pyramid_swagger.load_schema import load_schema
+from pyramid_swagger.model import SwaggerSchema
+from pyramid_swagger.spec import API_DOCS_FILENAME
+from pyramid_swagger.spec import validate_swagger_schema
 
 
 # Prefix of configs that will be passed to the underlying bravado-core instance

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import mock
 import pytest
 from bravado_core.spec import Spec

@@ -2,6 +2,8 @@
 """
 Methods to help validate a given JSON document against the Swagger Spec.
 """
+from __future__ import absolute_import
+
 import os
 
 import swagger_spec_validator
@@ -9,7 +11,7 @@ from jsonschema.exceptions import ValidationError
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
 
-from .exceptions import wrap_exception
+from pyramid_swagger.exceptions import wrap_exception
 
 API_DOCS_FILENAME = 'api_docs.json'
 

@@ -5,6 +5,8 @@
 # Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
 # a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
+from __future__ import absolute_import
+
 import pytest
 import simplejson
 from _pytest.fixtures import FixtureRequest
@@ -14,10 +16,10 @@ from pyramid.interfaces import IRoutesMapper
 from pyramid.response import Response
 from webtest.app import AppError
 
-from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import get_swagger_spec
 from pyramid_swagger.tween import validation_tween_factory
+from tests.acceptance.request_test import test_app
 from tests.acceptance.response_test import CustomResponseValidationException
 from tests.acceptance.response_test import EnhancedDummyRequest
 from tests.acceptance.response_test import get_registry

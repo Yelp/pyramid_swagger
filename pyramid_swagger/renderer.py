@@ -2,6 +2,8 @@
 """
 This model contains the main factory of renderers to use while dealing with Swagger 2.0 endpoints.
 """
+from __future__ import absolute_import
+
 from functools import partial
 
 from bravado_core.exception import MatchingResponseNotFound
