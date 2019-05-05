@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 
 import glob
 import os.path
-import warnings
 
 import simplejson
 from bravado_core.spec import build_http_handlers
@@ -215,27 +214,13 @@ def create_bravado_core_config(settings):
     }
 
     configs = {
-        'use_models': False
+        'use_models': False,
     }
-
-    bravado_core_configs_from_pyramid_swagger_configs = {
+    configs.update({
         bravado_core_key: settings[pyramid_swagger_key]
         for pyramid_swagger_key, bravado_core_key in iteritems(config_keys)
         if pyramid_swagger_key in settings
-    }
-    if bravado_core_configs_from_pyramid_swagger_configs:
-        warnings.warn(
-            message='Configs {old_configs} are deprecated, please use {new_configs} instead.'.format(
-                old_configs=', '.join(k for k, v in sorted(iteritems(config_keys))),
-                new_configs=', '.join(
-                    '{}{}'.format(BRAVADO_CORE_CONFIG_PREFIX, v)
-                    for k, v in sorted(iteritems(config_keys))
-                ),
-            ),
-            category=DeprecationWarning,
-        )
-        configs.update(bravado_core_configs_from_pyramid_swagger_configs)
-
+    })
     configs.update({
         key.replace(BRAVADO_CORE_CONFIG_PREFIX, ''): value
         for key, value in iteritems(settings)
