@@ -2,11 +2,14 @@ sudo: false
 language: python
 matrix:
     include:
-    - env: TOXENV=py27
+    - python: "2.7"
+      env: TOXENV=py27
     - python: "3.5"
       env: TOXENV=py35
-    - env: TOXENV=py27-pyramid15
-    - env: TOXENV=docs
+    - python: "2.7"
+      env: TOXENV=py27-pyramid15
+    - python: "3.6"
+      env: TOXENV=docs
 install: pip install tox coveralls
 script: tox
 after_success: coveralls
