@@ -140,7 +140,9 @@ def bravado_core_configs(bravado_core_formats):
 
 
 @mock.patch('pyramid_swagger.ingest.warnings')
-def test_create_bravado_core_config_non_empty_deprecated_configs(mock_warnings, bravado_core_formats, bravado_core_configs):
+def test_create_bravado_core_config_non_empty_deprecated_configs(
+    mock_warnings, bravado_core_formats, bravado_core_configs,
+):
     pyramid_swagger_config = {
         'pyramid_swagger.enable_request_validation': True,
         'pyramid_swagger.enable_response_validation': False,
@@ -153,8 +155,9 @@ def test_create_bravado_core_config_non_empty_deprecated_configs(mock_warnings, 
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
 
     assert bravado_core_configs == bravado_core_config
-    # NOTE: the assertion is detailed and not defined by a constant because PYRAMID_SWAGGER_TO_BRAVADO_CORE_CONFIGS_MAPPING
-    # usage is deprecated and will eventually be removed in future versions
+    # NOTE: the assertion is detailed and not defined by a constant because
+    # PYRAMID_SWAGGER_TO_BRAVADO_CORE_CONFIGS_MAPPING usage is deprecated
+    # and will eventually be removed in future versions
     mock_warnings.warn.assert_called_once_with(
         message='Configs '
                 'pyramid_swagger.enable_request_validation, pyramid_swagger.enable_response_validation, '

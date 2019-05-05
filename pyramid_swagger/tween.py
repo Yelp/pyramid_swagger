@@ -90,7 +90,7 @@ def _get_validation_context(registry):
 
     if validation_context_path:
         m = re.match(
-            '(?P<module_path>.*)\.(?P<contextmanager_name>.*)',
+            r'(?P<module_path>.*)\.(?P<contextmanager_name>.*)',
             validation_context_path,
         )
         module_path = m.group('module_path')
@@ -124,14 +124,13 @@ def get_swagger_objects(settings, route_info, registry):
     schema12 = registry.settings['pyramid_swagger.schema12']
     schema20 = registry.settings['pyramid_swagger.schema20']
 
-    fallback_to_swagger12_route = (
-        SWAGGER_20 in enabled_swagger_versions and
-        SWAGGER_12 in enabled_swagger_versions and
-        settings.prefer_20_routes and
-        route_info.get('route') and
-        route_info['route'].name not in settings.prefer_20_routes
-    )
-    if fallback_to_swagger12_route:
+    if (
+        SWAGGER_20 in enabled_swagger_versions
+        and SWAGGER_12 in enabled_swagger_versions
+        and settings.prefer_20_routes
+        and route_info.get('route')
+        and route_info['route'].name not in settings.prefer_20_routes
+    ):
         return settings.swagger12_handler, schema12
 
     if SWAGGER_20 in enabled_swagger_versions:
@@ -452,10 +451,10 @@ def should_exclude_request(settings, request, route_info):
         settings.validate_path
     ))
     return (
-        disable_all_validation or
-        should_exclude_path(settings.exclude_paths, request.path_info) or
-        should_exclude_route(settings.exclude_routes, route_info) or
-        is_swagger_documentation_route(route_info)
+        disable_all_validation
+        or should_exclude_path(settings.exclude_paths, request.path_info)
+        or should_exclude_route(settings.exclude_routes, route_info)
+        or is_swagger_documentation_route(route_info)
     )
 
 
@@ -465,10 +464,7 @@ def should_exclude_path(exclude_path_regexes, path):
 
 
 def should_exclude_route(excluded_routes, route_info):
-    return (
-        route_info.get('route') and
-        route_info['route'].name in excluded_routes
-    )
+    return route_info.get('route') and route_info['route'].name in excluded_routes
 
 
 def validation_error(exc_class):

@@ -15,7 +15,6 @@ from pyramid.urldispatch import RoutesMapper
 from webob.multidict import MultiDict
 from webtest import AppError
 
-import pyramid_swagger
 import pyramid_swagger.tween
 from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError

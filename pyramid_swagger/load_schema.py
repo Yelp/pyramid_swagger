@@ -228,10 +228,7 @@ class RequestMatcher(object):
         :param request: a :class:`pyramid.request.Request`
         :returns: True if this matcher matches the request, False otherwise
         """
-        return (
-            partial_path_match(request.path_info, self.path) and
-            request.method == self.method
-        )
+        return partial_path_match(request.path_info, self.path) and request.method == self.method
 
 
 def extract_response_body_schema(operation, schema_models):
