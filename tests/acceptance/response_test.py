@@ -7,8 +7,6 @@ import mock
 import pyramid.testing
 import pytest
 import simplejson
-from _pytest.fixtures import FixtureRequest
-from mock import Mock
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
@@ -22,7 +20,7 @@ from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import compile_swagger_schema
 from pyramid_swagger.ingest import get_resource_listing
 from pyramid_swagger.tween import validation_tween_factory
-from tests.acceptance.request_test import test_app
+from tests.acceptance.request_test import build_test_app
 
 
 class CustomResponseValidationException(Exception):
@@ -203,8 +201,8 @@ def test_200_for_good_validated_array_response():
 
 
 def test_200_for_normal_response_validation():
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['1.2']),
+    app = build_test_app(
+        swagger_versions=['1.2'],
         **{'pyramid_swagger.enable_response_validation': True}
     )
     response = app.post_json('/sample', {'foo': 'test', 'bar': 'test'})
@@ -213,8 +211,8 @@ def test_200_for_normal_response_validation():
 
 def test_200_skip_validation_for_excluded_path():
     # FIXME(#64): This test is broken and doesn't check anything.
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['1.2']),
+    app = build_test_app(
+        swagger_versions=['1.2'],
         **{'pyramid_swagger.exclude_paths': [r'^/sample/?']}
     )
     response = app.get(
@@ -230,16 +228,16 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
     HTTPNotFound exception.
     """
     with pytest.raises(AppError):
-        app = test_app(
-            request=Mock(spec=FixtureRequest, param=['1.2']),
+        app = build_test_app(
+            swagger_versions=['1.2'],
             **{'pyramid_swagger.enable_path_validation': False}
         )
         assert app.get('/this/path/doesnt/exist')
 
 
 def test_error_handling_for_12():
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['1.2']),
+    app = build_test_app(
+        swagger_versions=['1.2'],
         **{'pyramid_swagger.enable_response_validation': True}
     )
     # Should throw 400 and not 500 (500 is thrown by pyramid_swagger when
