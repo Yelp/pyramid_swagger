@@ -184,7 +184,7 @@ class SchemaValidator(object):
 
     :param schema: a :class:`dict` jsonschema that was used by the
         validator
-    :param valdiator: a Validator which a func:`validate` method
+    :param validator: a Validator which a func:`validate` method
         for validating a field from a request or response. This
         will often be a :class:`jsonschema.validator.Validator`.
     """

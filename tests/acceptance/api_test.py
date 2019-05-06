@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import os
+
 import pytest
 from webtest import TestApp as App
 
@@ -10,7 +12,7 @@ from tests.acceptance.app import main
 @pytest.fixture
 def settings():
     return {
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.schema_directory': os.path.join('tests', 'sample_schemas', 'good_app'),
         'pyramid_swagger.enable_swagger_spec_validation': False,
     }
 

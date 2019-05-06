@@ -141,9 +141,8 @@ def bravado_core_configs(bravado_core_formats):
     }
 
 
-@mock.patch('pyramid_swagger.ingest.warnings')
 def test_create_bravado_core_config_non_empty_deprecated_configs(
-    mock_warnings, bravado_core_formats, bravado_core_configs,
+    bravado_core_formats, bravado_core_configs,
 ):
     pyramid_swagger_config = {
         'pyramid_swagger.enable_request_validation': True,
@@ -157,25 +156,9 @@ def test_create_bravado_core_config_non_empty_deprecated_configs(
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
 
     assert bravado_core_configs == bravado_core_config
-    # NOTE: the assertion is detailed and not defined by a constant because
-    # PYRAMID_SWAGGER_TO_BRAVADO_CORE_CONFIGS_MAPPING usage is deprecated
-    # and will eventually be removed in future versions
-    mock_warnings.warn.assert_called_once_with(
-        message='Configs '
-                'pyramid_swagger.enable_request_validation, pyramid_swagger.enable_response_validation, '
-                'pyramid_swagger.enable_swagger_spec_validation, pyramid_swagger.include_missing_properties, '
-                'pyramid_swagger.use_models, pyramid_swagger.user_formats '
-                'are deprecated, please use '
-                'bravado_core.validate_requests, bravado_core.validate_responses, '
-                'bravado_core.validate_swagger_spec, bravado_core.include_missing_properties, '
-                'bravado_core.use_models, bravado_core.formats '
-                'instead.',
-        category=DeprecationWarning,
-    )
 
 
-@mock.patch('pyramid_swagger.ingest.warnings')
-def test_create_bravado_core_config_with_passthrough_configs(mock_warnings, bravado_core_formats, bravado_core_configs):
+def test_create_bravado_core_config_with_passthrough_configs(bravado_core_formats, bravado_core_configs):
     pyramid_swagger_config = {
         '{}validate_requests'.format(BRAVADO_CORE_CONFIG_PREFIX): True,
         '{}validate_responses'.format(BRAVADO_CORE_CONFIG_PREFIX): False,
@@ -188,4 +171,3 @@ def test_create_bravado_core_config_with_passthrough_configs(mock_warnings, brav
     bravado_core_config = create_bravado_core_config(pyramid_swagger_config)
 
     assert bravado_core_configs == bravado_core_config
-    assert not mock_warnings.warn.called
