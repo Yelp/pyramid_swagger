@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import datetime
 import json
 
@@ -185,7 +187,10 @@ class TestPyramidSwaggerRendererFactoryIntegrationTest(object):
             [{'date': datetime.date.today()}, '{"date": "' + datetime.date.today().isoformat() + '"}'],
         ],
     )
-    def test_no_errors(self, spy_get_response_spec, spy_marshal_schema_object, swagger_spec, mock_request, view_response, expected_rendered_value):
+    def test_no_errors(
+        self, spy_get_response_spec, spy_marshal_schema_object,
+        swagger_spec, mock_request, view_response, expected_rendered_value,
+    ):
         system = {'request': mock_request}
         renderer = self.renderer_factory(info=self.info)
         rendered_value = renderer(view_response, system)
@@ -211,7 +216,10 @@ class TestPyramidSwaggerRendererFactoryIntegrationTest(object):
             [{'date': datetime.date.today()}, True],
         ],
     )
-    def test_response_spec_not_found(self, spy_get_response_spec, spy_marshal_schema_object, mock_request, view_response, expect_exernal_renderer_exception):
+    def test_response_spec_not_found(
+        self, spy_get_response_spec, spy_marshal_schema_object,
+        mock_request, view_response, expect_exernal_renderer_exception,
+    ):
         mock_request.response.status_code = 400
         system = {'request': mock_request}
         renderer = self.renderer_factory(info=self.info)
@@ -233,7 +241,9 @@ class TestPyramidSwaggerRendererFactoryIntegrationTest(object):
         assert not spy_marshal_schema_object.called
         assert rendered_value == expected_rendered_value
 
-    def test_marshaling_raise_exception(self, spy_get_response_spec, spy_marshal_schema_object, swagger_spec, mock_request):
+    def test_marshaling_raise_exception(
+        self, spy_get_response_spec, spy_marshal_schema_object, swagger_spec, mock_request,
+    ):
         system = {'request': mock_request}
         value_to_renderer = {'date': datetime.date.today().isoformat()}
 

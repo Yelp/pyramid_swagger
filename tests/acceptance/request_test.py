@@ -1,15 +1,31 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import datetime
 from contextlib import contextmanager
 
 import pytest
 import simplejson
-from _pytest.fixtures import FixtureRequest
-from mock import Mock
 from pyramid.httpexceptions import exception_response
 from webtest.utils import NoDefault
 
 from pyramid_swagger import exceptions
+
+
+def build_test_app(swagger_versions, **overrides):
+    """Fixture for setting up a test test_app with particular settings."""
+    from tests.acceptance.app import main
+    from webtest import TestApp as App
+    settings = dict({
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
+        'pyramid_swagger.enable_request_validation': True,
+        'pyramid_swagger.enable_response_validation': False,
+        'pyramid_swagger.enable_swagger_spec_validation': False,
+        'pyramid_swagger.swagger_versions': swagger_versions},
+        **overrides
+    )
+
+    return App(main({}, **settings))
 
 
 # Parameterize pyramid_swagger.swagger_versions
@@ -17,20 +33,11 @@ from pyramid_swagger import exceptions
     params=[['1.2'], ['2.0'], ['1.2', '2.0']],
     ids=['1.2', '2.0', '1.2-2.0'],
 )
-def test_app(request, **overrides):
+def test_app(request):
     """Fixture for setting up a test test_app with particular settings."""
-    from .app import main
-    from webtest import TestApp as App
-    settings = dict({
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
-        'pyramid_swagger.enable_request_validation': True,
-        'pyramid_swagger.enable_response_validation': False,
-        'pyramid_swagger.enable_swagger_spec_validation': False,
-        'pyramid_swagger.swagger_versions': request.param},
-        **overrides
+    return build_test_app(
+        swagger_versions=request.param,
     )
-
-    return App(main({}, **settings))
 
 
 @contextmanager
@@ -164,8 +171,8 @@ def test_404_if_path_not_in_swagger(test_app):
 
 
 def test_200_skip_validation_with_excluded_path():
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['2.0']),
+    app = build_test_app(
+        swagger_versions=['2.0'],
         **{'pyramid_swagger.exclude_paths': [r'^/undefined/path']}
     )
     assert app.get('/undefined/path').status_code == 200
@@ -277,8 +284,8 @@ def test_200_skip_validation_when_disabled():
         'pyramid_swagger.enable_request_validation': False,
         'skip_swagger_data_assert': True,
     }
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['2.0']),
+    app = build_test_app(
+        swagger_versions=['2.0'],
         **overrides
     )
     response = app.get('/get_with_non_string_query_args', params={})
@@ -286,16 +293,16 @@ def test_200_skip_validation_when_disabled():
 
 
 def test_path_validation_context():
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['2.0']),
+    app = build_test_app(
+        swagger_versions=['2.0'],
         **{'pyramid_swagger.validation_context_path': validation_ctx_path}
     )
     assert app.get('/does_not_exist').status_code == 206
 
 
 def test_request_validation_context():
-    app = test_app(
-        request=Mock(spec=FixtureRequest, param=['2.0']),
+    app = build_test_app(
+        swagger_versions=['2.0'],
         **{'pyramid_swagger.validation_context_path': validation_ctx_path})
     response = app.get('/get_with_non_string_query_args', params={})
     assert response.status_code == 206

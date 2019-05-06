@@ -3,6 +3,8 @@
 The core model we use to represent the entire ingested swagger schema for this
 service.
 """
+from __future__ import absolute_import
+
 import re
 from collections import namedtuple
 

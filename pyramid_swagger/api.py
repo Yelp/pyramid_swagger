@@ -2,6 +2,8 @@
 """
 Module for automatically serving /api-docs* via Pyramid.
 """
+from __future__ import absolute_import
+
 import copy
 import os.path
 

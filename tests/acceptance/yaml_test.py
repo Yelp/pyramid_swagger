@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import base64
 import copy
 import json
@@ -10,8 +12,8 @@ from bravado_core.schema import is_list_like
 from six import iterkeys
 from webtest import TestApp as App
 
-from .app import main
 from pyramid_swagger.tween import SwaggerFormat
+from tests.acceptance.app import main
 
 
 @pytest.fixture

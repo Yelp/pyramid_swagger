@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import json
 import os.path
 import re
@@ -9,7 +11,7 @@ import yaml
 from six import BytesIO
 from webtest import TestApp as App
 
-from .app import main
+from tests.acceptance.app import main
 
 
 DESERIALIZERS = {
@@ -151,7 +153,7 @@ def test_dereferenced_swagger_schema_retrieval(schema_format, test_app_deref):
     actual_dict = deserializer(response)
 
     # pattern for references outside the current file
-    ref_pattern = re.compile('("\$ref": "[^#][^"]*")')
+    ref_pattern = re.compile(r'("\$ref": "[^#][^"]*")')
     assert ref_pattern.findall(json.dumps(actual_dict)) == []
 
     if sys.platform != 'win32':

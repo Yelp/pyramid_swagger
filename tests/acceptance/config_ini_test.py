@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import os.path
 
 import pytest
 from pyramid.paster import get_appsettings
 from webtest import TestApp as App
 
-from .app import main
 from pyramid_swagger.tween import get_swagger_versions
 from pyramid_swagger.tween import load_settings
+from tests.acceptance.app import main
 
 
 @pytest.fixture

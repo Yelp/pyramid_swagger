@@ -3,12 +3,12 @@
 Module to load swagger specs and build efficient data structures for querying
 them during request validation.
 """
+from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from collections import namedtuple
 
 import simplejson
-from jsonschema import _validators
 from jsonschema import RefResolver
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
@@ -23,6 +23,12 @@ EXTENDED_TYPES = {
     'float': (float,),
     'int': (int,),
 }
+
+
+_draft3_type_validator = Draft3Validator.VALIDATORS['type']
+_draft4_type_validator = Draft4Validator.VALIDATORS['type']
+_draft4_required_validator = Draft4Validator.VALIDATORS['required']
+_ref_validator = Draft4Validator.VALIDATORS['$ref']
 
 
 def build_param_schema(schema, param_type):
@@ -85,8 +91,10 @@ def ignore(_validator, *args):
 
 def build_swagger_type_validator(models):
     def swagger_type_validator(validator, ref, instance, schema):
-        func = _validators.ref if ref in models else _validators.type_draft4
-        return func(validator, ref, instance, schema)
+        if ref in models:
+            return _ref_validator(validator, ref, instance, schema)
+        else:
+            return _draft4_type_validator(validator, ref, instance, schema)
 
     return swagger_type_validator
 
@@ -97,7 +105,7 @@ def type_validator(validator, types, instance, schema):
     """
     if schema.get('type') == 'File':
         return []
-    return _validators.type_draft3(validator, types, instance, schema)
+    return _draft3_type_validator(validator, types, instance, schema)
 
 
 def required_validator(validator, req, instance, schema):
@@ -108,7 +116,7 @@ def required_validator(validator, req, instance, schema):
         if req is True and not instance:
             return [ValidationError("%s is required" % schema['name'])]
         return []
-    return _validators.required_draft4(validator, req, instance, schema)
+    return _draft4_required_validator(validator, req, instance, schema)
 
 
 def get_body_validator(models):
@@ -228,10 +236,7 @@ class RequestMatcher(object):
         :param request: a :class:`pyramid.request.Request`
         :returns: True if this matcher matches the request, False otherwise
         """
-        return (
-            partial_path_match(request.path_info, self.path) and
-            request.method == self.method
-        )
+        return partial_path_match(request.path_info, self.path) and request.method == self.method
 
 
 def extract_response_body_schema(operation, schema_models):

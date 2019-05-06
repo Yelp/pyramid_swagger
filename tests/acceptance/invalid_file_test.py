@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import base64
 
 import pytest
 from webtest import TestApp as App
 
-from .app import main
 from pyramid_swagger.tween import SwaggerFormat
+from tests.acceptance.app import main
 
 
 @pytest.fixture

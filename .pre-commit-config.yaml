@@ -1,19 +1,32 @@
--   repo: git://github.com/pre-commit/pre-commit-hooks
-    sha: v0.7.1
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.2.1
     hooks:
-    -   id: autopep8-wrapper
-        args:
-        - -i
-        - --ignore=E501
     -   id: check-json
     -   id: check-yaml
     -   id: debug-statements
     -   id: end-of-file-fixer
     -   id: fix-encoding-pragma
-    -   id: flake8
     -   id: name-tests-test
     -   id: trailing-whitespace
--   repo: git://github.com/asottile/reorder_python_imports
-    sha: v0.3.2
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.4.4
+    hooks:
+    -   id: autopep8
+        args:
+        - -i
+        - --ignore=E309,E501
+-   repo: https://gitlab.com/pycqa/flake8.git
+    rev: 3.7.6
+    hooks:
+    -   id: flake8
+        args:
+        - --ignore=W503
+        exclude: ^docs
+-   repo: https://github.com/asottile/reorder_python_imports
+    rev: v1.4.0
     hooks:
     -   id: reorder-python-imports
+        args:
+        - --add-import
+        - from __future__ import absolute_import

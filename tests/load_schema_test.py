@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
 import mock
 import pytest
 
@@ -43,9 +45,8 @@ def test_type_validator_skips_File():
     assert len(errors) == 0
 
 
-@mock.patch('pyramid_swagger.load_schema._validators.type_draft3')
-def test_type_validator_calls_draft3_type_validator_when_not_File(
-        mock_type_draft3):
+@mock.patch('pyramid_swagger.load_schema._draft3_type_validator')
+def test_type_validator_calls_draft3_type_validator_when_not_File(mock_type_draft3):
     schema = {'paramType': 'form', 'type': 'number'}
     list(load_schema.type_validator(None, "number", 99, schema))
     assert mock_type_draft3.call_count == 1

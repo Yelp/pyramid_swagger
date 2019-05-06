@@ -5,19 +5,20 @@
 # Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
 # a single codebase to exercise both Swagger 1.2 and 2.0 responses.
 #
+from __future__ import absolute_import
+
 import pytest
 import simplejson
-from _pytest.fixtures import FixtureRequest
 from mock import Mock
 from mock import patch
 from pyramid.interfaces import IRoutesMapper
 from pyramid.response import Response
 from webtest.app import AppError
 
-from .request_test import test_app
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.ingest import get_swagger_spec
 from pyramid_swagger.tween import validation_tween_factory
+from tests.acceptance.request_test import build_test_app
 from tests.acceptance.response_test import CustomResponseValidationException
 from tests.acceptance.response_test import EnhancedDummyRequest
 from tests.acceptance.response_test import get_registry
@@ -199,11 +200,12 @@ def test_200_for_good_validated_array_response():
 
 
 def test_200_for_normal_response_validation():
-    assert test_app(
-        request=Mock(spec=FixtureRequest, param=['2.0']),
-        **{'pyramid_swagger.enable_response_validation': True}) \
-        .post_json('/sample', {'foo': 'test', 'bar': 'test'}) \
-        .status_code == 200
+    assert build_test_app(
+        swagger_versions=['2.0'],
+        **{'pyramid_swagger.enable_response_validation': True}
+    ).post_json(
+        '/sample', {'foo': 'test', 'bar': 'test'},
+    ).status_code == 200
 
 
 def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
@@ -212,10 +214,10 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
     HTTPNotFound exception.
     """
     with pytest.raises(AppError):
-        assert test_app(
-            request=Mock(spec=FixtureRequest, param=['2.0']),
-            **{'pyramid_swagger.enable_path_validation': False}) \
-            .get('/this/path/doesnt/exist')
+        assert build_test_app(
+            swagger_versions=['2.0'],
+            **{'pyramid_swagger.enable_path_validation': False}
+        ).get('/this/path/doesnt/exist')
 
 
 def test_response_validation_context():
