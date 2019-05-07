@@ -1,6 +1,11 @@
 Changelog
 =========
 
+2.7.0 (2019--5-07)
+++++++++++++++++++++++++++
+* Remove not needed deprecation warnings (see #238)
+* Make ``pyramid_swagger`` compatible with ``jsonschema>3`` (see #327)
+
 2.6.2 (2018-07-02)
 ++++++++++++++++++++++++++
 * Fix bug that prevents library usage on Windows Platform (see #234)
