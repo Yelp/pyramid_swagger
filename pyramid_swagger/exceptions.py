@@ -7,12 +7,19 @@ import six
 from pyramid.httpexceptions import HTTPBadRequest
 from pyramid.httpexceptions import HTTPInternalServerError
 from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPUnauthorized
 
 
 class RequestValidationError(HTTPBadRequest):
     def __init__(self, *args, **kwargs):
         self.child = kwargs.pop('child', None)
         super(RequestValidationError, self).__init__(*args, **kwargs)
+
+
+class RequestAuthenticationError(HTTPUnauthorized):
+    def __init__(self, *args, **kwargs):
+        self.child = kwargs.pop('child', None)
+        super(RequestAuthenticationError, self).__init__(*args, **kwargs)
 
 
 class PathNotFoundError(HTTPNotFound):

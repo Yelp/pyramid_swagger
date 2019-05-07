@@ -12,8 +12,10 @@ from contextlib import contextmanager
 import bravado_core
 import jsonschema.exceptions
 import simplejson
+import six
 from bravado_core.exception import SwaggerMappingError
-from bravado_core.formatter import SwaggerFormat  # noqa
+from bravado_core.exception import SwaggerSecurityValidationError
+from bravado_core.formatter import SwaggerFormat  # noqa: F401
 from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
@@ -24,6 +26,7 @@ from pyramid.settings import asbool
 from pyramid.settings import aslist
 
 from pyramid_swagger.exceptions import PathNotFoundError
+from pyramid_swagger.exceptions import RequestAuthenticationError
 from pyramid_swagger.exceptions import RequestValidationError
 from pyramid_swagger.exceptions import ResponseValidationError
 from pyramid_swagger.model import PathNotMatchedError
@@ -474,8 +477,10 @@ def validation_error(exc_class):
         def _validate(*args, **kwargs):
             try:
                 return f(*args, **kwargs)
-            except (jsonschema.exceptions.ValidationError,
-                    SwaggerMappingError) as exc:
+            except (
+                jsonschema.exceptions.ValidationError,
+                SwaggerMappingError,
+            ) as exc:
                 # This will alter our stack trace slightly, but Pyramid knows
                 # how to render it. And the real value is in the message
                 # anyway.
@@ -580,8 +585,12 @@ def swaggerize_request(request, op, **kwargs):
 
     :type request: :class:`pyramid.request.Request`
     :type op: :class:`bravado_core.operation.Operation`
+    :raises: RequestValidationError, RequestAuthenticationError
     """
-    request_data = unmarshal_request(request, op)
+    try:
+        request_data = unmarshal_request(request, op)
+    except SwaggerSecurityValidationError as e:
+        six.raise_from(RequestAuthenticationError(e), e)
     return request_data
 
 
