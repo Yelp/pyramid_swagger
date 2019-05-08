@@ -173,6 +173,20 @@
         ]
       }
     },
+    "/sample/authentication": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "No response was specified"
+          }
+        },
+        "description": "",
+        "operationId": "sample_authentication",
+        "security": [
+          {"AuthToken": []}
+        ]
+      }
+    },
     "/sample": {
       "get": {
         "responses": {
@@ -380,6 +394,14 @@
           ]
         }
       }
+    }
+  },
+  "securityDefinitions": {
+    "AuthToken": {
+      "description": "Dummy Auth Token",
+      "in": "header",
+      "name": "X-Auth-Token",
+      "type": "apiKey"
     }
   }
 }

@@ -306,3 +306,12 @@ def test_request_validation_context():
         **{'pyramid_swagger.validation_context_path': validation_ctx_path})
     response = app.get('/get_with_non_string_query_args', params={})
     assert response.status_code == 206
+
+
+def test_request_to_authenticated_endpoint_without_authentication():
+    app = build_test_app(swagger_versions=['2.0'])
+    response = app.get(
+        '/sample/authentication',
+        expect_errors=True,
+    )
+    assert response.status_code == 401
