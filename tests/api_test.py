@@ -84,7 +84,7 @@ def test_resolve_nested_refs():
     """
     os.environ["PYTHONHASHSEED"] = str(1)
     with open('tests/sample_schemas/nested_defns/swagger.yaml') as swagger_spec:
-        spec_dict = yaml.load(swagger_spec)
+        spec_dict = yaml.safe_load(swagger_spec)
     spec = Spec.from_dict(spec_dict, '')
     assert spec.flattened_spec
 
@@ -108,7 +108,7 @@ def test_extenal_refs_no_empty_keys():
     keys swagger specs.
     """
     with open('tests/sample_schemas/external_refs/swagger.json') as swagger_spec:
-        spec_dict = yaml.load(swagger_spec)
+        spec_dict = yaml.safe_load(swagger_spec)
     path = 'file:' + os.getcwd() + '/tests/sample_schemas/external_refs/swagger.json'
     spec = Spec.from_dict(spec_dict, path)
     flattened_spec = spec.flattened_spec
