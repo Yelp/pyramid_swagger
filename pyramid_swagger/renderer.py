@@ -35,10 +35,7 @@ class PyramidSwaggerRendererFactory(object):
                 schema_object_spec=response_spec['schema'],
                 value=response_object,
             )
-        except MatchingResponseNotFound:
-            # Response specs not found
-            return response_object
-        except SwaggerMappingError:
+        except (MatchingResponseNotFound, SwaggerMappingError, KeyError):
             # marshaling process failed
             return response_object
 

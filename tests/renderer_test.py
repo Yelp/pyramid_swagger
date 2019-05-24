@@ -97,6 +97,25 @@ class TestPyramidSwaggerRendererFactoryUnitTest(object):
         )
         assert rendered_value == self.external_renderer_factory.return_value.return_value
 
+    def test_rendering_response_without_schema(self, mock_get_response_spec, mock_marshal_schema_object):
+        renderer_factory = PyramidSwaggerRendererFactory(renderer_factory=self.external_renderer_factory)
+        mock_get_response_spec.return_value = {'200': {'description': ''}}
+
+        renderer = renderer_factory(info=self.info)
+        rendered_value = renderer(self.value_to_render, self.mock_system)
+
+        self.external_renderer_factory.assert_called_once_with(self.info)
+        mock_get_response_spec.assert_called_once_with(
+            op=self.mock_request.operation,
+            status_code=self.mock_request.response.status_code,
+        )
+        assert not mock_marshal_schema_object.called
+        self.external_renderer_factory.return_value.assert_called_once_with(
+            self.value_to_render,
+            self.mock_system,
+        )
+        assert rendered_value == self.external_renderer_factory.return_value.return_value
+
     def test_rendering_error_during_marshaling(self, mock_get_response_spec, mock_marshal_schema_object):
         renderer_factory = PyramidSwaggerRendererFactory(renderer_factory=self.external_renderer_factory)
         mock_marshal_schema_object.side_effect = SwaggerMappingError
