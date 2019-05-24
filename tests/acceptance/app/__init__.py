@@ -51,6 +51,7 @@ def date_view(request):
 
 
 @view_config(route_name='post_endpoint_with_optional_body', request_method='POST', renderer='pyramid_swagger')
+@view_config(route_name='sample_no_response_schema', request_method='GET', renderer='pyramid_swagger')
 def post_endpoint_with_optional_body(request):
     return request.content_length
 
@@ -71,10 +72,7 @@ def main(global_config, **settings):
         '/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}',
     )
     config.add_route('standard', '/sample/{path_arg}/resource')
-    config.add_route(
-        'get_with_non_string_query_args',
-        '/get_with_non_string_query_args',
-    )
+    config.add_route('get_with_non_string_query_args', '/get_with_non_string_query_args')
     config.add_route('post_with_primitive_body', '/post_with_primitive_body')
     config.add_route('post_with_form_params', '/post_with_form_params')
     config.add_route('post_with_file_upload', '/post_with_file_upload')
@@ -94,3 +92,4 @@ def main(global_config, **settings):
 def include_samples(config):
     config.add_route('sample_header', '/header')
     config.add_route('sample_authentication', '/authentication')
+    config.add_route('sample_no_response_schema', '/no_response_schema')
