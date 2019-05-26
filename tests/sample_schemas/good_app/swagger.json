@@ -187,6 +187,17 @@
         ]
       }
     },
+    "/sample/no_response_schema": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Body presence status"
+          }
+        },
+        "description": "",
+        "operationId": "sample_no_response_schema"
+      }
+    },
     "/sample": {
       "get": {
         "responses": {

@@ -315,3 +315,9 @@ def test_request_to_authenticated_endpoint_without_authentication():
         expect_errors=True,
     )
     assert response.status_code == 401
+
+
+def test_request_to_endpoint_with_no_response_schema():
+    app = build_test_app(swagger_versions=['2.0'])
+    response = app.get('/sample/no_response_schema')
+    assert response.status_code == 200
