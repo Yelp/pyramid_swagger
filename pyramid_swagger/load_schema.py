@@ -7,13 +7,16 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from collections import namedtuple
+from copy import deepcopy
 
+import jsonschema
 import simplejson
 from jsonschema import RefResolver
 from jsonschema import validators
 from jsonschema.exceptions import ValidationError
 from jsonschema.validators import Draft3Validator
 from jsonschema.validators import Draft4Validator
+from six import iteritems
 
 from pyramid_swagger.model import partial_path_match
 
@@ -195,9 +198,18 @@ class SchemaValidator(object):
 
     @classmethod
     def from_schema(cls, schema, resolver, validator_class):
+        type_checker = deepcopy(validator_class.TYPE_CHECKER)
+        type_checker.redefine_many({
+            type_name: lambda checker, value: all(check(value) for check in checks)
+            for type_name, checks in iteritems(EXTENDED_TYPES)
+        })
+        extended_validator_class = jsonschema.validators.extend(
+            validator_class,
+            type_checker=type_checker,
+        )
         return cls(
             schema,
-            validator_class(schema, resolver=resolver, types=EXTENDED_TYPES))
+            extended_validator_class(schema, resolver=resolver))
 
     def validate(self, values):
         """Validate a :class:`dict` of values. If `self.schema` is falsy this

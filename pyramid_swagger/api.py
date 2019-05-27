@@ -233,7 +233,7 @@ class YamlRendererFactory(object):
     def __call__(self, value, system):
         response = system['request'].response
         response.headers['Content-Type'] = 'application/x-yaml; charset=UTF-8'
-        return yaml.dump(value).encode('utf-8')
+        return yaml.safe_dump(value).encode('utf-8')
 
 
 def build_swagger_20_swagger_schema_views(config):

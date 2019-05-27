@@ -87,7 +87,7 @@ def validate_json_response(response, expected_dict):
 
 def validate_yaml_response(response, expected_dict):
     assert response.headers['content-type'] == 'application/x-yaml; charset=UTF-8'
-    assert _strip_xmodel(yaml.load(response.body)) == expected_dict
+    assert _strip_xmodel(yaml.safe_load(response.body)) == expected_dict
 
 
 def _rewrite_ref(ref, schema_format):
@@ -122,7 +122,7 @@ def test_swagger_json_api_doc_route(testapp_with_base64, test_file, schema_forma
 
     fname = 'tests/sample_schemas/yaml_app/%s.yaml' % test_file
     with open(fname, 'r') as f:
-        expected_schema = yaml.load(f)
+        expected_schema = yaml.safe_load(f)
 
     _recursively_rewrite_refs(expected_schema, schema_format)
 

@@ -13,7 +13,7 @@ from tests.acceptance.app import main
 
 DESERIALIZERS = {
     'json': lambda r: json.loads(r.body.decode('utf-8')),
-    'yaml': lambda r: yaml.load(BytesIO(r.body)),
+    'yaml': lambda r: yaml.safe_load(BytesIO(r.body)),
 }
 
 
