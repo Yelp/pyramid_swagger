@@ -43,9 +43,9 @@ def test_proper_error_on_missing_resource_listing():
                 'tests/sample_schemas/missing_resource_listing/api_docs.json'),
         )
     assert(
-        'tests/sample_schemas/missing_resource_listing/' in str(exc)
+        'tests/sample_schemas/missing_resource_listing/' in str(exc.value)
     )
-    assert 'must be named {0}'.format(API_DOCS_FILENAME) in str(exc)
+    assert 'must be named {0}'.format(API_DOCS_FILENAME) in str(exc.value)
 
 
 def test_proper_error_on_missing_api_declaration():
@@ -55,7 +55,7 @@ def test_proper_error_on_missing_api_declaration():
         )
     assert (
         'tests/sample_schemas/missing_api_declaration/missing.json'
-        in str(exc)
+        in str(exc.value)
     )
 
 
