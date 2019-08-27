@@ -25,5 +25,5 @@ def test_proper_error_on_missing_api_declaration():
             resource_listing = simplejson.load(f)
             validate_swagger_schema(dir_path, resource_listing)
 
-    assert os.path.basename(dir_path) in str(exc)
-    assert os.path.basename('missing.json') in str(exc)
+    assert os.path.basename(dir_path) in str(exc.value)
+    assert os.path.basename('missing.json') in str(exc.value)

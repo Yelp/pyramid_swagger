@@ -26,8 +26,8 @@ def test_proper_error_on_missing_resource_listing():
     filename = 'tests/sample_schemas/missing_resource_listing/api_docs.json'
     with pytest.raises(ResourceListingNotFoundError) as exc:
         _load_resource_listing(filename)
-    assert filename in str(exc)
-    assert 'must be named {0}'.format(API_DOCS_FILENAME) in str(exc)
+    assert filename in str(exc.value)
+    assert 'must be named {0}'.format(API_DOCS_FILENAME) in str(exc.value)
 
 
 def test_proper_error_on_missing_api_declaration():
@@ -36,7 +36,7 @@ def test_proper_error_on_missing_api_declaration():
             {'sample_resource': 'fake/sample_resource.json'},
             'fake',
         )
-    assert 'fake/sample_resource.json' in str(exc)
+    assert 'fake/sample_resource.json' in str(exc.value)
 
 
 @mock.patch('pyramid_swagger.ingest.build_http_handlers',
@@ -100,7 +100,7 @@ def test_generate_resource_listing_with_existing_listing():
     with pytest.raises(ResourceListingGenerationError) as exc:
         generate_resource_listing('tests/sample_schemas/good_app/', listing)
 
-    assert 'Generating a listing would override' in str(exc)
+    assert 'Generating a listing would override' in str(exc.value)
 
 
 @mock.patch('pyramid_swagger.ingest.generate_resource_listing', autospec=True)

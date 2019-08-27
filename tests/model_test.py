@@ -63,8 +63,8 @@ def test_swagger_schema_for_request_not_found(schema):
                 method="GET"
             ),
         )
-    assert '/does_not_exist' in str(excinfo)
-    assert 'Could not find ' in str(excinfo)
+    assert '/does_not_exist' in str(excinfo.value)
+    assert 'Could not find ' in str(excinfo.value)
 
 
 def test_partial_path_match():
