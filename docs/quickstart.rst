@@ -210,7 +210,7 @@ The errors are caused by the fact that ``pyramid.renderers.JSON`` is not aware o
 If your view is configured to use ``pyramid_swagger`` renderer then your endpoint will provide HTTP/200 responses similar
 to ``{"date": "2017-09-16"}``.
 
-This is possible because the marsharling of the view return value converts the ``datetime.date`` object to its ISO 8601
+This is possible because the marshalling of the view return value converts the ``datetime.date`` object to its ISO 8601
 string representation that could be handled by the default JSON renderer.
 
 .. note::
