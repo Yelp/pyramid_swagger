@@ -8,6 +8,7 @@ import os.path
 import simplejson
 from bravado_core.spec import build_http_handlers
 from bravado_core.spec import Spec
+from pyramid.settings import asbool
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 from six.moves.urllib.request import pathname2url
@@ -217,12 +218,13 @@ def create_bravado_core_config(settings):
         'use_models': False,
     }
     configs.update({
-        bravado_core_key: settings[pyramid_swagger_key]
+        bravado_core_key: (settings[pyramid_swagger_key] if bravado_core_key == 'formats'
+                           else asbool(settings[pyramid_swagger_key]))
         for pyramid_swagger_key, bravado_core_key in iteritems(config_keys)
         if pyramid_swagger_key in settings
     })
     configs.update({
-        key.replace(BRAVADO_CORE_CONFIG_PREFIX, ''): value
+        key.replace(BRAVADO_CORE_CONFIG_PREFIX, ''): asbool(value)
         for key, value in iteritems(settings)
         if key.startswith(BRAVADO_CORE_CONFIG_PREFIX)
     })
