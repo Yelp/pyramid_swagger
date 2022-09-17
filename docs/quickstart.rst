@@ -15,7 +15,7 @@ Creating your initial Swagger Schema can be intimidating but don't fear, it's no
 
 To create your first Swagger Schema, I encourage you to take a look at Swagger's official `PetStore example <http://petstore.swagger.io>`_. You can even see the raw JSON for the `Swagger Schema. <http://petstore.swagger.io/v2/swagger.json>`_ You'll notice that Swagger has a lot of details, but the core part of building a schema is documenting each endpoint's inputs and outputs.
 
-For your intial attempt, documenting an endpoint can be simplified to some basic components:
+For your initial attempt, documenting an endpoint can be simplified to some basic components:
 
 1. Documenting the core URI (e.g. /foo/bar)
 2. Documenting request parameters (in the path, in the query arguments, and in the query body)
