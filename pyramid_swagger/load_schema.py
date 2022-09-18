@@ -274,7 +274,7 @@ def extract_validatable_type(type_name, models):
     swagger-ui, they must not use a $ref to internal models.
 
     :returns: A key-value that jsonschema can validate. Key will be either
-        'type' or '$ref' as is approriate.
+        'type' or '$ref' as is appropriate.
     :rtype: dict
     """
     if type_name in models:
