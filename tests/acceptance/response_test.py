@@ -1,24 +1,29 @@
 # -*- coding: utf-8 -*-
+#
+# Swagger 2.0 response acceptance tests
+#
+# Based on request_test.py (Swagger 1.2 tests). Differences made it hard for
+# a single codebase to exercise both Swagger 1.2 and 2.0 responses.
+#
 from __future__ import absolute_import
 
 from contextlib import contextmanager
 
-import mock
-import pyramid.testing
 import pytest
 import simplejson
+from mock import Mock
+from mock import patch
 from pyramid.config import Configurator
 from pyramid.interfaces import IRoutesMapper
 from pyramid.registry import Registry
 from pyramid.response import Response
+from pyramid.testing import DummyRequest
 from pyramid.urldispatch import RoutesMapper
 from webob.multidict import MultiDict
-from webtest import AppError
+from webtest.app import AppError
 
-import pyramid_swagger.tween
 from pyramid_swagger.exceptions import ResponseValidationError
-from pyramid_swagger.ingest import compile_swagger_schema
-from pyramid_swagger.ingest import get_resource_listing
+from pyramid_swagger.ingest import get_swagger_spec
 from pyramid_swagger.tween import validation_tween_factory
 from tests.acceptance.request_test import build_test_app
 
@@ -27,7 +32,7 @@ class CustomResponseValidationException(Exception):
     pass
 
 
-class EnhancedDummyRequest(pyramid.testing.DummyRequest):
+class EnhancedDummyRequest(DummyRequest):
     """
     pyramid.testing.DummyRequest doesn't support MultiDicts like the real
     pyramid.request.Request so this is the next best thing.
@@ -40,15 +45,15 @@ class EnhancedDummyRequest(pyramid.testing.DummyRequest):
         self.content_type = getattr(self, 'content_type', None)
 
 
+validation_ctx_path = 'tests.acceptance.response_test.validation_context'
+
+
 @contextmanager
 def validation_context(request, response=None):
     try:
         yield
     except Exception:
         raise CustomResponseValidationException
-
-
-validation_ctx_path = 'tests.acceptance.response_test.validation_context'
 
 
 def get_registry(settings):
@@ -61,37 +66,45 @@ def get_registry(settings):
     return registry
 
 
-def get_swagger_schema(schema_dir='tests/sample_schemas/good_app/'):
-    return compile_swagger_schema(
-        schema_dir,
-        get_resource_listing(schema_dir, False)
-    )
-
-
-def _validate_against_tween(request, response=None, **overrides):
+def _validate_against_tween(request, response=None, path_pattern='/',
+                            **overrides):
     """
-    Acceptance testing helper for testing the validation tween with Swagger 1.2
+    Acceptance testing helper for testing the swagger tween with Swagger 2.0
     responses.
 
-    :param request: pytest fixture
+    :param request: pyramid request
     :param response: standard fixture by default
+    :param path_pattern: Path pattern eg. /foo/{bar}
+    :param overrides: dict of overrides for `pyramid_swagger` config
     """
     def handler(request):
         return response or Response()
 
     settings = dict({
-        'pyramid_swagger.swagger_versions': ['1.2'],
+        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/',
         'pyramid_swagger.enable_swagger_spec_validation': False,
-        'pyramid_swagger.schema_directory': 'tests/sample_schemas/good_app/'},
+        'pyramid_swagger.enable_response_validation': True,
+        'pyramid_swagger.swagger_versions': ['2.0']},
         **overrides
     )
-    settings['pyramid_swagger.schema12'] = get_swagger_schema()
-    settings['pyramid_swagger.schema20'] = None
+
+    spec = get_swagger_spec(settings)
+    settings['pyramid_swagger.schema12'] = None
+    settings['pyramid_swagger.schema20'] = spec
+
     registry = get_registry(settings)
 
-    # Let's make request validation a no-op so we can focus our tests.
-    with mock.patch.object(pyramid_swagger.tween, 'validate_request'):
-        validation_tween_factory(handler, registry)(request)
+    # This is a little messy because the current flow of execution doesn't
+    # set up the route_info in pyramid. Have to mock out the `route_info`
+    # so that usages in the tween meet expectations. Holler if you know a
+    # better way to do this!
+    op = spec.get_op_for_request(request.method, path_pattern)
+    mock_route_info = {'match': request.matchdict, 'route': None}
+    mock_route_mapper = Mock(spec=IRoutesMapper, return_value=mock_route_info)
+    with patch('pyramid_swagger.tween.get_op_for_request', return_value=op):
+        with patch('pyramid.registry.Registry.queryUtility',
+                   return_value=mock_route_mapper):
+            validation_tween_factory(handler, registry)(request)
 
 
 def test_response_validation_enabled_by_default():
@@ -107,25 +120,34 @@ def test_response_validation_enabled_by_default():
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween(request, response=response)
-    assert "'logging_info' is a required property" in str(excinfo.value)
+    with pytest.raises(ResponseValidationError):
+        _validate_against_tween(
+            request,
+            response=response,
+            path_pattern='/sample/{path_arg}/resource')
 
 
 def test_500_when_response_is_missing_required_field():
+
     request = EnhancedDummyRequest(
         method='GET',
         path='/sample/path_arg1/resource',
         params={'required_arg': 'test'},
         matchdict={'path_arg': 'path_arg1'},
     )
-    # Omit the logging_info key from the response.
+
+    # Omit the logging_info key from the response to induce failure
     response = Response(
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
+
     with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween(request, response=response)
+        _validate_against_tween(
+            request,
+            response=response,
+            path_pattern='/sample/{path_arg}/resource')
+
     assert "'logging_info' is a required property" in str(excinfo.value)
 
 
@@ -140,7 +162,10 @@ def test_200_when_response_is_void_with_none_response():
         body=simplejson.dumps(None),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
-    _validate_against_tween(request, response=response)
+    _validate_against_tween(
+        request,
+        response=response,
+        path_pattern='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}')
 
 
 def test_200_when_response_is_void_with_empty_response():
@@ -151,7 +176,10 @@ def test_200_when_response_is_void_with_empty_response():
         matchdict={'int_arg': '1', 'float_arg': '2.0', 'boolean_arg': 'true'},
     )
     response = Response(body='{}')
-    _validate_against_tween(request, response=response)
+    _validate_against_tween(
+        request,
+        response=response,
+        path_pattern='/sample/nonstring/{int_arg}/{float_arg}/{boolean_arg}')
 
 
 def test_500_when_response_arg_is_wrong_type():
@@ -163,13 +191,17 @@ def test_500_when_response_arg_is_wrong_type():
     )
     response = Response(
         body=simplejson.dumps({
-            'raw_response': 1.0,
+            'raw_response': 1.0,  # <-- is supposed to be a string
             'logging_info': {'foo': 'bar'}
         }),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween(request, response=response)
+        _validate_against_tween(
+            request,
+            response=response,
+            path_pattern='/sample/{path_arg}/resource')
+
     assert "1.0 is not of type " in str(excinfo.value)
 
 
@@ -183,8 +215,13 @@ def test_500_for_bad_validated_array_response():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
     with pytest.raises(ResponseValidationError) as excinfo:
-        _validate_against_tween(request, response=response)
-    assert "is not one of [" in str(excinfo.value)
+        _validate_against_tween(
+            request,
+            response=response,
+            path_pattern='/sample_array_response')
+
+    assert "'bad_enum_value' is not one of " in \
+           str(excinfo.value)
 
 
 def test_200_for_good_validated_array_response():
@@ -197,29 +234,19 @@ def test_200_for_good_validated_array_response():
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
 
-    _validate_against_tween(request, response=response)
+    _validate_against_tween(
+        request,
+        response=response,
+        path_pattern='/sample_array_response')
 
 
 def test_200_for_normal_response_validation():
-    app = build_test_app(
-        swagger_versions=['1.2'],
+    assert build_test_app(
+        swagger_versions=['2.0'],
         **{'pyramid_swagger.enable_response_validation': True}
-    )
-    response = app.post_json('/sample', {'foo': 'test', 'bar': 'test'})
-    assert response.status_code == 200
-
-
-def test_200_skip_validation_for_excluded_path():
-    # FIXME(#64): This test is broken and doesn't check anything.
-    app = build_test_app(
-        swagger_versions=['1.2'],
-        **{'pyramid_swagger.exclude_paths': [r'^/sample/?']}
-    )
-    response = app.get(
-        '/sample/path_arg1/resource',
-        params={'required_arg': 'test'}
-    )
-    assert response.status_code == 200
+    ).post_json(
+        '/sample', {'foo': 'test', 'bar': 'test'},
+    ).status_code == 200
 
 
 def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
@@ -228,23 +255,10 @@ def test_app_error_if_path_not_in_spec_and_path_validation_disabled():
     HTTPNotFound exception.
     """
     with pytest.raises(AppError):
-        app = build_test_app(
-            swagger_versions=['1.2'],
+        assert build_test_app(
+            swagger_versions=['2.0'],
             **{'pyramid_swagger.enable_path_validation': False}
-        )
-        assert app.get('/this/path/doesnt/exist')
-
-
-def test_error_handling_for_12():
-    app = build_test_app(
-        swagger_versions=['1.2'],
-        **{'pyramid_swagger.enable_response_validation': True}
-    )
-    # Should throw 400 and not 500 (500 is thrown by pyramid_swagger when
-    # response_validation is True and response format does not match the
-    # type specified by the operation's swagger spec. But that match should
-    # be done only when the response status is 200...203)
-    assert app.get('/throw_400', expect_errors=True).status_code == 400
+        ).get('/this/path/doesnt/exist')
 
 
 def test_response_validation_context():
@@ -259,9 +273,11 @@ def test_response_validation_context():
         body=simplejson.dumps({'raw_response': 'foo'}),
         headers={'Content-Type': 'application/json; charset=UTF-8'},
     )
+
     with pytest.raises(CustomResponseValidationException):
         _validate_against_tween(
             request,
             response=response,
+            path_pattern='/sample/{path_arg}/resource',
             **{'pyramid_swagger.validation_context_path': validation_ctx_path}
         )

@@ -30,8 +30,8 @@ def build_test_app(swagger_versions, **overrides):
 
 # Parameterize pyramid_swagger.swagger_versions
 @pytest.fixture(
-    params=[['1.2'], ['2.0'], ['1.2', '2.0']],
-    ids=['1.2', '2.0', '1.2-2.0'],
+    params=[['2.0']],
+    ids=['2.0'],
 )
 def test_app(request):
     """Fixture for setting up a test test_app with particular settings."""

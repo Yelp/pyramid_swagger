@@ -6,7 +6,6 @@ import re
 
 import mock
 import pytest
-import simplejson
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
@@ -16,26 +15,20 @@ from pyramid.response import Response
 from pyramid.urldispatch import Route
 
 from pyramid_swagger.exceptions import RequestValidationError
-from pyramid_swagger.exceptions import ResponseValidationError
-from pyramid_swagger.load_schema import SchemaValidator
-from pyramid_swagger.load_schema import ValidatorMap
 from pyramid_swagger.model import PathNotMatchedError
 from pyramid_swagger.tween import DEFAULT_EXCLUDED_PATHS
 from pyramid_swagger.tween import get_exclude_paths
 from pyramid_swagger.tween import get_op_for_request
 from pyramid_swagger.tween import get_swagger_objects
 from pyramid_swagger.tween import get_swagger_versions
-from pyramid_swagger.tween import handle_request
-from pyramid_swagger.tween import prepare_body
 from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import PyramidSwaggerResponse
 from pyramid_swagger.tween import Settings
 from pyramid_swagger.tween import should_exclude_path
 from pyramid_swagger.tween import should_exclude_route
-from pyramid_swagger.tween import SWAGGER_12
 from pyramid_swagger.tween import SWAGGER_20
-from pyramid_swagger.tween import validate_response
 from pyramid_swagger.tween import validation_error
+# from pyramid_swagger.tween import validate_response
 
 
 def assert_eq_regex_lists(left, right):
@@ -78,16 +71,6 @@ def test_exclude_path_with_old_setting():
     )
 
 
-def test_response_content_type_missing_raises_5xx():
-    with pytest.raises(ResponseValidationError) as excinfo:
-        prepare_body(
-            # there is no way to instantiate a Response object with no content type
-            mock.Mock(spec=Response, content_type=None),
-        )
-
-    assert 'Content-Type must be set' in str(excinfo.value)
-
-
 @pytest.fixture
 def mock_route_info():
     class MockRoute(object):
@@ -119,46 +102,6 @@ def test_validation_skips_path_properly():
     assert not should_exclude_path(excluded_paths, '/sample/resources')
 
 
-# TODO: Should probably be migrated to acceptance tests after we make mocking
-# schemas easier there.
-def test_validation_content_type_with_json():
-    fake_schema = mock.Mock(response_body_schema={'type': 'object'})
-    fake_validator = mock.Mock(schema=fake_schema)
-    body = {'status': 'good'}
-    response = Response(
-        body=simplejson.dumps(body),
-        headers={'Content-Type': 'application/json; charset=UTF-8'},
-    )
-    validator_map = mock.Mock(spec=ValidatorMap, response=fake_validator)
-    validate_response(response, validator_map)
-    fake_validator.validate.assert_called_once_with(body)
-
-
-def test_skips_validating_errors():
-    fake_schema = mock.Mock(response_body_schema={'type': 'string'})
-    fake_validator = mock.Mock(schema=fake_schema)
-    fake_validator_map = mock.Mock(response=fake_validator)
-    response = Response(
-        body='abe1351f',
-        status_code=403,
-    )
-    validate_response(response, fake_validator_map)
-    assert not fake_validator.validate.called
-
-
-def test_raw_string():
-    fake_schema = mock.Mock(response_body_schema={'type': 'string'})
-    fake_validator = mock.Mock(spec=SchemaValidator, schema=fake_schema)
-    response = Response(
-        body='abe1351f',
-        headers={'Content-Type': 'application/text; charset=UTF-8'},
-    )
-    validator_map = mock.Mock(spec=ValidatorMap, response=fake_validator)
-    validate_response(response, validator_map)
-    fake_validator.validate.assert_called_once_with(
-        response.body.decode('utf-8'))
-
-
 def build_mock_validator(properties):
     return mock.Mock(
         spec=['schema', 'validate'],
@@ -169,42 +112,6 @@ def build_mock_validator(properties):
             )
         },
     )
-
-
-def test_handle_request_returns_request_data():
-    mock_request = mock.Mock(
-        spec=PyramidSwaggerRequest,
-        query={'int': '123', 'float': '3.14'},
-        form={'form_int': '333', 'string2': 'xyz'},
-        path={'path_int': '222', 'string': 'abc'},
-        headers={'X-Is-Bool': 'True'},
-        body={'more': 'foo'},
-    )
-
-    body_validator = build_mock_validator({'more': 'object'})
-    body_validator.schema['name'] = 'bar'
-
-    validator_map = mock.Mock(
-        query=build_mock_validator({'int': 'integer', 'float': 'float'}),
-        path=build_mock_validator({'path_int': 'integer', 'string': 'string'}),
-        form=build_mock_validator({'form_int': 'integer'}),
-        headers=build_mock_validator({'X-Is-Bool': 'boolean'}),
-        body=body_validator,
-    )
-
-    expected = {
-        'int': 123,
-        'float': 3.14,
-        'path_int': 222,
-        'form_int': 333,
-        'string': 'abc',
-        'string2': 'xyz',
-        'X-Is-Bool': True,
-        'bar': {'more': 'foo'},
-    }
-
-    request_data = handle_request(mock_request, validator_map)
-    assert request_data == expected
 
 
 def test_get_op_for_request_found():
@@ -238,9 +145,8 @@ def test_get_op_for_request_not_found_when_no_match_in_swagger_spec():
 
 
 def test_get_swagger_versions_success():
-    for versions in (['1.2'], ['2.0'], ['1.2', '2.0']):
-        settings = {'pyramid_swagger.swagger_versions': versions}
-        assert set(versions) == get_swagger_versions(settings)
+    settings = {'pyramid_swagger.swagger_versions': ['2.0']}
+    assert set(['2.0']) == get_swagger_versions(settings)
 
 
 def test_get_swagger_versions_empty():
@@ -299,65 +205,9 @@ def test_get_swagger20_objects_if_only_swagger20_version_is_present(
         settings, registry):
     registry.settings['pyramid_swagger.swagger_versions'] = [SWAGGER_20]
     registry.settings['pyramid_swagger.schema20'] = 'schema20'
-    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
+    swagger_handler, spec = get_swagger_objects(settings, registry)
     assert 'swagger20_handler' in str(swagger_handler)
     assert 'schema20' == spec
-
-
-def test_get_swagger12_objects_if_only_swagger12_version_is_present(
-        settings, registry):
-    registry.settings['pyramid_swagger.swagger_versions'] = [SWAGGER_12]
-    registry.settings['pyramid_swagger.schema12'] = 'schema12'
-    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
-    assert 'swagger12_handler' in str(swagger_handler)
-    assert 'schema12' == spec
-
-
-def test_get_swagger20_objects_if_both_present_but_no_prefer20_config(
-        settings, registry):
-    registry.settings['pyramid_swagger.swagger_versions'] = [
-        SWAGGER_12, SWAGGER_20]
-    registry.settings['pyramid_swagger.schema20'] = 'schema20'
-    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
-    assert 'swagger20_handler' in str(swagger_handler)
-    assert 'schema20' == spec
-
-
-def test_get_swagger20_objects_if_both_present_but_route_in_prefer20(
-        settings, registry):
-    settings.prefer_20_routes = ['swagger20_route']
-    registry.settings['pyramid_swagger.swagger_versions'] = [
-        SWAGGER_12, SWAGGER_20]
-    route_info = {'route': Mock()}
-    route_info['route'].name = 'swagger20_route'
-    registry.settings['pyramid_swagger.schema20'] = 'schema20'
-    swagger_handler, spec = get_swagger_objects(settings, route_info, registry)
-    assert 'swagger20_handler' in str(swagger_handler)
-    assert 'schema20' == spec
-
-
-def test_get_swagger20_objects_if_both_present_but_request_has_no_route(
-        settings, registry):
-    settings.prefer_20_routes = ['swagger20_route']
-    registry.settings['pyramid_swagger.swagger_versions'] = [
-        SWAGGER_12, SWAGGER_20]
-    registry.settings['pyramid_swagger.schema20'] = 'schema20'
-    swagger_handler, spec = get_swagger_objects(settings, {}, registry)
-    assert 'swagger20_handler' in str(swagger_handler)
-    assert 'schema20' == spec
-
-
-def test_get_swagger12_objects_if_both_present_but_route_not_in_prefer20(
-        settings, registry):
-    settings.prefer_20_routes = ['swagger20_route']
-    registry.settings['pyramid_swagger.swagger_versions'] = [
-        SWAGGER_12, SWAGGER_20]
-    route_info = {'route': Mock()}
-    route_info['route'].name = 'swagger12_route'
-    registry.settings['pyramid_swagger.schema12'] = 'schema12'
-    swagger_handler, spec = get_swagger_objects(settings, route_info, registry)
-    assert 'swagger12_handler' in str(swagger_handler)
-    assert 'schema12' == spec
 
 
 def test_is_swagger_documentation_route_without_route_is_safe():

@@ -11,7 +11,6 @@ from contextlib import contextmanager
 
 import bravado_core
 import jsonschema.exceptions
-import simplejson
 import six
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.exception import SwaggerSecurityValidationError
@@ -35,10 +34,9 @@ from pyramid_swagger.model import PathNotMatchedError
 log = logging.getLogger(__name__)
 
 
-SWAGGER_12 = '1.2'
 SWAGGER_20 = '2.0'
 DEFAULT_SWAGGER_VERSIONS = [SWAGGER_20]
-SUPPORTED_SWAGGER_VERSIONS = [SWAGGER_12, SWAGGER_20]
+SUPPORTED_SWAGGER_VERSIONS = [SWAGGER_20]
 
 
 DEFAULT_EXCLUDED_PATHS = [
@@ -51,20 +49,17 @@ DEFAULT_EXCLUDED_PATHS = [
 class Settings(namedtuple(
     'Settings',
     [
-        'swagger12_handler',
         'swagger20_handler',
         'validate_request',
         'validate_response',
         'validate_path',
         'exclude_paths',
         'exclude_routes',
-        'prefer_20_routes',
     ]
 )):
 
     """A settings object for configurable options.
 
-    :param swagger12_handler: a :class:`SwaggerHandler` for v1.2 or None
     :param swagger20_handler: a :class:`SwaggerHandler` for v2.0 or None
     :param validate_swagger_spec: check Swagger files for correctness.
     :param validate_request: check requests against Swagger spec.
@@ -76,9 +71,6 @@ class Settings(namedtuple(
     :rtype: namedtuple
     :param exclude_routes: list of route names that should be excluded from
         validation.
-    :param prefer_20_routes: list of route names that should be handled
-        via v2.0 spec when `2.0` is in `swagger_versions`. All others will be
-        handled via v1.2 spec. [i.e. Make v2.0 an opt-in feature]
     """
 
 
@@ -108,40 +100,20 @@ def _get_validation_context(registry):
         return noop_context
 
 
-def get_swagger_objects(settings, route_info, registry):
+def get_swagger_objects(settings, registry):
     """Returns appropriate swagger handler and swagger spec schema.
 
     Swagger Handler contains callables that isolate implementation differences
     in the tween to handle both Swagger 1.2 and Swagger 2.0.
 
-    Exception is made when `settings.prefer_20_routes` are non-empty and
-    ['1.2', '2.0'] both are present in available swagger versions. In this
-    special scenario, '2.0' spec is chosen only for requests which are listed
-    in the `prefer_20_routes`. This helps in incremental migration of
-    routes from v1.2 to v2.0 by making moving to v2.0 opt-in.
-
     :rtype: (:class:`SwaggerHandler`,
-             :class:`pyramid_swagger.model.SwaggerSchema` OR
-                :class:`bravado_core.spec.Spec`)
+             :class:`bravado_core.spec.Spec`)
     """
     enabled_swagger_versions = get_swagger_versions(registry.settings)
-    schema12 = registry.settings['pyramid_swagger.schema12']
     schema20 = registry.settings['pyramid_swagger.schema20']
-
-    if (
-        SWAGGER_20 in enabled_swagger_versions
-        and SWAGGER_12 in enabled_swagger_versions
-        and settings.prefer_20_routes
-        and route_info.get('route')
-        and route_info['route'].name not in settings.prefer_20_routes
-    ):
-        return settings.swagger12_handler, schema12
 
     if SWAGGER_20 in enabled_swagger_versions:
         return settings.swagger20_handler, schema20
-
-    if SWAGGER_12 in enabled_swagger_versions:
-        return settings.swagger12_handler, schema12
 
 
 def validation_tween_factory(handler, registry):
@@ -160,8 +132,7 @@ def validation_tween_factory(handler, registry):
         # matchdict so we can validate it and use it to exclude routes from
         # validation.
         route_info = route_mapper(request)
-        swagger_handler, spec = get_swagger_objects(settings, route_info,
-                                                    registry)
+        swagger_handler, spec = get_swagger_objects(settings, registry)
 
         if should_exclude_request(settings, request, route_info):
             return handler(request)
@@ -328,48 +299,8 @@ class PyramidSwaggerResponse(OutgoingResponse):
         return getattr(self.response, 'json_body', {})
 
 
-def handle_request(request, validator_map, **kwargs):
-    """Validate the request against the swagger spec and return a dict with
-    all parameter values available in the request, casted to the expected
-    python type.
-
-    :param request: a :class:`PyramidSwaggerRequest` to validate
-    :param validator_map: a :class:`pyramid_swagger.load_schema.ValidatorMap`
-        used to validate the request
-    :returns: a :class:`dict` of request data for each parameter in the swagger
-        spec
-    :raises: RequestValidationError when the request is not valid for the
-        swagger spec
-    """
-    request_data = {}
-    validation_pairs = []
-
-    for validator, values in [
-        (validator_map.query, request.query),
-        (validator_map.path, request.path),
-        (validator_map.form, request.form),
-        (validator_map.headers, request.headers),
-    ]:
-        values = cast_params(validator.schema, values)
-        validation_pairs.append((validator, values))
-        request_data.update(values)
-
-    # Body is a special case because the key for the request_data comes
-    # from the name in the schema, instead of keys in the values
-    if validator_map.body.schema:
-        param_name = validator_map.body.schema['name']
-        validation_pairs.append((validator_map.body, request.body))
-        request_data[param_name] = request.body
-
-    validate_request(validation_pairs)
-
-    return request_data
-
-
 def load_settings(registry):
     return Settings(
-        swagger12_handler=build_swagger12_handler(
-            registry.settings.get('pyramid_swagger.schema12')),
         swagger20_handler=build_swagger20_handler(),
         validate_request=asbool(registry.settings.get(
             'pyramid_swagger.enable_request_validation',
@@ -387,8 +318,6 @@ def load_settings(registry):
         exclude_routes=set(aslist(registry.settings.get(
             'pyramid_swagger.exclude_routes',
         ) or [])),
-        prefer_20_routes=set(aslist(registry.settings.get(
-            'pyramid_swagger.prefer_20_routes') or [])),
     )
 
 
@@ -402,20 +331,6 @@ def build_swagger20_handler():
         handle_request=swaggerize_request,
         handle_response=swaggerize_response,
     )
-
-
-def build_swagger12_handler(schema):
-    """Builds a swagger12 handler or returns None if no schema is present.
-
-    :type schema: :class:`pyramid_swagger.model.SwaggerSchema`
-    :rtype: :class:`SwaggerHandler` or None
-    """
-    if schema:
-        return SwaggerHandler(
-            op_for_request=schema.validators_for_request,
-            handle_request=handle_request,
-            handle_response=validate_response,
-        )
 
 
 def get_exclude_paths(registry):
@@ -501,81 +416,6 @@ CAST_TYPE_TO_FUNC = {
 }
 
 
-def cast_request_param(param_type, param_name, param_value):
-    """Try to cast a request param (e.g. query arg, POST data) from a string to
-    its specified type in the schema. This allows validating non-string params.
-
-    :param param_type: name of the type to be casted to
-    :type  param_type: string
-    :param param_name: param name
-    :type  param_name: string
-    :param param_value: param value
-    :type  param_value: string
-    """
-    try:
-        return CAST_TYPE_TO_FUNC.get(param_type, lambda x: x)(param_value)
-    except ValueError:
-        log.warn("Failed to cast %s value of %s to %s",
-                 param_name, param_value, param_type)
-        # Ignore type error, let jsonschema validation handle incorrect types
-        return param_value
-
-
-@validation_error(RequestValidationError)
-def validate_request(validation_pairs):
-    for validator, values in validation_pairs:
-        validator.validate(values)
-
-
-def cast_params(schema, values):
-    if not schema:
-        return {}
-
-    def get_type(param_name):
-        return schema['properties'].get(param_name, {}).get('type')
-
-    return dict(
-        (k, cast_request_param(get_type(k), k, v))
-        for k, v in values.items()
-    )
-
-
-@validation_error(ResponseValidationError)
-def validate_response(response, validator_map):
-    """Validates response against our schemas.
-
-    :param response: the response object to validate
-    :type response: :class:`pyramid.response.Response`
-    :type validator_map: :class:`pyramid_swagger.load_schema.ValidatorMap`
-    """
-    validator = validator_map.response
-
-    # Short circuit if we are supposed to not validate anything.
-    returns_nothing = validator.schema.get('type') == 'void'
-    body_empty = response.body in (None, b'', b'{}', b'null')
-    if returns_nothing and body_empty:
-        return
-
-    # Don't attempt to validate non-success responses in v1.2
-    if not 200 <= response.status_code <= 203:
-        return
-
-    validator.validate(prepare_body(response))
-
-
-def prepare_body(response):
-    # content_type must be set to access response.text
-    if not response.content_type:
-        raise ResponseValidationError(
-            'Response validation error: Content-Type must be set'
-        )
-
-    if 'application/json' in response.content_type:
-        return simplejson.loads(response.text)
-    else:
-        return response.text
-
-
 @validation_error(RequestValidationError)
 def swaggerize_request(request, op, **kwargs):
     """
@@ -643,10 +483,10 @@ def get_op_for_request(request, route_info, spec):
 def get_swagger_versions(settings):
     """
     Validates and returns the versions of the Swagger Spec that this pyramid
-    application supports.
+    application supports. (currently only support 2.0)
 
     :type settings: dict
-    :return: list of strings. eg ['1.2', '2.0']
+    :return: list of strings. eg ['2.0']
     :raises: ValueError when an unsupported Swagger version is encountered.
     """
     swagger_versions = set(aslist(settings.get(
