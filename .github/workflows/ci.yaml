@@ -8,12 +8,12 @@ jobs:
       fail-fast: false
       matrix:
         tox:
-          - py38
-          - py310
+          - '3.8'
+          - '3.10'
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
       - run: pip install tox
-      - run: tox -e ${{ matrix.tox }}
+      - run: tox -e py
