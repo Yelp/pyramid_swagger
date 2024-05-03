@@ -8,11 +8,8 @@ jobs:
       fail-fast: false
       matrix:
         tox:
+          - py38
           - py310
-          - pre-commit
-          - mypy
-          - docs
-          # TODO: benchmark blocked on https://github.com/actions/toolkit/issues/399
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
