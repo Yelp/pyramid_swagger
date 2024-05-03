@@ -16,7 +16,7 @@ repos:
         args:
         - -i
         - --ignore=E309,E501
--   repo: https://gitlab.com/pycqa/flake8.git
+-   repo: https://github.com/PyCQA/flake8
     rev: 3.7.6
     hooks:
     -   id: flake8

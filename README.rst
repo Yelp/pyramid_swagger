@@ -52,7 +52,7 @@ How to contribute
 
     ::
 
-        tox -e py27    # Note: use py35 for Python 3.5, see tox.ini for possible values
+        tox -e py38    # Note: use py310 for Python 3.10, see tox.ini for possible values
 
 #. Commit patches: http://gitref.org/basic/
 #. Push to github: ``git pull && git push origin``
