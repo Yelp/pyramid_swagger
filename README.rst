@@ -36,7 +36,7 @@ How to contribute
 
     ::
 
-        git remote add upstream https://github.com/striglia/pyramid_swagger.git
+        git remote add upstream https://github.com/Yelp/pyramid_swagger.git
         git fetch upstream
         git checkout upstream/master -b my-feature-branch
 

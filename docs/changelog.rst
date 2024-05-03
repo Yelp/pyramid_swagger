@@ -1,6 +1,14 @@
 Changelog
 =========
 
+2.8.0 (2024--5-03)
+++++++++++++++++++++++++++
+* Ensure http 401 in case of missing security (see #239)
+* Fix pyramid swagger renderer if missing schema (see #242)
+* Reduce usage of deprecated methods (see #241)
+* Minor fixes (see #243, #244 and #246)
+* Update tox to py38 and py310 and skip swagger 1.2 tests (see #249)
+
 2.7.0 (2019--5-07)
 ++++++++++++++++++++++++++
 * Remove not needed deprecation warnings (see #238)

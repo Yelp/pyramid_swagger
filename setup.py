@@ -34,10 +34,8 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
 
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.10',
     ],
     keywords='pyramid swagger validation',
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
