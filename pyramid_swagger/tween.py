@@ -469,7 +469,6 @@ def should_exclude_request(settings, request, route_info):
 
 
 def should_exclude_response_validation(settings, route_info):
-    print(route_info)
     return should_exclude_route(settings.response_validation_exclude_routes, route_info)
 
 
