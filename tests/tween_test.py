@@ -31,6 +31,7 @@ from pyramid_swagger.tween import PyramidSwaggerRequest
 from pyramid_swagger.tween import PyramidSwaggerResponse
 from pyramid_swagger.tween import Settings
 from pyramid_swagger.tween import should_exclude_path
+from pyramid_swagger.tween import should_exclude_response_validation
 from pyramid_swagger.tween import should_exclude_route
 from pyramid_swagger.tween import SWAGGER_12
 from pyramid_swagger.tween import SWAGGER_20
@@ -106,6 +107,21 @@ def test_should_exclude_route_no_matched_route(mock_route_info):
 
 def test_should_exclude_route_no_route():
     assert not should_exclude_route(set(['foo', 'two']), {'route': None})
+
+
+def test_should_exclude_response_validation(settings, mock_route_info):
+    settings.response_validation_exclude_routes = ['route-one', 'two']
+    assert should_exclude_response_validation(settings, mock_route_info)
+
+
+def test_should_exclude_response_validation_no_matched_route(settings, mock_route_info):
+    settings.response_validation_exclude_routes = ['foo', 'two']
+    assert not should_exclude_response_validation(settings, mock_route_info)
+
+
+def test_should_exclude_response_validation_no_route():
+    settings.response_validation_exclude_routes = ['foo', 'two']
+    assert not should_exclude_response_validation(settings, {'route': None})
 
 
 def test_validation_skips_path_properly():

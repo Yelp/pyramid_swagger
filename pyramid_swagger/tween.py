@@ -59,6 +59,7 @@ class Settings(namedtuple(
         'exclude_paths',
         'exclude_routes',
         'prefer_20_routes',
+        'response_validation_exclude_routes'
     ]
 )):
 
@@ -79,6 +80,8 @@ class Settings(namedtuple(
     :param prefer_20_routes: list of route names that should be handled
         via v2.0 spec when `2.0` is in `swagger_versions`. All others will be
         handled via v1.2 spec. [i.e. Make v2.0 an opt-in feature]
+    :param response_validation_exclude_routes: list of route names that should be excluded from
+        response validation.
     """
 
 
@@ -195,7 +198,7 @@ def validation_tween_factory(handler, registry):
 
         response = handler(request)
 
-        if settings.validate_response:
+        if settings.validate_response and not should_exclude_response_validation(settings, route_info):
             with validation_context(request, response=response):
                 swagger_handler.handle_response(response, op_or_validators_map)
 
@@ -389,6 +392,9 @@ def load_settings(registry):
         ) or [])),
         prefer_20_routes=set(aslist(registry.settings.get(
             'pyramid_swagger.prefer_20_routes') or [])),
+        response_validation_exclude_routes=set(aslist(registry.settings.get(
+            'pyramid_swagger.response_validation_exclude_routes',
+        ) or [])),
     )
 
 
@@ -460,6 +466,11 @@ def should_exclude_request(settings, request, route_info):
         or should_exclude_route(settings.exclude_routes, route_info)
         or is_swagger_documentation_route(route_info)
     )
+
+
+def should_exclude_response_validation(settings, route_info):
+    print(route_info)
+    return should_exclude_route(settings.response_validation_exclude_routes, route_info)
 
 
 def should_exclude_path(exclude_path_regexes, path):

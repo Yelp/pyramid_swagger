@@ -11,6 +11,7 @@ import pytest
 import simplejson
 from mock import Mock
 from mock import patch
+from pyramid.interfaces import IRoute
 from pyramid.interfaces import IRoutesMapper
 from pyramid.response import Response
 from webtest.app import AppError
@@ -58,7 +59,9 @@ def _validate_against_tween(request, response=None, path_pattern='/',
     # so that usages in the tween meet expectations. Holler if you know a
     # better way to do this!
     op = spec.get_op_for_request(request.method, path_pattern)
-    mock_route_info = {'match': request.matchdict, 'route': None}
+    mock_route = Mock(spec=IRoute)
+    mock_route.name = path_pattern
+    mock_route_info = {'match': request.matchdict, 'route': mock_route}
     mock_route_mapper = Mock(spec=IRoutesMapper, return_value=mock_route_info)
     with patch('pyramid_swagger.tween.get_op_for_request', return_value=op):
         with patch('pyramid.registry.Registry.queryUtility',
@@ -181,6 +184,24 @@ def test_500_for_bad_validated_array_response():
 
     assert "'bad_enum_value' is not one of " in \
            str(excinfo.value)
+
+
+def test_response_not_validated_if_route_in_response_validation_exclude_routes():
+    request = EnhancedDummyRequest(
+        method='GET',
+        path='/sample_array_response',
+    )
+    response = Response(
+        body='{}',
+        headers={'Content-Type': 'application/json; charset=UTF-8'},
+    )
+
+    _validate_against_tween(
+        request,
+        response=response,
+        path_pattern='/sample_array_response',
+        # the route name is configured to be the same as the path_pattern in `_validate_against_tween`
+        **{'pyramid_swagger.response_validation_exclude_routes': {'/sample_array_response'}})
 
 
 def test_200_for_good_validated_array_response():
