@@ -36,6 +36,8 @@ setup(
 
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.10',
+
+        'License :: OSI Approved :: BSD License',
     ],
     keywords='pyramid swagger validation',
     packages=find_packages(exclude=["contrib", "docs", "tests*"]),
