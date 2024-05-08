@@ -1,9 +1,5 @@
 Changelog
 =========
-2.9.0 (2024-5-06)
-++++++++++++++++++++++++++
-* Add response_validation_exclude_routes support (see #253)
-
 2.8.0 (2024-5-03)
 ++++++++++++++++++++++++++
 * Ensure http 401 in case of missing security (see #239)
