@@ -31,6 +31,7 @@ def test_load_ini_settings(ini_app):
     assert settings.validate_path is True
     assert settings.exclude_routes == {'/undefined/first', '/undefined/second'}
     assert settings.prefer_20_routes == {'/sample'}
+    assert settings.response_validation_exclude_routes == {'/exclude_response/first', '/exclude_response/second'}
 
 
 def test_get_swagger_versions(ini_app):
