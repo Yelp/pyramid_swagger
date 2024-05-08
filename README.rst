@@ -6,13 +6,6 @@
     .. image:: https://github.com/Yelp/pyramid_swagger/actions/workflows/ci.yaml/badge.svg
         :target: https://github.com/Yelp/pyramid_swagger/actions/workflows/ci.yaml
         :alt: Github Actions
-:Current coverage on master:
-    .. image:: https://coveralls.io/repos/striglia/pyramid_swagger/badge.png
-        :target: https://coveralls.io/r/striglia/pyramid_swagger
-:Persistent chat for questions:
-    .. image:: https://badges.gitter.im/Join%20Chat.svg
-        :alt: Join the chat at https://gitter.im/striglia/pyramid_swagger
-        :target: https://gitter.im/striglia/pyramid_swagger?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 
 pyramid_swagger
