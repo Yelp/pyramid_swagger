@@ -3,12 +3,9 @@
 :Source: https://github.com/striglia/pyramid_swagger
 :License: Copyright © 2014 Scott Triglia under the `BSD 3-clause <http://opensource.org/licenses/BSD-3-Clause>`_
 :Build status:
-    .. image:: https://travis-ci.org/striglia/pyramid_swagger.png?branch=master
-        :target: https://travis-ci.org/striglia/pyramid_swagger?branch=master
-        :alt: Travis CI
-    .. image:: https://ci.appveyor.com/api/projects/status/ufmlmpwy1vj3yjgk/branch/master?svg=true
-        :target: https://ci.appveyor.com/project/striglia/pyramid-swagger
-        :alt: Appveyor (Windows CI)
+    .. image:: https://github.com/Yelp/pyramid_swagger/actions/workflows/ci.yaml/badge.svg
+        :target: https://github.com/Yelp/pyramid_swagger/actions/workflows/ci.yaml
+        :alt: Github Actions
 :Current coverage on master:
     .. image:: https://coveralls.io/repos/striglia/pyramid_swagger/badge.png
         :target: https://coveralls.io/r/striglia/pyramid_swagger
