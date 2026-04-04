@@ -47,7 +47,8 @@ def includeme(config):
 
     config.add_renderer('pyramid_swagger', PyramidSwaggerRendererFactory())
 
-    if settings.get('pyramid_swagger.enable_api_doc_views', True):
+    if pyramid.settings.asbool(
+            settings.get('pyramid_swagger.enable_api_doc_views', True)):>>>>>>> master
         if SWAGGER_12 in swagger_versions:
             register_api_doc_endpoints(
                 config,
